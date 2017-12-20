@@ -1,0 +1,518 @@
+﻿/*CHARTS PANEL*/
+.charts-panel {
+    display: block;
+    position: relative;
+    float: left;
+    box-sizing: border-box;
+    width: 100%;
+    height: auto;
+    min-height: 400px;
+    background-color: white;
+    border: 1px solid #999; 
+    padding: 0;
+    margin: 0;
+}
+
+.charts-panel > div {
+    display: block;
+    position: relative;
+    float: left;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+
+
+
+/* Option panel */
+.options-panel {
+    width: 100%;
+    height: auto;
+    border-bottom: 1px solid #999;
+    background-color: #e4e4ed;
+    padding: 6px;
+}
+
+.options-panel > div, select, input{
+    display: block;
+    position: relative;
+    float: left;
+}
+
+.dropdown-label {
+    width: auto;
+    height: 32px;
+    padding: 6px;
+    padding-left: 0;
+    font-family: 'Century Gothic';
+    line-height: 20px;
+    margin: 0 6px;
+}
+
+.dropdown-container {
+    width: 160px;
+    height: 32px;
+    padding: 0;
+    margin-right: 24px;
+    font-family: 'Century Gothic';
+}
+
+.charts-options-checkbox {
+    height: 32px;
+    margin: 0 !important;
+    margin-left: 24px !important;
+}
+
+.charts-options-checkbox-label {
+    width: auto;
+    height: 32px;
+    padding: 6px;
+    padding-left: 0;
+    font-family: 'Century Gothic';
+    line-height: 20px;
+    margin-left: 6px;
+}
+
+.dropdown-container input{
+    width: 300px;
+}
+
+
+
+
+
+/* Charts container */
+.charts-container {
+    display: block;
+    position: relative;
+    float: left;
+    box-sizing: border-box;
+    width: 100%;
+    height: 716px;
+    min-height: 500px;
+    background-color: white;
+}
+
+.chart-left-container {
+    display: block;
+    position: absolute;
+    float: left;
+    box-sizing: border-box;
+    left: 0px;
+    right: 100px;
+    top: 0;
+    height: 100%;
+}
+
+.chart-right-container {
+    display: block;
+    position: absolute;
+    float: right;
+    box-sizing: border-box;
+    right: 0px;
+    width: 100px;
+    top: 0;
+    height: 100%;
+}
+
+.actual-chart-container {
+    display: block;
+    position: relative;
+    float: left;
+    box-sizing: border-box;
+    width: 100%;
+    height: 640px;
+    border-right: 0.5px solid #999999;
+    border-bottom: 0.5px solid #999999;
+    overflow: hidden;
+}
+
+.quote-info-panel {
+
+}
+
+.date-line {
+    display: block;
+    position: relative;
+    float: left;
+    box-sizing: border-box;
+    width: 100%;
+    height: 30px;
+    background-color: #EEEEEE;
+    border-bottom: 0.5px solid #999999;
+    border-right: 0.5px solid #999999;
+}
+
+.timeline-container {
+    display: block;
+    position: relative;
+    float: left;
+    box-sizing: border-box;
+    height: 40px;
+    width: 100%;
+    margin-top: 6px;
+    background-color: white;
+}
+
+
+.timeline {
+    display: block;
+    position: absolute;
+    float: left;
+    box-sizing: border-box;
+    left: 3px;
+    right: 3px;
+    top: 4px;
+    height: 32px;
+    border: 1px solid #AAAAAA;
+}
+
+.timeline-pointer {
+    display: block;
+    position: absolute;
+    float: left;
+    box-sizing: border-box;
+    width: 32px;
+    height: 36px;
+    left: 21px;
+    top: 2px;
+    border: 3px solid red;
+    background-color: transparent;
+}
+
+
+
+.values-container {
+    display: block;
+    position: relative;
+    float: left;
+    box-sizing: border-box;
+    width: 100%;
+    height: 640px;
+    border-bottom: 0.5px solid #999999;
+}
+
+
+
+
+
+/* SVG */
+.chart-svg-layer-container {
+    display: block;
+    position: relative;
+    box-sizing: border-box;
+    background-color: white;
+    border: none;
+    height: 100%;
+    width: 100%;
+}
+
+.chart-svg-layer {
+    display: block;
+    position: absolute;
+    box-sizing: border-box;
+    background-color: white;
+    border: none;
+    top: 0;
+    bottom: 1px;
+    left: 0;
+    right: 1px;
+    overflow: hidden;
+}
+
+.chart-svg-panel-container {
+    display: block;
+    position: relative;
+    box-sizing: border-box;
+    background-color: white;
+    height: 100%;
+    width: 100%;
+}
+
+.chart-svg-panel {
+    display: block;
+    position: absolute;
+    box-sizing: border-box;
+    background-color: white;
+    border: none;
+    left: 0px;
+}
+
+/*
+path{
+    shape-rendering: crispEdges;
+}
+
+.crosshair {
+    position: absolute;
+    display: block;
+    border: 1px dotted rgb(0, 23, 216);
+    margin: 0;
+    padding: 0;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+}
+
+.crosshair-vertical {
+    width: 1px;
+    height: 100%;
+}
+
+.crosshair-horizontal {
+    width: 100%;
+    height: 1px;
+}
+
+.chart-details-panel {
+    display: block;
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 134px;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #888;
+    background-color: white;
+    z-index: 2;
+}
+
+.chart-detail-line-container {
+    display: block;
+    position: relative;
+    padding: 3px;
+    width: 132px;
+    height: 18px;
+    font-size: 11px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background-color: #DDD;
+    color: #333;
+    line-height: 12px;
+}
+
+.chart-detail-line-label {
+    display: block;
+    position: relative;
+    float: left;
+    width: 60px;
+    height: 100%;
+}
+
+.svg-date-line {
+    background: #EEE;
+    border-bottom: 1px solid #444;
+}
+
+.svg-date-value {
+    text-align: center !important;
+    width: 100% !important;
+}*/
+
+/*.chart-detail-line-value {
+    display: block;
+    position: relative;
+    float: left;
+    width: 65px;
+    height: 100%;
+    text-align: right;
+}
+
+.scale-indicator {
+    display: none;
+    position: absolute;
+    width: auto;
+    height: 24px;
+    color: #444;
+    font-size: 10px;
+    line-height: 12px;
+    padding: 6px;
+    margin: 0 3px;
+    text-align: center;
+    border: 1px solid;
+    z-index: 2;
+    overflow: hidden;
+}
+
+.value-indicator {
+    background-color: rgb(242, 242, 188);
+    border-color: rgb(193, 161, 0);
+    margin-top: -12px;
+    left: 6px;
+}
+
+.date-indicator {
+    background-color: rgb(242, 242, 188);
+    border-color: rgb(193, 161, 0);
+    width: 70px;
+    margin-left: -35px;
+    top: 6px;
+}
+
+
+
+
+.draw-layer {
+    display: block;
+    position: relative;
+    float: left;
+    width: 100%;
+    height: 100%;
+    background-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0);
+    margin: 0;
+    padding: 0;
+    z-index: 999;
+}
+
+
+.info-panel {
+    display: block;
+    visibility: visible;
+    background-color: blue;
+    height: 100px;
+    width: 100%;
+    padding: 6px;
+    padding-left: 0;
+    font-family: 'Century Gothic';
+    color: white;
+    line-height: 20px;
+    margin: 0 6px;
+}*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*.date-scale-container {
+    display: block;
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    width: 100%;
+    background-color: white;
+}
+
+.date-scale-labels {
+    display: block;
+    position: absolute;
+    box-sizing: border-box;
+    overflow: hidden;
+    height: 100%;
+    bottom: 0;
+    left: 0;
+    background-color: blue;
+    z-index: 0;
+}
+
+.date-scale-slider {
+    display: block;
+    position: absolute;
+    box-sizing: border-box;
+    overflow: hidden;
+    height: 100%;
+    bottom: 0;
+    left: 0;
+    background-color: transparent;
+    z-index: 1;
+}
+
+.timeframe-charts-container {
+    display: block;
+    position: relative;
+    float: left;
+    box-sizing: border-box;
+    width: 100%;
+    overflow: hidden;
+}*/
+
+/*.chart-container {
+    display: block;
+    position: relative;
+    float: left;
+    box-sizing: border-box;
+    width: 100%;
+    overflow: hidden;
+    border-bottom: 1px solid #333;
+}
+
+.chart-container-values {
+    display: block;
+    position: relative;
+    float: right;
+    box-sizing: border-box;
+    height: 100%;
+    overflow: hidden;
+    background-color: white;
+}
+
+.chart-container-visible {
+    display: block;
+    position: absolute;
+    float: right;
+    box-sizing: border-box;
+    height: 100%;
+    overflow: hidden;
+    background-color: #DDD;
+    bottom: 0;
+    top: 0;
+    left: 0;
+    border-right: 1px solid #333;
+}*/
+
+/*.chart-infobox {
+    display: block;
+    position: absolute;
+    box-sizing: border-box;
+    border: none;
+    top: 6px;
+    left: 6px;
+    width: auto;
+    height: 18px;
+    z-index: 2;
+    font-family: 'Century Gothic';
+    line-height: 18px;
+    color: #444;
+}*/
+
+/*.chart-events-layer {
+    display: block;
+    position: absolute;
+    float: right;
+    box-sizing: border-box;
+    background-color: transparent;
+    height: 100%;
+    bottom: 0;
+    top: 0;
+    left: 0;
+    border-right: 1px solid transparent;
+    z-index: 1;
+}
+
+
+span.info {
+    margin-left: 12px; 
+}*/
+
+
+
+
+/* Timeline container */

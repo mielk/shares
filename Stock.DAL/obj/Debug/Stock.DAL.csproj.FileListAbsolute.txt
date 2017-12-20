@@ -1,0 +1,142 @@
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.DAL\bin\Debug\Stock.DAL.dll.config
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.DAL\bin\Debug\Stock.DAL.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.DAL\bin\Debug\Stock.DAL.pdb
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.DAL\bin\Debug\EntityFramework.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.DAL\bin\Debug\Moq.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.DAL\bin\Debug\Ninject.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.DAL\bin\Debug\EntityFramework.xml
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.DAL\bin\Debug\Moq.xml
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.DAL\bin\Debug\Ninject.pdb
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.DAL\bin\Debug\Ninject.xml
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.DAL\obj\Debug\Stock.DAL.csprojResolveAssemblyReference.cache
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.DAL\obj\Debug\Stock.DAL.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.DAL\obj\Debug\Stock.DAL.pdb
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.DAL\bin\Debug\Stock.DAL.dll.config
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.DAL\bin\Debug\Stock.DAL.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.DAL\bin\Debug\Stock.DAL.pdb
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.DAL\bin\Debug\EntityFramework.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.DAL\bin\Debug\Moq.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.DAL\bin\Debug\MySql.Data.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.DAL\bin\Debug\Ninject.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.DAL\bin\Debug\EntityFramework.xml
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.DAL\bin\Debug\Moq.xml
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.DAL\bin\Debug\Ninject.pdb
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.DAL\bin\Debug\Ninject.xml
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.DAL\obj\Debug\Stock.DAL.csprojResolveAssemblyReference.cache
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.DAL\obj\Debug\Stock.DAL.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.DAL\obj\Debug\Stock.DAL.pdb
+C:\tm\aplikacje\FX\Stock.DAL\obj\Debug\Stock.DAL.dll
+C:\tm\aplikacje\FX\Stock.DAL\obj\Debug\Stock.DAL.pdb
+C:\tm\aplikacje\FX\Stock.DAL\bin\Debug\Stock.DAL.dll.config
+C:\tm\aplikacje\FX\Stock.DAL\bin\Debug\Stock.DAL.dll
+C:\tm\aplikacje\FX\Stock.DAL\bin\Debug\Stock.DAL.pdb
+C:\tm\aplikacje\FX\Stock.DAL\bin\Debug\EntityFramework.dll
+C:\tm\aplikacje\FX\Stock.DAL\bin\Debug\Moq.dll
+C:\tm\aplikacje\FX\Stock.DAL\bin\Debug\MySql.Data.dll
+C:\tm\aplikacje\FX\Stock.DAL\bin\Debug\Ninject.dll
+C:\tm\aplikacje\FX\Stock.DAL\bin\Debug\EntityFramework.xml
+C:\tm\aplikacje\FX\Stock.DAL\bin\Debug\Moq.xml
+C:\tm\aplikacje\FX\Stock.DAL\bin\Debug\Ninject.pdb
+C:\tm\aplikacje\FX\Stock.DAL\bin\Debug\Ninject.xml
+C:\tm\aplikacje\FX\Stock.DAL\obj\Debug\Stock.DAL.csprojResolveAssemblyReference.cache
+C:\tm\my\fx\fx\Stock.DAL\bin\Debug\Stock.DAL.dll.config
+C:\tm\my\fx\fx\Stock.DAL\bin\Debug\Stock.DAL.dll
+C:\tm\my\fx\fx\Stock.DAL\bin\Debug\Stock.DAL.pdb
+C:\tm\my\fx\fx\Stock.DAL\bin\Debug\EntityFramework.dll
+C:\tm\my\fx\fx\Stock.DAL\bin\Debug\Moq.dll
+C:\tm\my\fx\fx\Stock.DAL\bin\Debug\MySql.Data.dll
+C:\tm\my\fx\fx\Stock.DAL\bin\Debug\Ninject.dll
+C:\tm\my\fx\fx\Stock.DAL\bin\Debug\EntityFramework.xml
+C:\tm\my\fx\fx\Stock.DAL\bin\Debug\Moq.xml
+C:\tm\my\fx\fx\Stock.DAL\bin\Debug\Ninject.pdb
+C:\tm\my\fx\fx\Stock.DAL\bin\Debug\Ninject.xml
+C:\tm\my\fx\fx\Stock.DAL\obj\Debug\Stock.DAL.dll
+C:\tm\my\fx\fx\Stock.DAL\obj\Debug\Stock.DAL.pdb
+C:\tm\my\fx\fx\Stock.DAL\obj\Debug\Stock.DAL.csprojResolveAssemblyReference.cache
+C:\tm\tm\fx\Stock.DAL\bin\Debug\Stock.DAL.dll.config
+C:\tm\tm\fx\Stock.DAL\bin\Debug\Stock.DAL.dll
+C:\tm\tm\fx\Stock.DAL\bin\Debug\Stock.DAL.pdb
+C:\tm\tm\fx\Stock.DAL\bin\Debug\EntityFramework.dll
+C:\tm\tm\fx\Stock.DAL\bin\Debug\Moq.dll
+C:\tm\tm\fx\Stock.DAL\bin\Debug\MySql.Data.dll
+C:\tm\tm\fx\Stock.DAL\bin\Debug\Ninject.dll
+C:\tm\tm\fx\Stock.DAL\bin\Debug\EntityFramework.xml
+C:\tm\tm\fx\Stock.DAL\bin\Debug\Moq.xml
+C:\tm\tm\fx\Stock.DAL\bin\Debug\Ninject.pdb
+C:\tm\tm\fx\Stock.DAL\bin\Debug\Ninject.xml
+C:\tm\tm\fx\Stock.DAL\obj\Debug\Stock.DAL.dll
+C:\tm\tm\fx\Stock.DAL\obj\Debug\Stock.DAL.pdb
+C:\tm\aplikacje\FX2\Stock.DAL\bin\Debug\Stock.DAL.dll.config
+C:\tm\aplikacje\FX2\Stock.DAL\bin\Debug\Stock.DAL.dll
+C:\tm\aplikacje\FX2\Stock.DAL\bin\Debug\Stock.DAL.pdb
+C:\tm\aplikacje\FX2\Stock.DAL\bin\Debug\EntityFramework.dll
+C:\tm\aplikacje\FX2\Stock.DAL\bin\Debug\Moq.dll
+C:\tm\aplikacje\FX2\Stock.DAL\bin\Debug\MySql.Data.dll
+C:\tm\aplikacje\FX2\Stock.DAL\bin\Debug\Ninject.dll
+C:\tm\aplikacje\FX2\Stock.DAL\bin\Debug\EntityFramework.xml
+C:\tm\aplikacje\FX2\Stock.DAL\bin\Debug\Moq.xml
+C:\tm\aplikacje\FX2\Stock.DAL\bin\Debug\Ninject.pdb
+C:\tm\aplikacje\FX2\Stock.DAL\bin\Debug\Ninject.xml
+C:\tm\aplikacje\FX2\Stock.DAL\obj\Debug\Stock.DAL.dll
+C:\tm\aplikacje\FX2\Stock.DAL\obj\Debug\Stock.DAL.pdb
+C:\tm\aplikacje\FX3\Stock.DAL\bin\Debug\Stock.DAL.dll.config
+C:\tm\aplikacje\FX3\Stock.DAL\bin\Debug\Stock.DAL.dll
+C:\tm\aplikacje\FX3\Stock.DAL\bin\Debug\Stock.DAL.pdb
+C:\tm\aplikacje\FX3\Stock.DAL\bin\Debug\EntityFramework.dll
+C:\tm\aplikacje\FX3\Stock.DAL\bin\Debug\EntityFramework.SqlServer.dll
+C:\tm\aplikacje\FX3\Stock.DAL\bin\Debug\Moq.dll
+C:\tm\aplikacje\FX3\Stock.DAL\bin\Debug\MySql.Data.dll
+C:\tm\aplikacje\FX3\Stock.DAL\bin\Debug\MySql.Data.Entity.EF6.dll
+C:\tm\aplikacje\FX3\Stock.DAL\bin\Debug\Ninject.dll
+C:\tm\aplikacje\FX3\Stock.DAL\bin\Debug\Stock.Core.dll
+C:\tm\aplikacje\FX3\Stock.DAL\bin\Debug\Stock.Utils.dll
+C:\tm\aplikacje\FX3\Stock.DAL\bin\Debug\Stock.Core.pdb
+C:\tm\aplikacje\FX3\Stock.DAL\bin\Debug\Stock.Utils.pdb
+C:\tm\aplikacje\FX3\Stock.DAL\bin\Debug\EntityFramework.xml
+C:\tm\aplikacje\FX3\Stock.DAL\bin\Debug\EntityFramework.SqlServer.xml
+C:\tm\aplikacje\FX3\Stock.DAL\bin\Debug\Moq.xml
+C:\tm\aplikacje\FX3\Stock.DAL\bin\Debug\Ninject.pdb
+C:\tm\aplikacje\FX3\Stock.DAL\bin\Debug\Ninject.xml
+C:\tm\aplikacje\FX3\Stock.DAL\obj\Debug\Stock.DAL.csprojResolveAssemblyReference.cache
+C:\tm\aplikacje\FX3\Stock.DAL\obj\Debug\Stock.DAL.dll
+C:\tm\aplikacje\FX3\Stock.DAL\obj\Debug\Stock.DAL.pdb
+C:\Tomek\aplikacje\FX\Stock.DAL\bin\Debug\Stock.DAL.dll.config
+C:\Tomek\aplikacje\FX\Stock.DAL\bin\Debug\Stock.DAL.dll
+C:\Tomek\aplikacje\FX\Stock.DAL\bin\Debug\Stock.DAL.pdb
+C:\Tomek\aplikacje\FX\Stock.DAL\bin\Debug\EntityFramework.dll
+C:\Tomek\aplikacje\FX\Stock.DAL\bin\Debug\EntityFramework.SqlServer.dll
+C:\Tomek\aplikacje\FX\Stock.DAL\bin\Debug\Moq.dll
+C:\Tomek\aplikacje\FX\Stock.DAL\bin\Debug\MySql.Data.dll
+C:\Tomek\aplikacje\FX\Stock.DAL\bin\Debug\MySql.Data.Entity.EF6.dll
+C:\Tomek\aplikacje\FX\Stock.DAL\bin\Debug\Ninject.dll
+C:\Tomek\aplikacje\FX\Stock.DAL\bin\Debug\Stock.Core.dll
+C:\Tomek\aplikacje\FX\Stock.DAL\bin\Debug\Stock.Utils.dll
+C:\Tomek\aplikacje\FX\Stock.DAL\bin\Debug\Stock.Core.pdb
+C:\Tomek\aplikacje\FX\Stock.DAL\bin\Debug\Stock.Utils.pdb
+C:\Tomek\aplikacje\FX\Stock.DAL\bin\Debug\EntityFramework.xml
+C:\Tomek\aplikacje\FX\Stock.DAL\bin\Debug\EntityFramework.SqlServer.xml
+C:\Tomek\aplikacje\FX\Stock.DAL\bin\Debug\Moq.xml
+C:\Tomek\aplikacje\FX\Stock.DAL\bin\Debug\Ninject.pdb
+C:\Tomek\aplikacje\FX\Stock.DAL\bin\Debug\Ninject.xml
+C:\Tomek\aplikacje\FX\Stock.DAL\obj\Debug\Stock.DAL.csprojResolveAssemblyReference.cache
+C:\Tomek\aplikacje\FX\Stock.DAL\obj\Debug\Stock.DAL.dll
+C:\Tomek\aplikacje\FX\Stock.DAL\obj\Debug\Stock.DAL.pdb
+C:\Tomek\aplikacje\shares\Stock.DAL\bin\Debug\Stock.DAL.dll.config
+C:\Tomek\aplikacje\shares\Stock.DAL\bin\Debug\Stock.DAL.dll
+C:\Tomek\aplikacje\shares\Stock.DAL\bin\Debug\Stock.DAL.pdb
+C:\Tomek\aplikacje\shares\Stock.DAL\bin\Debug\EntityFramework.dll
+C:\Tomek\aplikacje\shares\Stock.DAL\bin\Debug\EntityFramework.SqlServer.dll
+C:\Tomek\aplikacje\shares\Stock.DAL\bin\Debug\Moq.dll
+C:\Tomek\aplikacje\shares\Stock.DAL\bin\Debug\MySql.Data.dll
+C:\Tomek\aplikacje\shares\Stock.DAL\bin\Debug\MySql.Data.Entity.EF6.dll
+C:\Tomek\aplikacje\shares\Stock.DAL\bin\Debug\Ninject.dll
+C:\Tomek\aplikacje\shares\Stock.DAL\bin\Debug\Stock.Utils.dll
+C:\Tomek\aplikacje\shares\Stock.DAL\bin\Debug\Stock.Utils.pdb
+C:\Tomek\aplikacje\shares\Stock.DAL\bin\Debug\EntityFramework.xml
+C:\Tomek\aplikacje\shares\Stock.DAL\bin\Debug\EntityFramework.SqlServer.xml
+C:\Tomek\aplikacje\shares\Stock.DAL\bin\Debug\Moq.xml
+C:\Tomek\aplikacje\shares\Stock.DAL\bin\Debug\Ninject.pdb
+C:\Tomek\aplikacje\shares\Stock.DAL\bin\Debug\Ninject.xml
+C:\Tomek\aplikacje\shares\Stock.DAL\obj\Debug\Stock.DAL.csprojResolveAssemblyReference.cache
+C:\Tomek\aplikacje\shares\Stock.DAL\obj\Debug\Stock.DAL.dll
+C:\Tomek\aplikacje\shares\Stock.DAL\obj\Debug\Stock.DAL.pdb

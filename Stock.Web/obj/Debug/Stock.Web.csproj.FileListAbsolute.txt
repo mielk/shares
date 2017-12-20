@@ -1,0 +1,394 @@
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\Stock.Web.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\Stock.Web.pdb
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\Antlr3.Runtime.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\EntityFramework.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\Microsoft.Web.Infrastructure.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\Newtonsoft.Json.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\Ninject.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\Ninject.Web.Common.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\Ninject.Web.Mvc.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\Stock.DAL.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\Stock.Domain.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\System.Net.Http.Formatting.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\System.Web.Http.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\System.Web.Http.WebHost.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\System.Web.Mvc.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\System.Web.Optimization.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\System.Web.Providers.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\System.Web.Razor.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\System.Web.WebPages.Deployment.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\System.Web.WebPages.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\System.Web.WebPages.Razor.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\WebActivator.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\WebGrease.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\Stock.DAL.pdb
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\Stock.Domain.pdb
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\EntityFramework.xml
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\Ninject.pdb
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\Ninject.xml
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\Ninject.Web.Common.pdb
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\Ninject.Web.Common.xml
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\Ninject.Web.Mvc.pdb
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\Ninject.Web.Mvc.xml
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\Newtonsoft.Json.xml
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\System.Net.Http.Formatting.xml
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\System.Web.Http.xml
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\System.Web.Http.WebHost.xml
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\System.Web.Mvc.xml
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\System.Web.Razor.xml
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\System.Web.WebPages.xml
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\System.Web.WebPages.Deployment.xml
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\bin\System.Web.WebPages.Razor.xml
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\obj\Debug\Stock.Web.csprojResolveAssemblyReference.cache
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\obj\Debug\Stock.Web.dll
+C:\Users\Tomek\documents\visual studio 2012\Projects\Stock\Stock.Web\obj\Debug\Stock.Web.pdb
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\Stock.Web.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\Stock.Web.pdb
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\Antlr3.Runtime.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\EntityFramework.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\Microsoft.Web.Infrastructure.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\Newtonsoft.Json.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\Ninject.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\Ninject.Web.Common.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\Ninject.Web.Mvc.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\Stock.DAL.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\Stock.Domain.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\System.Net.Http.Formatting.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\System.Web.Http.WebHost.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\System.Web.Mvc.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\System.Web.Optimization.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\System.Web.Providers.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\System.Web.Razor.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\System.Web.WebPages.Deployment.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\System.Web.WebPages.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\System.Web.WebPages.Razor.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\WebActivator.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\WebGrease.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\Stock.DAL.pdb
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\Stock.Domain.pdb
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\EntityFramework.xml
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\Ninject.pdb
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\Ninject.xml
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\Ninject.Web.Common.pdb
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\Ninject.Web.Common.xml
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\Ninject.Web.Mvc.pdb
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\Ninject.Web.Mvc.xml
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\Newtonsoft.Json.xml
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\System.Net.Http.Formatting.xml
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\System.Web.Http.WebHost.xml
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\System.Web.Mvc.xml
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\System.Web.Razor.xml
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\System.Web.WebPages.xml
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\System.Web.WebPages.Deployment.xml
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\bin\System.Web.WebPages.Razor.xml
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\obj\Debug\Stock.Web.csprojResolveAssemblyReference.cache
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\obj\Debug\Stock.Web.dll
+C:\Users\txmieln\Documents\Visual Studio 2012\Projects\stock\Stock.Web\obj\Debug\Stock.Web.pdb
+C:\tm\aplikacje\FX\Stock.Web\bin\Stock.Web.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\Stock.Web.pdb
+C:\tm\aplikacje\FX\Stock.Web\bin\Antlr3.Runtime.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\EntityFramework.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\Microsoft.Web.Infrastructure.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\Newtonsoft.Json.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\Ninject.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\Ninject.Web.Common.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\Ninject.Web.Mvc.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\Stock.DAL.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\Stock.Domain.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\System.Web.Mvc.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\System.Web.Optimization.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\System.Web.Providers.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\System.Web.Razor.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\System.Web.WebPages.Deployment.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\System.Web.WebPages.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\System.Web.WebPages.Razor.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\WebActivator.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\WebGrease.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\Stock.DAL.pdb
+C:\tm\aplikacje\FX\Stock.Web\bin\Stock.Domain.pdb
+C:\tm\aplikacje\FX\Stock.Web\bin\EntityFramework.xml
+C:\tm\aplikacje\FX\Stock.Web\bin\Ninject.pdb
+C:\tm\aplikacje\FX\Stock.Web\bin\Ninject.xml
+C:\tm\aplikacje\FX\Stock.Web\bin\Ninject.Web.Common.pdb
+C:\tm\aplikacje\FX\Stock.Web\bin\Ninject.Web.Common.xml
+C:\tm\aplikacje\FX\Stock.Web\bin\Ninject.Web.Mvc.pdb
+C:\tm\aplikacje\FX\Stock.Web\bin\Ninject.Web.Mvc.xml
+C:\tm\aplikacje\FX\Stock.Web\bin\Newtonsoft.Json.xml
+C:\tm\aplikacje\FX\Stock.Web\bin\System.Web.Mvc.xml
+C:\tm\aplikacje\FX\Stock.Web\bin\System.Web.Razor.xml
+C:\tm\aplikacje\FX\Stock.Web\bin\System.Web.WebPages.xml
+C:\tm\aplikacje\FX\Stock.Web\bin\System.Web.WebPages.Deployment.xml
+C:\tm\aplikacje\FX\Stock.Web\bin\System.Web.WebPages.Razor.xml
+C:\tm\aplikacje\FX\Stock.Web\obj\Debug\Stock.Web.csprojResolveAssemblyReference.cache
+C:\tm\aplikacje\FX\Stock.Web\obj\Debug\Stock.Web.dll
+C:\tm\aplikacje\FX\Stock.Web\obj\Debug\Stock.Web.pdb
+C:\tm\aplikacje\FX\Stock.Web\bin\MySql.Data.dll
+C:\tm\aplikacje\FX\Stock.Web\bin\mysql.data.entity.EF6.dll
+C:\tm\my\fx\fx\Stock.Web\bin\Stock.Web.dll.config
+C:\tm\my\fx\fx\Stock.Web\bin\Stock.Web.dll
+C:\tm\my\fx\fx\Stock.Web\bin\Stock.Web.pdb
+C:\tm\my\fx\fx\Stock.Web\bin\Antlr3.Runtime.dll
+C:\tm\my\fx\fx\Stock.Web\bin\EntityFramework.dll
+C:\tm\my\fx\fx\Stock.Web\bin\Microsoft.Web.Infrastructure.dll
+C:\tm\my\fx\fx\Stock.Web\bin\MySql.Data.dll
+C:\tm\my\fx\fx\Stock.Web\bin\mysql.data.entity.EF6.dll
+C:\tm\my\fx\fx\Stock.Web\bin\Newtonsoft.Json.dll
+C:\tm\my\fx\fx\Stock.Web\bin\Ninject.dll
+C:\tm\my\fx\fx\Stock.Web\bin\Ninject.Web.Common.dll
+C:\tm\my\fx\fx\Stock.Web\bin\Ninject.Web.Mvc.dll
+C:\tm\my\fx\fx\Stock.Web\bin\Stock.DAL.dll
+C:\tm\my\fx\fx\Stock.Web\bin\Stock.Domain.dll
+C:\tm\my\fx\fx\Stock.Web\bin\System.Web.Mvc.dll
+C:\tm\my\fx\fx\Stock.Web\bin\System.Web.Optimization.dll
+C:\tm\my\fx\fx\Stock.Web\bin\System.Web.Providers.dll
+C:\tm\my\fx\fx\Stock.Web\bin\System.Web.Razor.dll
+C:\tm\my\fx\fx\Stock.Web\bin\System.Web.WebPages.Deployment.dll
+C:\tm\my\fx\fx\Stock.Web\bin\System.Web.WebPages.dll
+C:\tm\my\fx\fx\Stock.Web\bin\System.Web.WebPages.Razor.dll
+C:\tm\my\fx\fx\Stock.Web\bin\WebActivator.dll
+C:\tm\my\fx\fx\Stock.Web\bin\WebGrease.dll
+C:\tm\my\fx\fx\Stock.Web\bin\Stock.DAL.pdb
+C:\tm\my\fx\fx\Stock.Web\bin\Stock.Domain.pdb
+C:\tm\my\fx\fx\Stock.Web\bin\EntityFramework.xml
+C:\tm\my\fx\fx\Stock.Web\bin\Ninject.pdb
+C:\tm\my\fx\fx\Stock.Web\bin\Ninject.xml
+C:\tm\my\fx\fx\Stock.Web\bin\Ninject.Web.Common.pdb
+C:\tm\my\fx\fx\Stock.Web\bin\Ninject.Web.Common.xml
+C:\tm\my\fx\fx\Stock.Web\bin\Ninject.Web.Mvc.pdb
+C:\tm\my\fx\fx\Stock.Web\bin\Ninject.Web.Mvc.xml
+C:\tm\my\fx\fx\Stock.Web\bin\Newtonsoft.Json.xml
+C:\tm\my\fx\fx\Stock.Web\bin\System.Web.Mvc.xml
+C:\tm\my\fx\fx\Stock.Web\bin\System.Web.Razor.xml
+C:\tm\my\fx\fx\Stock.Web\bin\System.Web.WebPages.xml
+C:\tm\my\fx\fx\Stock.Web\bin\System.Web.WebPages.Deployment.xml
+C:\tm\my\fx\fx\Stock.Web\bin\System.Web.WebPages.Razor.xml
+C:\tm\my\fx\fx\Stock.Web\obj\Debug\Stock.Web.csprojResolveAssemblyReference.cache
+C:\tm\my\fx\fx\Stock.Web\obj\Debug\Stock.Web.dll
+C:\tm\my\fx\fx\Stock.Web\obj\Debug\Stock.Web.pdb
+C:\tm\tm\fx\Stock.Web\obj\Debug\Stock.Web.csprojResolveAssemblyReference.cache
+C:\tm\tm\fx\Stock.Web\bin\Stock.Web.dll.config
+C:\tm\tm\fx\Stock.Web\bin\Stock.Web.dll
+C:\tm\tm\fx\Stock.Web\bin\Stock.Web.pdb
+C:\tm\tm\fx\Stock.Web\bin\Antlr3.Runtime.dll
+C:\tm\tm\fx\Stock.Web\bin\EntityFramework.dll
+C:\tm\tm\fx\Stock.Web\bin\Microsoft.Web.Infrastructure.dll
+C:\tm\tm\fx\Stock.Web\bin\MySql.Data.dll
+C:\tm\tm\fx\Stock.Web\bin\mysql.data.entity.EF6.dll
+C:\tm\tm\fx\Stock.Web\bin\Newtonsoft.Json.dll
+C:\tm\tm\fx\Stock.Web\bin\Ninject.dll
+C:\tm\tm\fx\Stock.Web\bin\Ninject.Web.Common.dll
+C:\tm\tm\fx\Stock.Web\bin\Ninject.Web.Mvc.dll
+C:\tm\tm\fx\Stock.Web\bin\Stock.DAL.dll
+C:\tm\tm\fx\Stock.Web\bin\Stock.Domain.dll
+C:\tm\tm\fx\Stock.Web\bin\System.Web.Mvc.dll
+C:\tm\tm\fx\Stock.Web\bin\System.Web.Optimization.dll
+C:\tm\tm\fx\Stock.Web\bin\System.Web.Providers.dll
+C:\tm\tm\fx\Stock.Web\bin\System.Web.Razor.dll
+C:\tm\tm\fx\Stock.Web\bin\System.Web.WebPages.Deployment.dll
+C:\tm\tm\fx\Stock.Web\bin\System.Web.WebPages.dll
+C:\tm\tm\fx\Stock.Web\bin\System.Web.WebPages.Razor.dll
+C:\tm\tm\fx\Stock.Web\bin\WebActivator.dll
+C:\tm\tm\fx\Stock.Web\bin\WebGrease.dll
+C:\tm\tm\fx\Stock.Web\bin\Stock.DAL.pdb
+C:\tm\tm\fx\Stock.Web\bin\Stock.Domain.pdb
+C:\tm\tm\fx\Stock.Web\bin\EntityFramework.xml
+C:\tm\tm\fx\Stock.Web\bin\Ninject.pdb
+C:\tm\tm\fx\Stock.Web\bin\Ninject.xml
+C:\tm\tm\fx\Stock.Web\bin\Ninject.Web.Common.pdb
+C:\tm\tm\fx\Stock.Web\bin\Ninject.Web.Common.xml
+C:\tm\tm\fx\Stock.Web\bin\Ninject.Web.Mvc.pdb
+C:\tm\tm\fx\Stock.Web\bin\Ninject.Web.Mvc.xml
+C:\tm\tm\fx\Stock.Web\bin\Newtonsoft.Json.xml
+C:\tm\tm\fx\Stock.Web\bin\System.Web.Mvc.xml
+C:\tm\tm\fx\Stock.Web\bin\System.Web.Razor.xml
+C:\tm\tm\fx\Stock.Web\bin\System.Web.WebPages.xml
+C:\tm\tm\fx\Stock.Web\bin\System.Web.WebPages.Deployment.xml
+C:\tm\tm\fx\Stock.Web\bin\System.Web.WebPages.Razor.xml
+C:\tm\tm\fx\Stock.Web\obj\Debug\Stock.Web.dll
+C:\tm\tm\fx\Stock.Web\obj\Debug\Stock.Web.pdb
+C:\tm\aplikacje\FX2\Stock.Web\obj\Debug\Stock.Web.csprojResolveAssemblyReference.cache
+C:\tm\aplikacje\FX2\Stock.Web\bin\Stock.Web.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\Stock.Web.pdb
+C:\tm\aplikacje\FX2\Stock.Web\bin\Antlr3.Runtime.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\EntityFramework.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\Microsoft.Web.Infrastructure.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\MySql.Data.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\mysql.data.entity.EF6.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\Newtonsoft.Json.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\Ninject.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\Ninject.Web.Common.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\Ninject.Web.Mvc.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\Stock.DAL.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\Stock.Domain.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\System.Web.Mvc.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\System.Web.Optimization.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\System.Web.Providers.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\System.Web.Razor.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\System.Web.WebPages.Deployment.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\System.Web.WebPages.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\System.Web.WebPages.Razor.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\WebActivator.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\WebGrease.dll
+C:\tm\aplikacje\FX2\Stock.Web\bin\Stock.DAL.pdb
+C:\tm\aplikacje\FX2\Stock.Web\bin\Stock.Domain.pdb
+C:\tm\aplikacje\FX2\Stock.Web\bin\EntityFramework.xml
+C:\tm\aplikacje\FX2\Stock.Web\bin\Ninject.pdb
+C:\tm\aplikacje\FX2\Stock.Web\bin\Ninject.xml
+C:\tm\aplikacje\FX2\Stock.Web\bin\Ninject.Web.Common.pdb
+C:\tm\aplikacje\FX2\Stock.Web\bin\Ninject.Web.Common.xml
+C:\tm\aplikacje\FX2\Stock.Web\bin\Ninject.Web.Mvc.pdb
+C:\tm\aplikacje\FX2\Stock.Web\bin\Ninject.Web.Mvc.xml
+C:\tm\aplikacje\FX2\Stock.Web\bin\Newtonsoft.Json.xml
+C:\tm\aplikacje\FX2\Stock.Web\bin\System.Web.Mvc.xml
+C:\tm\aplikacje\FX2\Stock.Web\bin\System.Web.Razor.xml
+C:\tm\aplikacje\FX2\Stock.Web\bin\System.Web.WebPages.xml
+C:\tm\aplikacje\FX2\Stock.Web\bin\System.Web.WebPages.Deployment.xml
+C:\tm\aplikacje\FX2\Stock.Web\bin\System.Web.WebPages.Razor.xml
+C:\tm\aplikacje\FX2\Stock.Web\obj\Debug\Stock.Web.dll
+C:\tm\aplikacje\FX2\Stock.Web\obj\Debug\Stock.Web.pdb
+C:\tm\aplikacje\FX3\Stock.Web\bin\Stock.Web.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\Stock.Web.pdb
+C:\tm\aplikacje\FX3\Stock.Web\bin\Antlr3.Runtime.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\EntityFramework.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\EntityFramework.SqlServer.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\Microsoft.Web.Infrastructure.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\MySql.Data.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\MySql.Data.Entity.EF6.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\Newtonsoft.Json.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\Ninject.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\Ninject.Web.Common.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\Ninject.Web.Mvc.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\Stock.Core.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\Stock.DAL.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\Stock.Domain.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\System.Web.Mvc.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\System.Web.Optimization.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\System.Web.Providers.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\System.Web.Razor.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\System.Web.WebPages.Deployment.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\System.Web.WebPages.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\System.Web.WebPages.Razor.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\WebActivator.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\WebGrease.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\Stock.Utils.dll
+C:\tm\aplikacje\FX3\Stock.Web\bin\Stock.Core.pdb
+C:\tm\aplikacje\FX3\Stock.Web\bin\Stock.DAL.pdb
+C:\tm\aplikacje\FX3\Stock.Web\bin\Stock.Domain.pdb
+C:\tm\aplikacje\FX3\Stock.Web\bin\EntityFramework.xml
+C:\tm\aplikacje\FX3\Stock.Web\bin\EntityFramework.SqlServer.xml
+C:\tm\aplikacje\FX3\Stock.Web\bin\Ninject.pdb
+C:\tm\aplikacje\FX3\Stock.Web\bin\Ninject.xml
+C:\tm\aplikacje\FX3\Stock.Web\bin\Ninject.Web.Common.pdb
+C:\tm\aplikacje\FX3\Stock.Web\bin\Ninject.Web.Common.xml
+C:\tm\aplikacje\FX3\Stock.Web\bin\Ninject.Web.Mvc.pdb
+C:\tm\aplikacje\FX3\Stock.Web\bin\Ninject.Web.Mvc.xml
+C:\tm\aplikacje\FX3\Stock.Web\bin\Newtonsoft.Json.xml
+C:\tm\aplikacje\FX3\Stock.Web\bin\System.Web.Mvc.xml
+C:\tm\aplikacje\FX3\Stock.Web\bin\System.Web.Razor.xml
+C:\tm\aplikacje\FX3\Stock.Web\bin\System.Web.WebPages.xml
+C:\tm\aplikacje\FX3\Stock.Web\bin\System.Web.WebPages.Deployment.xml
+C:\tm\aplikacje\FX3\Stock.Web\bin\System.Web.WebPages.Razor.xml
+C:\tm\aplikacje\FX3\Stock.Web\bin\Stock.Utils.pdb
+C:\tm\aplikacje\FX3\Stock.Web\obj\Debug\Stock.Web.csprojResolveAssemblyReference.cache
+C:\tm\aplikacje\FX3\Stock.Web\obj\Debug\Stock.Web.dll
+C:\tm\aplikacje\FX3\Stock.Web\obj\Debug\Stock.Web.pdb
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Stock.Web.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Stock.Web.pdb
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Antlr3.Runtime.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\EntityFramework.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\EntityFramework.SqlServer.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Microsoft.Web.Infrastructure.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\MySql.Data.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\MySql.Data.Entity.EF6.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Newtonsoft.Json.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Ninject.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Ninject.Web.Common.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Ninject.Web.Mvc.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Stock.Core.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Stock.DAL.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Stock.Domain.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\System.Net.Http.Formatting.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\System.Web.Http.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\System.Web.Http.WebHost.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\System.Web.Mvc.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\System.Web.Optimization.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\System.Web.Providers.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\System.Web.Razor.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\System.Web.WebPages.Deployment.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\System.Web.WebPages.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\System.Web.WebPages.Razor.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\WebActivator.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\WebGrease.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Stock.Utils.dll
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Stock.Core.pdb
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Stock.DAL.pdb
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Stock.Domain.pdb
+C:\Tomek\aplikacje\FX\Stock.Web\bin\EntityFramework.xml
+C:\Tomek\aplikacje\FX\Stock.Web\bin\EntityFramework.SqlServer.xml
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Ninject.pdb
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Ninject.xml
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Ninject.Web.Common.pdb
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Ninject.Web.Common.xml
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Ninject.Web.Mvc.pdb
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Ninject.Web.Mvc.xml
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Newtonsoft.Json.xml
+C:\Tomek\aplikacje\FX\Stock.Web\bin\System.Net.Http.Formatting.xml
+C:\Tomek\aplikacje\FX\Stock.Web\bin\System.Web.Http.xml
+C:\Tomek\aplikacje\FX\Stock.Web\bin\System.Web.Http.WebHost.xml
+C:\Tomek\aplikacje\FX\Stock.Web\bin\System.Web.Mvc.xml
+C:\Tomek\aplikacje\FX\Stock.Web\bin\System.Web.Razor.xml
+C:\Tomek\aplikacje\FX\Stock.Web\bin\System.Web.WebPages.xml
+C:\Tomek\aplikacje\FX\Stock.Web\bin\System.Web.WebPages.Deployment.xml
+C:\Tomek\aplikacje\FX\Stock.Web\bin\System.Web.WebPages.Razor.xml
+C:\Tomek\aplikacje\FX\Stock.Web\bin\Stock.Utils.pdb
+C:\Tomek\aplikacje\FX\Stock.Web\obj\Debug\Stock.Web.csprojResolveAssemblyReference.cache
+C:\Tomek\aplikacje\FX\Stock.Web\obj\Debug\Stock.Web.dll
+C:\Tomek\aplikacje\FX\Stock.Web\obj\Debug\Stock.Web.pdb
+C:\Tomek\aplikacje\shares\Stock.Web\bin\Stock.Web.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\Stock.Web.pdb
+C:\Tomek\aplikacje\shares\Stock.Web\bin\Antlr3.Runtime.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\EntityFramework.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\EntityFramework.SqlServer.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\Microsoft.Web.Infrastructure.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\MySql.Data.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\MySql.Data.Entity.EF6.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\Newtonsoft.Json.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\Ninject.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\Ninject.Web.Common.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\Ninject.Web.Mvc.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\Stock.DAL.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\Stock.Domain.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\System.Net.Http.Formatting.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\System.Web.Http.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\System.Web.Http.WebHost.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\System.Web.Mvc.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\System.Web.Optimization.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\System.Web.Providers.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\System.Web.Razor.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\System.Web.WebPages.Deployment.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\System.Web.WebPages.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\System.Web.WebPages.Razor.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\WebActivator.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\WebGrease.dll
+C:\Tomek\aplikacje\shares\Stock.Web\bin\Stock.DAL.pdb
+C:\Tomek\aplikacje\shares\Stock.Web\bin\Stock.Domain.pdb
+C:\Tomek\aplikacje\shares\Stock.Web\bin\EntityFramework.xml
+C:\Tomek\aplikacje\shares\Stock.Web\bin\EntityFramework.SqlServer.xml
+C:\Tomek\aplikacje\shares\Stock.Web\bin\Ninject.pdb
+C:\Tomek\aplikacje\shares\Stock.Web\bin\Ninject.xml
+C:\Tomek\aplikacje\shares\Stock.Web\bin\Ninject.Web.Common.pdb
+C:\Tomek\aplikacje\shares\Stock.Web\bin\Ninject.Web.Common.xml
+C:\Tomek\aplikacje\shares\Stock.Web\bin\Ninject.Web.Mvc.pdb
+C:\Tomek\aplikacje\shares\Stock.Web\bin\Ninject.Web.Mvc.xml
+C:\Tomek\aplikacje\shares\Stock.Web\bin\Newtonsoft.Json.xml
+C:\Tomek\aplikacje\shares\Stock.Web\bin\System.Net.Http.Formatting.xml
+C:\Tomek\aplikacje\shares\Stock.Web\bin\System.Web.Http.xml
+C:\Tomek\aplikacje\shares\Stock.Web\bin\System.Web.Http.WebHost.xml
+C:\Tomek\aplikacje\shares\Stock.Web\bin\System.Web.Mvc.xml
+C:\Tomek\aplikacje\shares\Stock.Web\bin\System.Web.Razor.xml
+C:\Tomek\aplikacje\shares\Stock.Web\bin\System.Web.WebPages.xml
+C:\Tomek\aplikacje\shares\Stock.Web\bin\System.Web.WebPages.Deployment.xml
+C:\Tomek\aplikacje\shares\Stock.Web\bin\System.Web.WebPages.Razor.xml
+C:\Tomek\aplikacje\shares\Stock.Web\obj\Debug\Stock.Web.csprojResolveAssemblyReference.cache
+C:\Tomek\aplikacje\shares\Stock.Web\obj\Debug\Stock.Web.dll
+C:\Tomek\aplikacje\shares\Stock.Web\obj\Debug\Stock.Web.pdb

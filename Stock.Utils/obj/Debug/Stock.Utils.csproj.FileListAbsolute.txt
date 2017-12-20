@@ -1,0 +1,14 @@
+C:\tm\aplikacje\FX3\Stock.Utils\bin\Debug\Stock.Utils.dll
+C:\tm\aplikacje\FX3\Stock.Utils\bin\Debug\Stock.Utils.pdb
+C:\tm\aplikacje\FX3\Stock.Utils\obj\Debug\Stock.Utils.dll
+C:\tm\aplikacje\FX3\Stock.Utils\obj\Debug\Stock.Utils.pdb
+C:\tm\aplikacje\FX3\Stock.Utils\obj\Debug\Stock.Utils.csprojResolveAssemblyReference.cache
+C:\Tomek\aplikacje\FX\Stock.Utils\bin\Debug\Stock.Utils.dll
+C:\Tomek\aplikacje\FX\Stock.Utils\bin\Debug\Stock.Utils.pdb
+C:\Tomek\aplikacje\FX\Stock.Utils\obj\Debug\Stock.Utils.dll
+C:\Tomek\aplikacje\FX\Stock.Utils\obj\Debug\Stock.Utils.pdb
+C:\Tomek\aplikacje\FX\Stock.Utils\obj\Debug\Stock.Utils.csprojResolveAssemblyReference.cache
+C:\Tomek\aplikacje\shares\Stock.Utils\bin\Debug\Stock.Utils.dll
+C:\Tomek\aplikacje\shares\Stock.Utils\bin\Debug\Stock.Utils.pdb
+C:\Tomek\aplikacje\shares\Stock.Utils\obj\Debug\Stock.Utils.dll
+C:\Tomek\aplikacje\shares\Stock.Utils\obj\Debug\Stock.Utils.pdb

@@ -1,0 +1,213 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{2B5E8335-91CA-44DF-9D27-250DFEC93430}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Stock_UnitTest</RootNamespace>
+    <AssemblyName>Stock-UnitTest</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
+    <IsCodedUITest>False</IsCodedUITest>
+    <TestProjectType>UnitTest</TestProjectType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Castle.Core">
+      <HintPath>..\packages\Castle.Core.3.3.3\lib\net45\Castle.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Web.XmlTransform">
+      <HintPath>..\packages\Microsoft.Web.Xdt.2.1.1\lib\net40\Microsoft.Web.XmlTransform.dll</HintPath>
+    </Reference>
+    <Reference Include="Moq">
+      <HintPath>..\packages\Moq.4.2.1402.2112\lib\net40\Moq.dll</HintPath>
+    </Reference>
+    <Reference Include="MySql.Data, Version=6.9.9.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\MySql.Data.6.9.9\lib\net45\MySql.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="MySql.Data.Entity.EF6, Version=6.9.9.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\MySql.Data.Entity.6.9.9\lib\net45\MySql.Data.Entity.EF6.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Data" />
+  </ItemGroup>
+  <Choose>
+    <When Condition="('$(VisualStudioVersion)' == '10.0' or '$(VisualStudioVersion)' == '') and '$(TargetFrameworkVersion)' == 'v3.5'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Stock.Core\AnalysisDataQueryDefinitionUnitTests.cs" />
+    <Compile Include="Stock.Core\Enums\HelperMethodsUnitTests.cs" />
+    <Compile Include="Stock.DAL\Helpers\DbStringBuilderUnitTest.cs" />
+    <Compile Include="Stock.DAL\Helpers\HelperMethodUnitTest.cs" />
+    <Compile Include="Stock.DAL\Infrastructure\RepositoryFactoryUnitTest.cs" />
+    <Compile Include="Stock.DAL\Repositories\Analysis\EFTrendlineRepositoryUnitTest.cs" />
+    <Compile Include="Stock.DAL\Repositories\Analysis\EFAnalysisRepositoryUnitTest.cs" />
+    <Compile Include="Stock.DAL\Repositories\Analysis\EFSimulationRepositoryUnitTest.cs" />
+    <Compile Include="Stock.DAL\Repositories\Data\EFPriceRepositoryUnitTest.cs" />
+    <Compile Include="Stock.DAL\Repositories\Data\EFQuotationRepositoryUnitTest.cs" />
+    <Compile Include="Stock.DAL\Repositories\Market\EFTimeframeRepositoryUnitTest.cs" />
+    <Compile Include="Stock.DAL\Repositories\Market\EFMarketRepositoryUnitTest.cs" />
+    <Compile Include="Stock.DAL\Repositories\Market\EFAssetRepositoryUnitTest.cs" />
+    <Compile Include="Stock.DAL\Repositories\Market\EFCurrencyRepositoryUnitTest.cs" />
+    <Compile Include="Stock.DAL\TransferObjects\AnalysisDto\AnalysisTimestampDtoUnitTests.cs" />
+    <Compile Include="Stock.DAL\TransferObjects\AnalysisDto\TrendRangesDtoUnitTests.cs" />
+    <Compile Include="Stock.DAL\TransferObjects\AnalysisDto\TrendBreaksDtoUnitTests.cs" />
+    <Compile Include="Stock.DAL\TransferObjects\AnalysisDto\TrendHitsDtoUnitTests.cs" />
+    <Compile Include="Stock.DAL\TransferObjects\AnalysisDto\TrendlineDtoUnitTests.cs" />
+    <Compile Include="Stock.DAL\TransferObjects\AnalysisDto\SimulationDtoUnitTests.cs" />
+    <Compile Include="Stock.DAL\TransferObjects\DataDto\ExtremumDtoUnitTests.cs" />
+    <Compile Include="Stock.DAL\TransferObjects\DataDto\PriceDtoUnitTests.cs" />
+    <Compile Include="Stock.DAL\TransferObjects\DataDto\QuotationDtoUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Analysis\AnalysisTimestampUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Analysis\ExtremumGroupUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Analysis\TrendRangeUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Analysis\TrendBreakUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Analysis\TrendHitUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Analysis\TrendlineUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Analysis\SimulationUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Data\HelperMethods.cs" />
+    <Compile Include="Stock.Domain\Entities\Data\AnalysisInfoUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Data\ExtremumUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Data\DataSetUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Data\QuotationUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Market\TimeframeProcessors\MonthsProcessorUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Market\TimeframeProcessors\HolidaysManagerUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Market\TimeframeProcessors\WeeksProcessorUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Market\TimeframeProcessors\DaysProcessorUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Market\TimeframeProcessors\HoursProcessorUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Market\TimeframeProcessors\TimeframeProcessorFactoryUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Market\TimeframeProcessors\MinutesProcessorUnitTests.cs" />
+    <Compile Include="Stock.Domain\Enums\HelperMethodsUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Market\AssetUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Market\TimeframeUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Market\CurrencyUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Market\FxPairUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Market\MarketUnitTests.cs" />
+    <Compile Include="Stock.Domain\Entities\Market\AssetTimeframeUnitTest.cs" />
+    <Compile Include="Stock.Domain\Services\Analysis\AnalysisProcessControllers\TrendlineProcessControllerUnitTests.cs" />
+    <Compile Include="Stock.Domain\Services\Analysis\AnalysisProcessControllers\PriceProcessControllerUnitTests.cs" />
+    <Compile Include="Stock.Domain\Services\Analysis\AnalysisTimestampServiceUnitTests.cs" />
+    <Compile Include="Stock.Domain\Services\Analysis\TrendlineProcessorUnitTests.cs" />
+    <Compile Include="Stock.Domain\Services\Analysis\TrendlineServiceUnitTests.cs" />
+    <Compile Include="Stock.Domain\Services\Analysis\SimulationsManagerUnitTests.cs" />
+    <Compile Include="Stock.Domain\Services\Analysis\Dictionary.cs" />
+    <Compile Include="Stock.Domain\Services\Analysis\ExtremumProcessorUnitTests.cs" />
+    <Compile Include="Stock.Domain\Services\Analysis\PriceProcessorUnitTests.cs" />
+    <Compile Include="Stock.Domain\Services\Analysis\ProcessManagerUnitTests.cs" />
+    <Compile Include="Stock.Domain\Services\Analysis\SimulationServiceUnitTests.cs" />
+    <Compile Include="Stock.Domain\Services\Data\DataSetServiceUnitTests.cs" />
+    <Compile Include="Stock.Domain\Services\Market\AssetServiceUnitTest.cs" />
+    <Compile Include="Stock.Domain\Services\Market\TimeframeServiceUnitTest.cs" />
+    <Compile Include="Stock.Domain\Services\Market\MarketServiceUnitTest.cs" />
+    <Compile Include="Stock.Domain\Services\Market\CurrencyServiceUnitTest.cs" />
+    <Compile Include="Stock.Domain\Entities\Data\PriceUnitTests.cs" />
+    <Compile Include="Stock.Domain\_TODO\DataItemUnitTests.cs" />
+    <Compile Include="Stock.Domain\_TODO\TrendlineUnitTests.cs" />
+    <Compile Include="Stock.Domain\_TODO\TrendServiceUnitTests.cs" />
+    <Compile Include="Stock.Domain\Services\HelperMethodsUnitTests.cs" />
+    <Compile Include="Stock.Domain\_TODO\TrendlineAnalyzerUnitTests.cs" />
+    <Compile Include="Stock.Utils\HelperMethods\ContainerHelperMethodsUnitTest.cs" />
+    <Compile Include="Stock.Utils\HelperMethods\StringHelperMethodsUnitTest.cs" />
+    <Compile Include="Stock.Utils\HelperMethods\DateTimeHelperMethodsUnitTest.cs" />
+    <Compile Include="Stock.Utils\HelperMethods\NumericHelperMethodsUnitTest.cs" />
+    <Compile Include="UnitTests.Helpers\UTDefaulter.cs" />
+    <Compile Include="UnitTests.Helpers\UTFactory.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Stock.DAL\TransferObjects\MarketObjectsDto\" />
+    <Folder Include="Stock.Web\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Stock.Core\Stock.Core.csproj">
+      <Project>{a92e05b9-8032-44e9-8add-7a6f58268d35}</Project>
+      <Name>Stock.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Stock.DAL\Stock.DAL.csproj">
+      <Project>{3eb97661-0497-42ef-88ba-67642bdc8175}</Project>
+      <Name>Stock.DAL</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Stock.Domain\Stock.Domain.csproj">
+      <Project>{05409976-6ca8-4c4b-822a-0db445548a05}</Project>
+      <Name>Stock.Domain</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Stock.Utils\Stock.Utils.csproj">
+      <Project>{5ab038a9-9b44-4bbf-b8a8-f4c8f2ca0de6}</Project>
+      <Name>Stock.Utils</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Choose>
+    <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.QualityTools.CodedUITestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.TestTools.UITest.Common, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.TestTools.UITest.Extension, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.TestTools.UITesting, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <Private>False</Private>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

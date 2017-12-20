@@ -1,0 +1,8 @@
+﻿HEAD & SHOULDERS (dla górnych)
+---------------------------
+1) Szuka par dołków, które mają podobny poziom (+/- 1%) i wszystkie notowania pomiędzy nimi są wyższe od nich
+	* muszą być oddalone o jakiś max. dystans, np. 20					- punkty [B] i [C]
+2) sprawdza czy w zakresie max. 20 notowań w lewo jest przecięcie poziomu z pkt. (1) w dół	- punkt [A]
+3) sprawdza czy w zakresie max. 20 notowań w prawo jest przecięcie poziomu z pkt. (1) w dół	- punkt [D]
+4) sprawdza poziomy max wierzchołków pomiędzy poszczególnymi punktami
+

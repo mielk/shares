@@ -1,0 +1,81 @@
+
+
+SIMPLE DIALOG APPLICATIONs
+-------------------------------------------------------
+	[+] Aby utrwalic wiedze zdobyta w dotychczasowych lekcjach, przeanalizuj umieszczone ponizej przyklady dwóch niewielkich aplikacji korzystajacych z 		omówionych w niniejszej lekcji sposobów komunikacji z uzytkownikiem oraz z kilku innych funkcjonalnosci przedstawionych w poprzednich lekcjach.
+
+	[+] Obliczanie pensji netto
+		Pierwszy przyklad bedzie sie opieral na omawianej juz i kilkakrotnie modyfikowanej funkcji do obliczania pensji netto. Dodatkowym elementem 		bedzie jednak pobieranie informacji o pensji brutto bezposrednio od uzytkownika, do czego wykorzystana zostanie funkcja InputBox, oraz 		wyswietlenie obliczonej pensji netto w oddzielnym oknie zapomoca funkcji MsgBox.
+
+		Sub zarobki()
+		    Dim pensjaBrutto As Long
+		    Dim pensjaNetto As Long
+
+		    pensjaBrutto = InputBox("Podaj wysokosc pensji brutto", "Pensja brutto")
+		    pensjaNetto = pensjaPoOpodatkowaniu(pensjaBrutto)
+
+		    Call MsgBox("Twoja pensja netto wynosi: " & pensjaNetto, vbOKOnly, "Pensja netto") 
+		End Sub
+
+		Function pensjaPoOpodatkowaniu(podstawa As Long) As Long
+		    pensjaPoOpodatkowaniu = podstawa - (podstawa * 0.18)
+		End Function
+
+
+After studying the previous lesson most of the code above should be clear for you.
+
+	[+] W wierszach 2-3 zadeklarowane sa dwie zmienne typu Long: pensjaBrutto i pensjaNetto.
+
+	[+] W wierszach 5-6 do zmiennej pensjaBrutto zostaje przypisany wynik dzialania funkcji InputBox, a wiec to, co uzytkownik wpisze w wyswietlonym oknie.
+
+	[+] Przy wywolaniu funkcji InputBox, oprócz obowiazkowego argumentu Prompt, który przyjmuje wartosc Podaj wysokosc pensji brutto, podany zostal równiez 		argument opcjonalny Title, do którego przypisano tekst Pensja brutto (oznacza to, ze taki tekst pojawi sie na niebieskim pasku u góry okna z 		zapytaniem).
+
+	[+] Zwróc uwage, ze funkcja InputBox zwraca wartosci tekstowe, wiec nawet jesli wpiszesz w jej oknie liczbe lub date, to wynikiem funkcji bedzie tekstowa 		reprezentacja tej liczby lub daty. Na szczescie, jak wspomniano w lekcji omawiajacej typy danych, przy przypisywaniu tekstowych reprezentacji 		liczb do zmiennych liczbowych, jezyk VBA automatycznie konwertuje je do wartosci liczbowych.
+
+	[+] W wierszu 7 do zmiennej pensjaNetto zostaje przypisany wynik funkcji pensjaPoOpodatkowaniu, w której argumentem podstawa jest wartosc zmiennej 		pensjaBrutto, czyli wartosc, która uzytkownik podal w oknie InputBox.
+
+	[+] W wierszu 9 zostaje wywolana funkcja MsgBox, która wyswietla na ekranie informacje o wysokosci pensji netto dla podanej wczesniej pensji brutto.
+
+	[+] Jak widzisz na podstawie argumentów podanych przy wywolywaniu funkcji MsgBox, okno komunikatu bedzie posiadalo tylko przycisk OK, a na pasku tytulu 		pojawi sie napis Pensja netto.
+
+	[+] Powyzsza aplikacja pozostawia jeszcze troche do zyczenia, glównie w kwestii sprawdzania poprawnosci danych. Wyobraz sobie bowiem, ze uzytkownik w 		oknie z pytaniem o wysokosc pensji brutto zamiast wartosci liczbowej wpisze tekst. W dopietej na ostatni guzik aplikacji w takiej sytuacji 		powinien pojawiac sie komunikat o nieprawidlowym formacie danych wraz z informacja, ze w tym polu wymagana jest liczba.
+
+	[+] Omówiona przed chwila aplikacja nie jest uodporniona na tego typu zachowania uzytkowników i w przypadku podania wartosci tekstowej zostanie 		wygenerowany blad, a cale makro przerwie swoje dzialanie wyswietlajac na ekranie zupelnie niezrozumialy dla koncowego uzytkownika komunikat VBA 		zawierajacy numer bledu. W profesjonalnych aplikacjach nie ma miejsca na takie sytuacje - uzytkownik nigdy nie powinien ogladac komunikatów o 		bledach powstalych podczas wykonywania kodu.
+
+	[+] W kolejnej lekcji poznasz jednak instrukcje warunkowa If ... Then, która doskonale nadaje sie do tego, zeby wyeliminowac te niedoskonalosc aplikacji.
+
+	[+] Obliczanie liczby przezytych miesiecy, tygodni, dni itd.
+		Drugi przyklad prezentuje aplikacje, która na podstawie podanej przez uzytkownika daty urodzenia oblicza liczbe przezytych przez niego miesiecy, 		tygodni oraz dni i wyswietla te informacje w oknie z komunikatem.
+		
+		Sub obliczanieCzasu()
+		    Dim dataUrodzenia As Date
+		    Dim miesiace As Long
+		    Dim tygodnie As Long
+		    Dim dni As Long
+
+		    dataUrodzenia = InputBox("Podaj date urodzenia", "Data urodzenia")
+		    miesiace = DateDiff("m", dataUrodzenia, Date)
+		    tygodnie = DateDiff("ww", dataUrodzenia, Date)
+		    dni = DateDiff("d", dataUrodzenia, Date)
+
+		    Call MsgBox("Dotychczas przezyles: " & vbCrLf & _
+                		miesiace & " miesiecy" & vbCrLf & _
+		                tygodnie & " tygodni" & vbCrLf & _
+                		dni & " dni", vbOKOnly, "Ile juz przezyles")
+
+		End Sub
+
+
+	[+] W wierszach 2-5 znajduja sie deklaracje zmiennych wykorzystanych w tej aplikacji. Pierwsza z nich jest zmienna typu datowego dataUrodzenia, do 		której, jak wskazuje jej nazwa, przypisana zostanie pózniej wprowadzona przez uzytkownika data urodzenia. Oprócz niej w aplikacji wykorzystane sa 		trzy zmienne typu Long - miesiace, tygodnie oraz dni, do których przypisana bedzie odpowiednia liczba miesiecy, tygodni i dni.
+
+	[+] W wierszu 7 do zmiennej dataUrodzenia zostaje przypisany wynik dzialania funkcji InputBox, czyli data, jaka uzytkownik wpisze w wyswietlonym oknie.
+
+	[+] W kolejnych trzech wierszach do zmiennych miesiace, tygodnie i dni przypisana zostaje liczba miesiecy, tygodni i dni jakie uplynely od daty urodzenia 		wprowadzonej przez uzytkownika do daty dzisiejszej.
+
+	[+] Do obliczenia róznicy pomiedzy dwiema datami - dzisiejsza i podana przez uzytkownika - zastosowano wbudowana funkcje DateDiff, której dzialanie 		omówiono szczególowo w poprzednim rozdziale.
+
+	[+] Aby pobrac aktualna date wykorzystano natomiast inna wbudowana funkcje - Date.
+
+	[+] Po obliczeniu wszystkich róznic w datach i przypisaniu ich do zmiennych, w wierszach 12-15 zostaje wywolane okno komunikatu, w którym wyswietlono 		wartosci tych zmiennych.
+
+	[+] Okreslajac tekst komunikatu kilkukrotnie zastosowano slowo kluczowe vbCrLf, co pozwolilo na wyswietlenie kazdej wyliczonej wartosci w oddzielnej 		linijce.

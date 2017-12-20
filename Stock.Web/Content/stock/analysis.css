@@ -1,0 +1,34 @@
+﻿/*CHARTS PANEL*/
+#analysis-panel {
+    display: block;
+    position: relative;
+    float: left;
+    box-sizing: border-box;
+    width: 100%;
+    height: auto;
+    min-height: 400px;
+    background-color: #DDD;
+    border: 1px solid #999; 
+    padding: 0;
+    margin: 0;
+}
+
+#analysis-panel > div {
+    display: block;
+    position: relative;
+    float: left;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+#run-analysis-button {
+    text-transform: uppercase;
+    height: auto;
+    width: auto;
+    line-height: 24px;
+    padding: 14px;
+    font-size: 14px;
+    color: #DDD;
+    margin: 6px;
+}

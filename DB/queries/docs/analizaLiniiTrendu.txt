@@ -1,0 +1,37 @@
+﻿dla każdej linii trendu
+
+najpierw rozpatruje cały rozkład w lewo, żeby mieć już to ogarnięte i nie powtarzać tego dla już istniejących linii
+
+1) szuka najbliższego wierzchołka, który spełnia wymogi [TrendHit]
+2) szuka najbliższego przebicia
+
+
+
+typy przecięć wierzchołków (przypadek dla linii oporu):
+- poniżej linii oporu (max. dystanx x%),
+- linia oporu przecina cień świecy,
+- cena zamknięcia przecina linię oporu, a cena zamknięcia następnej świecy jest poniżej
+
+
+
+
+
+Ewaluacja linii trendu:
+---------------------------------------
+
+tworzy tabelę range'ów
+HH
+HB
+
+dla każdego range'u wylicza punktację:
++ liczba notowań pomiędzy punktami
++ średnie odchylenie od linii trendu - im większe tym lepiej
+- siła obu wierzchołków (jeżeli para z Breakiem - ujemne punkty - decyduje poprzednie notowanie przed BreakIndex; im intensywniejsze przebicie tym mniej ujemnych punktów)
++ liczba notowań, które naruszyły linię trendu (ujemne punkty)
+
+
+* karna punktacja za przekroczenia linii trendu:
+1) przy przekroczeniu tylko przez cień bierze się odchylenie
+2) przy przekroczeniu także przez Close/Open bierze się [Close/Open - linie trendu]*2 + [extremum - linia trendu]
+3) dla wszystkich przekroczeń wylicza się średnią, odchylenie standardowe i sumę
+4) karne punkty = średnia + odchylenieSt + suma

@@ -1,0 +1,117 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    @Scripts.Render("~/bundles/stock")
+    @Scripts.Render("~/bundles/charts")
+    @Scripts.Render("~/bundles/analysis")
+    @Scripts.Render("~/bundles/simulation")
+}
+
+
+<div id="main">
+
+    <div class="margin-panel"></div>
+    <div id="menu-container">
+@*        <div id="logo-container"></div>*@
+        <div id="options-container">
+            <div id="charts-menu" class="menu-option">Wykresy</div>
+            <div id="analysis-menu" class="menu-option">Analizy</div>
+            <div id="simulation-menu" class="menu-option">Symulacja</div>
+            <div id="other-menu" class="menu-option">...</div>
+        </div>
+        <div id="login-container">
+            <div id="login-menu" class="top-panel-button login-icon"></div>
+            <div id="search-menu" class="top-panel-button search-icon"></div>                    
+        </div>
+    </div>
+
+    <div id="content-container">
+
+        <div id="charts-panel" class="charts-panel">
+
+            <div id="options-panel" class="options-panel">
+
+                <div id="company-dropdown-label" class="dropdown-label">Pair</div>
+                <select id="company-dropdown" class="dropdown-container"></select>
+        
+                <div id="timeframe-dropdown-label" class="dropdown-label">Timeframe</div>
+                <select id="timeframe-dropdown" class="dropdown-container"></select>
+
+                <input id="show-peaks-checkbox" class="charts-options-checkbox" type="checkbox" value="peaks" />
+                <div id="show-peaks-label" class="charts-options-checkbox-label">Show peaks</div>
+
+                <input id="show-trendlines-checkbox" class="charts-options-checkbox" type="checkbox" value="trendlines" />
+                <div id="show-trendlines-label" class="charts-options-checkbox-label">Show trendlines</div>
+
+@*                <input id="show-macd-checkbox" class="charts-options-checkbox" type="checkbox" value="trendlines" />
+                <div id="show-macd-label" class="charts-options-checkbox-label">MACD</div>
+
+                <input id="show-adx-checkbox" class="charts-options-checkbox" type="checkbox" value="trendlines" />
+                <div id="show-adx-label" class="charts-options-checkbox-label">ADX</div>*@
+
+            </div>
+
+            <div id="charts-container" class="charts-container">
+                <div id="chart-left-container" class="chart-left-container">
+                    
+                    <div id="actual-chart-container" class="actual-chart-container">
+                        <div id="chart-svg-layer" class="chart-svg-layer">
+                            <div id="chart-svg-panel-container" class="chart-svg-panel-container"></div>
+                        </div>
+                        <div id="quote-info-panel"></div>
+                    </div>
+
+                    <div id="date-line" class="date-line"></div>
+
+                    <div id="timeline-container" class="timeline-container">
+                        <div id="timeline" class="timeline"></div>
+                        <div id="timeline-pointer" class="timeline-pointer"></div>
+                    </div>
+
+                </div>
+                <div id="chart-right-container" class="chart-right-container">
+                    <div id="values-container" class="values-container"></div>
+                </div>
+            </div>
+
+        </div>
+
+@*        <div id="analysis-panel">
+
+            <div id="run-analysis-button" class="button">uruchom analizę</div>
+
+            <div id="info-panel" class="info-panel"></div>
+
+        </div>
+
+        <div id="simulation-panel" class="charts-panel">
+
+            <div id="simulation-options-panel" class="options-panel">
+
+                <div id="simulation-company-dropdown-label" class="dropdown-label">Pair</div>
+                <select id="simulation-company-dropdown" class="dropdown-container"></select>
+        
+                <div id="simulation-timeframe-dropdown-label" class="dropdown-label">Timeframe</div>
+                <select id="simulation-timeframe-dropdown" class="dropdown-container"></select>
+
+                <div id="simulation-navigation-panel" class="simulation-navigation-panel">
+                    <div id="simulation-prev" class="button simulation-navigation-button">prev</div>
+                    <div id="simulation-next" class="button simulation-navigation-button">next</div>
+                </div>
+
+                <div id="run-simulation-button" class="button">uruchom symulację</div>
+
+            </div>
+
+            <div id="simulation-charts-container" class="charts-container">
+
+            </div>
+
+        </div>*@
+
+    </div>
+
+    <div id="footer-container"></div>
+    <div class="margin-panel"></div>
+            
+</div>

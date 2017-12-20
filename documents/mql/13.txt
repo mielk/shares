@@ -1,0 +1,332 @@
+13 - Wstep do tablic VBA?
+Lekcja zostala podzielona na nastepujace czesci:
+Deklarowanie tablic
+Przypisywanie i pobieranie wartosci
+Zmiana indeksowania tablic
+Skrócona wersja indeksowania tablic
+Podpatrywanie wartosci zmiennych za pomoca okna Locals
+Deklarowanie tablic
+Tablica VBA jest specjalna konstrukcja sluzaca do przechowywania wielu wartosci dotyczacych podobnego rodzaju danych.
+
+Abys mógl sobie lepiej uzmyslowic, co to tak naprawde oznacza, zalózmy ze chcesz napisac makro obliczajace jakis skomplikowany wskaznik rentownosci, które wymaga danych na temat wartosci sprzedazy oraz kosztów poniesionych w kazdym z dwunastu miesiecy roku. Gdybys chcial w tym makrze uzyc tylko zwyklych zmiennych, takich jakie wielokrotnie pojawialy sie juz podczas tego kursu, musialbys uzyc do tego celu 24 zmiennych: 12 do opisania sprzedazy (jedna zmienna na kazdy miesiac) oraz 12 zmiennych opisujacych koszty (równiez jedna na kazdy miesiac). Deklaracja zmiennych wygladalaby wiec mniej wiecej tak: 1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+Dim sprzedaz_styczen As Double
+Dim sprzedaz_luty As Double
+Dim sprzedaz_marzec As Double
+Dim sprzedaz_kwiecien As Double
+Dim sprzedaz_maj As Double
+'(...)
+Dim koszty_styczen As Double
+Dim koszty_luty As Double
+Dim koszty_marzec As Double
+Dim koszty_kwiecien As Double
+Dim koszty_maj As Double
+'(...)
+
+Az strach pomyslec, co by bylo, gdyby obliczenia wymagaly takich danych z kilku lat, a dodatkowo w ujeciu dziennym. Oczywiscie byloby to praktycznie niewykonalne, a nawet jesli ktos uporalby sie z zadeklarowaniem wszystkich tych zmiennych, to praca z kodem, w którym znajdowaloby sie tysiace niemal identycznych zmiennych, bylaby koszmarem, a niepopelnienie zadnego bledu graniczyloby z cudem.
+
+Wlasnie w takich sytuacjach, jak opisana powyzej, nalezy siegnac po tablice.
+
+Tablice swa struktura przypominaja arkusz Excela - posiadaja wiersze, kolumny oraz komórki, w których przechowywane sa wartosci.
+
+W omawianym wczesniej przykladzie, zamiast tych wszystkich zmiennych liczbowych, mozna byloby zadeklarowac dwie zmienne tablicowe - przychody oraz koszty, z których kazda zawieralaby 12 wierszy i 1 kolumne (lub odwrotnie). W sytuacji, gdyby dane mialy obejmowac kilka lat, wystarczyloby po prostu dodac nowa kolumne dla kazdego nowego roku.
+
+Tym, co odróznia tablice VBA od arkusza Excela jest liczba wymiarów. Arkusz Excela posiada zawsze dwa wymiary okreslone przez numer wiersza oraz numer kolumny. Tablice VBA moga natomiast posiadac zróznicowana liczbe wymiarów - od jednego do trzydziestu (choc w praktyce tablice posiadajace wiecej niz trzy wymiary naleza do rzadkosci).
+Deklaracja tablicy wyglada nastepujaco:  
+Dim tablica (x1 To y1, ..., xn To yn) As typ_danych
+
+Tablica posiada tyle wymiarów, ile wyrazen xn To yn zawartych jest w nawiasie po nazwie tablicy. Kazde takie wyrazenie okresla rozmiar poszczególnego wymiaru tablicy.
+
+W ponizszej ramce znajduja sie przyklady deklaracji kilku tablic (w komentarzu nad deklaracja opisana jest liczba wymiarów oraz rozmiar tej tablicy):  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+'tablica jednowymiarowa zawierajaca 12 komórek
+Dim tablica(1 To 12) As String
+
+'tablica dwuwymiarowa o rozmiarach 10x10
+Dim tablica(1 To 10, 1 To 10) As Single
+
+'tablica trójwymiarowa o rozmiarach 10x20x30
+Dim tablica(1 To 10, 1 To 20, 1 To 30) As Double
+
+'tablica szesciowymiarowa o rozmiarach 8x7x8x6x8x4
+Dim tablica(1 To 8, 1 To 7, 1 To 8, 1 To 6, 1 To 8, 1 To 4) As Double
+
+Ponizej znajduje sie pogladowy rysunek przedstawiajacy strukture tablic jedno- , dwu- i trzywymiarowych. Niestety tablic o wiekszej liczbie wymiarów nie da sie przedstawic wizualnie, zreszta, jak przed chwila zaznaczono, sa one rzadko spotykane.
+
+Tablice
+
+Tablice jednowymiarowe (rysunek a) to po prostu jeden wiersz danych, zawierajacy tyle pól, ile okreslono przy deklarowaniu tej tablicy.
+
+Tablice dwuwymiarowe (rysunek b) wygladaja jak wycinek arkusza Excela - zawieraja wiersze i kolumny, a w kazdej komórce, znajdujacej sie na przecieciu poszczególnych kolumn i wierszy, przechowywana jest oddzielna wartosc.
+
+Tablice trójwymiarowe (rysunek c) mozna byloby zobrazowac jako szesciany, skladajace sie z wielu mniejszych szescianów. Kazdy z tych mniejszych szescianów przechowuje oddzielna wartosc. Aby odniesc sie do odpowiedniego miejsca w tej tablicy, nalezy podac 3 wspólrzedne.
+
+W omawianym przykladzie obie tablice - przychody oraz koszty - powinny zawierac 12 wierszy i 1 kolumne. Ich deklaracja wygladalaby wiec nastepujaco:  
+ 
+Dim przychody(1 To 12, 1 To 1) As Double
+Dim koszty(1 To 12, 1 To 1) As Double
+
+Trzeba jednak zaznaczyc, ze deklarowanie tablicy, w której jeden z wymiarów ma rozmiar 1 jest pozbawione sensu. Jezeli spojrzysz jeszcze raz na przedstawione wczesniej schematy tablic o róznej liczbie wymiarów, zobaczysz, ze zadeklarowanie dwuwymiarowej tablicy o rozmiarach 12x1 jest równoznaczne z zadeklarowaniem tablicy jednowymiarowej o rozmiarze 12. Zawsze w takiej sytuacji lepiej zdecydowac sie na mniejsza liczbe wymiarów. Pozwala to zaoszczedzic troche pamieci, przyspieszajac tym samym pózniejsze wykonywanie programu. Ponadto caly kod bedzie bardziej przejrzysty, a Ty oszczedzisz troche czasu na zbedne pisanie, gdyz odwolujac sie potem do tej tablicy bedziesz musial okreslac tylko jeden jej wymiar, zamiast dwóch.
+
+Powrót do poczatku lekcji Przypisywanie i pobieranie wartosci
+Kazdy element tablicy jest jakby oddzielna zmienna posiadajaca taki typ, jaki posiada cala tablica. Przykladowo, dwuwymiarowa tablica typu Double o dwunastu wierszach i dziesieciu kolumnach sklada sie ze 120 oddzielnych, niezaleznych od siebie zmiennych typu Double.
+
+Odwolywanie sie do konkretnego elementu tablicy jest bardzo proste i wymaga podania nazwy tej tablicy oraz indeksów okreslajacych pozycje elementu w poszczególnych wymiarach.
+
+Jesli chcialbys sie wiec przykladowo odwolac do wartosci sprzedazy dla kwietnia z opisywanej wczesniej jednowymiarowej tablicy przychody, zapis wygladalby nastepujaco:  
+przychody(4)
+
+Odwolanie do elementu, lezacego w trzecim wierszu i piatej kolumnie dwuwymiarowej tablicy tablica, wymagaloby natomiast takiego zapisu:  
+tablica(3, 5)
+
+Dla wiekszych wymiarów nalezy podac odpowiednio wieksza liczbe wymiarów.
+
+Jak widzisz, odwolywanie do elementu tablicy wyglada niemal identycznie, jak odwolywanie do konkretnej komórki arkusza, które bylo juz podczas tego kursu wielokrotnie stosowane.
+
+Odwolywanie sie do poszczególnych elementów tablicy jest niezbedne zarówno przy przypisywaniu wartosci do tablicy, jak i przy odczytywaniu przechowywanych w niej danych.
+
+Ponizej znajduje sie procedura, przedstawiajaca przyklad przypisywania wartosci do elementów tablicy oraz ich pózniejszego odczytywania.
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+Sub przypisywanieDanychDoTablicy()
+    Dim przychody(1 To 12) As Double
+    Dim koszty(1 To 12) As Double
+    Dim i As Byte
+
+    For i = 1 To 12
+        przychody(i) = Worksheets("przychody_i_koszty").Cells(i+1,2)
+        koszty(i) = Worksheets("przychody_i_koszty").Cells(i+1,3)
+    Next i
+
+    For i = 1 To 12
+        Debug.Print monthName(i) & ": przychody - " & przychody(i) & ", koszty - " & koszty(i)
+    Next i
+End Sub
+W powyzszej procedurze najpierw deklarowane sa dwie tablice - przychody oraz koszty. Kazda z tych tablic zawiera tylko dane dla dwunastu miesiecy jednego roku, dlatego, jak juz wczesniej wyjasniono, najodpowiedniejsza dla nich forma jest jednowymiarowa tablica posiadajaca 12 elementów.
+
+Oprócz tablic w procedurze zadeklarowana jest zmienna i, która sluzy za iterator dla znajdujacej sie w tej procedurze petli.
+
+Dane wykorzystywane w tym przykladzie mozesz znalezc w zalaczonym pliku tablice.xls, w arkuszu przychody_i_koszty. W drugiej kolumnie tego arkusza, w wierszach 2-13 znajduja sie dane na temat przychodów dla poszczególnych miesiecy, natomiast w trzeciej kolumnie, w tych samych wierszach, dane dotyczace kosztów.
+
+Aby wczytac dane do tablicy nalezy wykorzystac petle, która przejdzie od pierwszego do dwunastego wiersza arkusza, dla kazdego z tych wierszy pobierze wartosc przychodu (z drugiej kolumny) oraz kosztu (z trzeciej kolumny) i przypisze te wartosci do odpowiednich tablic.
+
+Przy pierwszym wywolaniu petli wartosc iteratora i wynosi 1, wiec kompilator odwoluje sie do pierwszego elementu tablicy przychody - przychody(1) - i przypisuje do niego wartosc okreslona wyrazeniem Worksheets("przychody_i_koszty").Cells(i+1, 2), a wiec wartosc znajdujaca sie w drugim wierszu i drugiej kolumnie arkusza przychody_i_koszty (numer wiersza, z którego pobierana jest wartosc dla danego miesiaca, jest w tym przykladzie wiekszy o 1 od numeru tego miesiaca, poniewaz w pierwszym wierszu arkusza znajduje sie naglówek i wszystkie wartosci sa przesuniete o jeden wiersz w dól).
+
+Chwile potem taka sama operacja jest wykonywana dla kosztów - kompilator odwoluje sie do pierwszego elementu tablicy koszty - koszty(1) - i przypisuje do niego wartosc przechowywana w komórce (2,3) arkusza przychody_i_koszty.
+
+Nastepnie wykonywanie kodu dociera do wiersza zamkniecia petli, wartosc iteratora zwiekszana jest o 1 (wynosi wiec teraz 2) i ponownie wykonywane sa operacje znajdujace sie wewnatrz petli - czyli pobranie wartosci z arkusza i przypisanie ich do odpowiednich pól tablicy (tym razem sa to wartosci dla lutego, potem dla marca itd.).
+
+Opisany zestaw operacji wykonywany jest 12 razy, czyli do momentu az wartosc iteratora przekroczy górne ograniczenie petli.
+
+W momencie, kiedy kompilator opuszcza petle, kazde pole w obu tablicach ma juz przypisana odpowiednia wartosc, pobrana z arkusza.
+
+Teraz wykonywanie kodu natrafia na druga petle, której zadaniem bedzie odczytanie danych znajdujacych sie w obu tabelach i wyprintowanie ich w oknie Immediate.
+
+Jako iterator ponownie zostala wykorzystana zmienna i, gdyz nie ma sensu wprowadzac dodatkowej zmiennej iteracyjnej, skoro obie wystepujace w tej procedurze petle nie sa ze soba w zaden sposób powiazane. Ponownie tez górnym i dolnym limitem tej petli sa liczby 1 i 12, poniewaz operacje maja byc wykonane dla kazdego z dwunastu pól obu tablic.
+
+Krótko mówiac, obie petle sa niemal identyczne i róznia sie tylko poleceniami, znajdujacymi sie w ich wnetrzu.
+
+Przy kazdym powtórzeniu drugiej petli wykonywane jest tylko jedno polecenie:  
+Debug.Print MonthName(i) & ": przychody - " & przychody(i) & ", koszty - " & koszty(i)
+
+Jak pamietasz z lekcji szóstej, polecenie Debug.Print sluzy do wyswietlania wartosci w oknie Immediate podczas dzialania makra.
+
+W tym przypadku w oknie Immediate wyswietlany bedzie tekst, który laczy w sobie nazwe miesiaca (zwracana przez funkcje MonthName), wartosc przychodu dla tego miesiaca (uzyskana za pomoca wyrazenia przychody(i)) oraz wartosc kosztów poniesionych w tym miesiacu (koszty(i)). Wszystkie wymienione wartosci dodatkowo polaczone sa ze soba fragmentami tekstów, dzieku czemu opis wyswietlony w oknie Immediate bedzie o wiele bardziej czytelny.
+
+Przy odwolywaniu sie do konkretnej komórki tablicy, na programistów czyhaja dwa rodzaje bledów.
+
+Pierwszy z nich to odniesienie sie do niewlasciwej liczby wymiarów tablicy.
+
+Zalózmy, ze w przedstawionym przed momentem kodzie, zastapilbys piaty wiersz nastepujacym wyrazeniem:  
+przychody(i, 1) = Worksheets("przychody_i_koszty").Cells(i + 1, 2)
+
+Po natrafieniu na powyzsza linijke kodu, kompilator próbowalby przypisac wartosc do pola tablicy przychody, okreslonego za pomoca dwóch indeksów - i oraz 1 (odpowiedni fragment zaznaczono w ramce na czerwono). Zwróc jednak uwage, ze tablica przychody zostala zadeklarowana jako tablica jednowymiarowa, nie mozna wiec odnosic sie do niej podajac indeksy dla dwóch wymiarów.
+
+Kompilator przy próbie uruchomienia procedury, zawierajacej taki zapis, zglosi blad Compile error: Wrong number of dimensions.
+
+Bledem jest tez oczywiscie okreslenie mniejszej liczby indeksów, niz wynikaloby to z liczby wymiarów danej tablicy. Przykladowo, jesli próbujac odwolac sie do konkretnego elementu tablicy trójwymiarowej, uzyjesz zapisu okreslajacego indeksy tylko dwóch wymiarów (np. tablica(1,1)), kompilator zglosi identyczny blad, poniewaz przy odwolywaniu do tablicy trójwymiarowej wymagane jest okreslenie indeksów dla wszystkich trzech jej wymiarów.
+
+Drugim, czesto spotykanym bledem, wystepujacym przy operacjach na tablicach, jest odwolanie przekraczajace istniejacy rozmiar tablicy.
+
+Przykladem takiej sytuacji moglaby byc próba odniesienia sie do pola przychody(13) w omawianym wczesniej przykladzie. Tablica przychody byla zadeklarowana jako jednowymiarowa tablica posiadajaca 12 pól zaindeksowanych od 1 do 12, dlatego próba odwolania sie do pola z indeksem 13 spowoduje wygenerowanie bledu Subscript out of range.
+
+W odróznieniu od poprzedniego bledu, ten blad nie przeszkadza jednak w normalnym uruchomieniu makra. Dopiero, gdy kompilator w toku dzialania makra natrafi na taki blad, wstrzymuje dalsze wykonywanie kodu i wyswietla komunikat z odpowiednia informacja.
+
+Zmiana indeksowania tablic
+Tablice VBA maja te zalete, ze definiujac rozmiary poszczególnych wymiarów nie trzeba rozpoczynac ich od 1.
+
+Zalózmy, ze w opisywanym wczesniej przykladzie tablica przychody nadal musialaby zawierac dane miesieczne, ale juz nie z jednego roku, lecz z okresu 2000-2010 (a wiec z 11 lat). Tablica musialaby wiec zostac zmodyfikowana do postaci tablicy dwuwymiarowej o wymiarach 12x11, a jej deklaracja wygladalaby tak:  
+Dim przychody(1 To 12, 1 To 11) As Double
+
+Zauwaz jednak, ze przy takiej postaci tablicy, odwolanie sie do wartosci dla okreslonego miesiaca i roku moze czasem przysparzac klopotów i wymagac chwili zastanowienia, a w zwiazku z tym jest tez podatne na bledy - w pospiechu mozna byloby na przyklad pomyslec, ze wartosc dla kwietnia 2004 roku zawarta jest w komórce (4, 4) tej tablicy, co oczywiscie byloby bledem, poniewaz komórka (4, 4) przechowuje wartosc dla kwietnia 2003.
+
+Problemu tego mozna uniknac odpowiednio zmieniajac indeksowanie tablicy.
+
+Calkowicie poprawna i znacznie wygodniejsza w uzyciu jest ponizsza postac deklaracji tej tablicy:  
+Dim przychody(1 To 12, 2000 To 2010) As Double
+
+Teraz tablica przychody równiez zawiera 12 wierszy i 11 kolumn, ale kolumny te sa ponumerowane od 2000 do 2010. Odnalezienie komórki odpowiadajacej kwietniowi 2004 nie sprawia juz teraz zadnych trudnosci, gdyz od razu widac, ze przechowuje ja komórka (4, 2004) tej tablicy.
+
+Dopuszczalne jest tez stosowanie w deklaracji rozmiarów tablic liczb ujemnych, w zwiazku z czym poprawne bylyby ponizsze przyklady deklaracji:  
+ 
+ 
+Dim tablica(-5 To 5, -10 To -1) As Double
+Dim tablica(-7 To -1, 5 To 15) As String
+Dim tablica(1 To 5, -5 To 0) As Variant
+
+Niedopuszczalne jest zadeklarowanie któregos z wymiarów tablicy w ten sposób, ze jego górna granica jest nizsza od dolnej.
+
+Blednie zadeklarowana bylaby wiec przykladowo nastepujaca tablica:
+ 
+Dim tablica(1 To 100, 3 To 1) As Double
+poniewaz w drugim z wymiarów górna granica (1) jest mniejsza od dolnej (3). Jezeli w kodzie znajdzie sie taka bledna deklaracja, makro nie zadziala, a przy kazdej próbie jego uruchomienia wyswietlony zostanie blad: Compile error: Range has no value.
+
+Powrót do poczatku lekcji Skrócona wersja indeksowania tablic
+W poprzednim podrozdziale dowiedziales sie, ze przy deklarowaniu tablic w VBA mozliwe jest nadanie im dowolnej numeracji wierszy i kolumn (oraz kolejnych wymiarów, jakkolwiek sie one nazywaja). Jednak mimo to, w zdecydowanej wiekszosci przypadków indeksowanie numerów kolumn i wierszy rozpoczyna sie od 0 lub 1.
+
+W zwiazku z tym, twórcy jezyka VBA wyszli na przeciw programistom i wprowadzili domyslne indeksowanie od zera. Oznacza to, ze jesli przy deklarowaniu tablicy pominiesz dolny indeks, kompilator automatycznie potraktuje te tablice tak, jakby byla zaindeksowana od zera.
+
+Jezeli wiec zamierzasz przykladowo zadeklarowac taka tablice:
+ 
+Dim tablica(0 To 5, 0 To 10) As Double
+mozesz pominac przy kazdym z wymiarów zapis [0 To] i zadeklarowac te tablice w taki sposób:  
+Dim tablica(5, 10) As Double
+
+Oba powyzsze zapisy sa ze soba równowazne, ale drugi z nich jest zdecydowanie wygodniejszy w uzyciu.
+
+Dla wielu osób latwiejsze jest jednak poslugiwanie sie tablicami indeksowanymi od 1. Programisci Microsoftu pomysleli tez i o nich. Jezeli na samej górze modulu umiescisz wiersz z poleceniem Option Base 1, to wszystkie tablice zadeklarowane w tym module beda sie domyslnie indeksowaly od 1.
+
+Polecenie Option Base
+
+W takiej sytuacji zapis:
+ 
+Dim tablica(5, 10) As Double
+jest równoznaczny z zapisem:
+ 
+Dim tablica(1 To 5, 1 To 10) As Double
+
+Nie ma tez zadnych przeszkód, zeby laczyc ze soba klasyczny zapis rozmiaru tablic z jego skrócona postacia. Calkowicie prawidlowe bylyby wiec przykladowo ponizsze deklaracje tablic:  
+ 
+ 
+ 
+Dim tablica(5, 10, 5 To 10) As Double
+Dim tablica(20, -5 To 5, 10) As Double
+Dim tablica(10, 1 To 10) As Double
+Dim tablica(0 To 10, 10) As Double
+
+Powrót do poczatku lekcji Podpatrywanie wartosci zmiennych za pomoca okna Locals
+Jakis czas temu omówilismy dzialanie okna Immediate - bardzo przydatnego narzedzia, sluzacego miedzy innymi do sprawdzania tymczasowych wartosci zmiennych i stalych.
+
+Edytor VBA oferuje programistom jeszcze jedno narzedzie umozliwiajace podpatrywanie wartosci poszczególnych zmiennych w trakcie wykonywania kodu programu - okno Locals, którego szczególowym omówieniem zajmiemy sie w tym podrozdziale.
+
+Korzystanie z okna Locals jest bardzo latwe i intuicyjne. Po zapoznaniu sie z ponizszym przykladem z pewnoscia nie bedziesz mial problemów ze zrozumieniem i korzystaniem z narzedzia Locals.
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+Option Explicit
+Option Base 1
+
+Sub oknoLocals()
+    Dim wyraz As String
+    Dim i As Integer
+    Dim j As Integer
+    Dim tablica(5, 5) As Long
+
+    wyraz = "jakis tekst"
+
+    For i = 1 To 5
+        For j = 1 To 5
+            tablica(i, j) = i * j
+        Next j
+    Next i
+
+End Sub 
+W przeciwienstwie do okna Immediate, które umozliwia sprawdzanie wartosci zmiennych nawet bez zatrzymywania dzialania makra, jezeli chcesz skorzystac z okna Locals musisz wstrzymac dzialanie makra ustawiajac punkt zatrzymania.
+
+Aby przetestowac dzialanie tego narzedzia, ustaw punkty zatrzymania w wierszach 10. i 14. przytoczonego przed momentem kodu (tak jak na rysunku ponizej), a nastepnie uruchom makro.
+
+Punkty zatrzymania w przykladowym kodzie - test okna Locals
+
+Kiedy wykonywanie kodu dojdzie do pierwszego z punktów zatrzymania i dzialanie makra zostanie wstrzymane, uruchom okno Locals. W tym celu kliknij nastepujace opcje na pasku menu edytora VBA:
+View
+Locals Window
+Uruchamianie okna Locals
+
+Na ekranie wyswietlone zostanie okno Locals, wygladajace tak, jak na ponizszym rysunku:
+
+Okno Locals
+
+W górnej czesci okna Locals (oznaczonej na powyzszym rysunku na czerwono) znajduje sie informacja na temat modulu oraz procedury (lub funkcji), w której aktualnie zatrzymal sie kompilator wykonujac kod. W naszym przypadku jest to modul Module2 (na Twoim komputerze moze nazywac sie inaczej, jest to uzaleznione od tego, w jakim module umiesciles kod) oraz procedura oknoLocals.
+
+W dolnej czesci okna Locals znajduje sie wykaz wszystkich zmiennych znajdujacych sie w danej procedurze (lub funkcji). Przy kazdej zmiennej znajduje sie jej aktualna wartosc oraz typ tej zmiennej.
+
+I tak przykladowo, zmienna wyraz przechowuje aktualnie pusty ciag znaków i jest zmienna typu String. Zmienna i oraz j przechowuja aktualnie wartosc 0 i sa zmiennymi typu Integer.
+
+Ostatnia wystepujaca w kodzie zmienna - tablica - jest zmienna tablicowa, przechowujaca wartosci typu Long. O tym, ze zmienna tablica jest zmienna tablicowa swiadcza w oknie Locals dwie rzeczy:
+Znak plusa z lewej strony nazwy zmiennej tablica, umozliwiajacy rozwiniecie tablicy i podpatrywanie wartosci dla poszczególnych pól tej tablicy.
+Klikniecie znaku plusa rozwija i zwija liste pól tablicy, tak, jak pokazano na ponizszym rysunku:
+Rozszerzenie tablicy w oknie Locals
+
+zauwaz, ze przy zwyklych zmiennych (wyraz, i oraz j) z lewej strony nie ma znaku plusa.
+Po okresleniu typu zmiennej (Long) znajduje sie nawias, w którym okreslono liczbe wymiarów oraz rozmiar poszczególnych wymiarów - (1 To 5, 1 To 5).
+Wcisnij teraz kilkakrotnie klawisz F5, aby wykonac kilka powtórzen petli, przypisujacej do kazdego kolejnego pola tablicy tablica iloczyn jego indeksów.
+
+Po kilku powtórzeniach petli ponownie sprawdz wartosci w oknie Locals. Powinny one wygladac mniej wiecej tak, jak na ponizszym zrzucie ekranowym (widok na Twoim komputerze moze sie troche róznic, w zaleznosci od tego, ile razy wcisnales klawisz F5):
+
+Rozwiniecie tablicy w oknie Locals
+
+Okno Locals, podobnie jak Immediate, powinno byc na stale zakotwiczone w edytorze VBA i uzywane najczesciej, jak to tylko mozliwe, poniewaz znacznie ulatwia programowanie, a w szczególnosci testowanie napisanego kodu.
+
+Aby zakotwiczyc okno Locals z prawej strony edytora VBA, ustaw kursor myszy na niebieskim polu tytulu okna Locals (zaznaczonym na ponizszym rysunku czerwona ramka), nastepnie nacisnij lewy przycisk myszy, aby chwycic okno Locals, a potem przeciagnij je i upusc przy prawej krawedzi ekranu.
+
+Zakotwiczanie okna Locals
+
+Powrót do poczatku lekcji
