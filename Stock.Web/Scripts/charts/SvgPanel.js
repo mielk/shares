@@ -153,6 +153,8 @@
 
     //Layout service.
     self.layout = function () {
+<<<<<<< HEAD
+=======
 
         var parentDiv = self.ui.getContainer();
         var svgDiv = self.ui.getSvgContainer();
@@ -190,6 +192,59 @@
         };
 
     }();
+
+
+    //function findQuotation(x) {
+    //    if (self.renderer) {
+    //        return self.renderer.findQuotation(x);
+    //    } else {
+    //        return null;
+    //    }
+    //}
+>>>>>>> 97823ea4ae2829d75e2af13c4f3344ea5aa8ebe1
+
+        var parentDiv = self.ui.getContainer();
+        var svgDiv = self.ui.getSvgContainer();
+
+<<<<<<< HEAD
+        function getPosition() {
+            var position = $(svgDiv).position();
+            var width = $(parentDiv).width();
+            var height = $(parentDiv).height();
+            var right = position.left + width;
+            var bottom = position.top + height;
+            return {
+                left: position.left,
+                top: position.top,
+                right: right,
+                bottom: bottom,
+                svgWidth: $(svgDiv).width(),
+                svgHeight: $(svgDiv).height(),
+                viewLeftX: -position.left,
+                viewRightX: -position.left + width,
+                viewWidth: width,
+                viewHeight: height
+            };
+        };
+
+        function getSvgSize() {
+            return {
+                width: $(svgDiv).width(),
+                height: $(svgDiv).height()
+            }
+        }
+
+        return {
+            getPosition: getPosition,
+            getSvgSize: getSvgSize
+        };
+
+    }();
+=======
+    //API.
+    //self.findQuotation = findQuotation;
+    //self.getInfo = getInfo;
+>>>>>>> 97823ea4ae2829d75e2af13c4f3344ea5aa8ebe1
 
 }
 SvgPanel.prototype.bind = function (e) {
@@ -249,6 +304,10 @@ function AbstractSvgRenderer(params) {
     }();
 
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 97823ea4ae2829d75e2af13c4f3344ea5aa8ebe1
     //API.
     self.render = function () {
         var paths = self.pathCalculator.calculate();
@@ -325,6 +384,7 @@ function PriceSvgRenderer(params) {
         }
 
         function getPartDataInfo(first, last) {
+<<<<<<< HEAD
             var firstIndex = Math.max(first, 0);
             var lastIndex = Math.min(last, quotations.length -1);
             var firstItem = quotations[firstIndex];
@@ -332,6 +392,13 @@ function PriceSvgRenderer(params) {
             var max = firstItem.quotation.High;
             var min = firstItem.quotation.Low;
             for (var i = firstIndex + 1; i <= lastIndex; i++) {
+=======
+            var firstItem = quotations[first];
+            var lastItem = quotations[last];
+            var max = firstItem.quotation.High;
+            var min = firstItem.quotation.Low;
+            for (var i = first + 1; i <= last; i++) {
+>>>>>>> 97823ea4ae2829d75e2af13c4f3344ea5aa8ebe1
                 var item = quotations[i];
                 if (item.quotation.High > max) max = item.quotation.High;
                 if (item.quotation.Low < min) min = item.quotation.Low;
@@ -342,7 +409,11 @@ function PriceSvgRenderer(params) {
                 startIndex: firstItem.DateIndex,
                 endDate: lastItem.Date,
                 endIndex: lastItem.DateIndex,
+<<<<<<< HEAD
                 counter: (lastIndex - firstIndex + 1),
+=======
+                counter: (last - first + 1),
+>>>>>>> 97823ea4ae2829d75e2af13c4f3344ea5aa8ebe1
                 max: max,
                 min: min,
                 levelDifference: max - min
@@ -357,7 +428,11 @@ function PriceSvgRenderer(params) {
             setData: setData,
             setDataInfo: setDataInfo,
             getQuotations: getQuotations,
+<<<<<<< HEAD
             getTrendlines: getTrendlines,
+=======
+            getTrendlins: getTrendlines,
+>>>>>>> 97823ea4ae2829d75e2af13c4f3344ea5aa8ebe1
             getDataInfo: getDataInfo,
             getPartDataInfo: getPartDataInfo
         };
@@ -378,6 +453,7 @@ function PriceSvgRenderer(params) {
         function calculate() {
             dataInfo = self.data.getDataInfo();
             quotations = self.data.getQuotations();
+<<<<<<< HEAD
             trendlines = self.data.getTrendlines();
             updateSizeParams();
 
@@ -389,6 +465,9 @@ function PriceSvgRenderer(params) {
         }
 
         function prepareQuotationsSvgPaths() {
+=======
+            updateSizeParams();
+>>>>>>> 97823ea4ae2829d75e2af13c4f3344ea5aa8ebe1
             for (var i = 0; i < quotations.length; i++) {
                 var item = quotations[i];
                 var pathInfo = calculateQuotationPath(item.quotation);
@@ -507,6 +586,13 @@ function PriceSvgRenderer(params) {
 
 
         //Reverse engineering.
+<<<<<<< HEAD
+=======
+        function getItemForX(x) {
+            return Math.min(Math.floor(x / params.singleItemWidth), dataInfo.counter - 1);
+        }
+
+>>>>>>> 97823ea4ae2829d75e2af13c4f3344ea5aa8ebe1
         function getItemsRange(left, right) {
             var firstItem = getItemForX(left);
             var lastItem = getItemForX(right);
