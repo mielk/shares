@@ -235,8 +235,8 @@ Date.prototype.isHoliday = function () {
             },
             space: 0.45,
             color: {
-                ascending: 'white',
-                descending: 'black'
+                ascending: '#2BC945', //'white',
+                descending: '#D55228'
             }
             
         },

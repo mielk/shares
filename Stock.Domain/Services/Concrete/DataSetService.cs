@@ -17,7 +17,7 @@ namespace Stock.Domain.Services
         public IEnumerable<DataSet> GetDataSets(int shareId)
         {
             _repository = new EFQuotationRepository();
-            var quotationDtos = _repository.GetQuotations(shareId);
+            var quotationDtos = _repository.GetQuotations(shareId).OrderBy(q => q.DateIndex);
             var extremumDtos = _repository.GetExtrema(shareId);
             var result = new List<DataSet>();
 

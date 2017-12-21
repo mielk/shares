@@ -191,25 +191,6 @@
 
     }();
 
-
-    //function findQuotation(x) {
-    //    if (self.renderer) {
-    //        return self.renderer.findQuotation(x);
-    //    } else {
-    //        return null;
-    //    }
-    //}
-
-    //function getInfo(quotation) {
-    //    if (self.renderer) {
-    //        return self.renderer.getInfo(quotation);
-    //    }
-    //}
-
-    //API.
-    //self.findQuotation = findQuotation;
-    //self.getInfo = getInfo;
-
 }
 SvgPanel.prototype.bind = function (e) {
     $(self).bind(e);
@@ -266,7 +247,6 @@ function AbstractSvgRenderer(params) {
         };
 
     }();
-
 
 
     //API.
@@ -345,11 +325,13 @@ function PriceSvgRenderer(params) {
         }
 
         function getPartDataInfo(first, last) {
-            var firstItem = quotations[first];
-            var lastItem = quotations[last];
+            var firstIndex = Math.max(first, 0);
+            var lastIndex = Math.min(last, quotations.length -1);
+            var firstItem = quotations[firstIndex];
+            var lastItem = quotations[lastIndex];
             var max = firstItem.quotation.High;
             var min = firstItem.quotation.Low;
-            for (var i = first + 1; i <= last; i++) {
+            for (var i = firstIndex + 1; i <= lastIndex; i++) {
                 var item = quotations[i];
                 if (item.quotation.High > max) max = item.quotation.High;
                 if (item.quotation.Low < min) min = item.quotation.Low;
@@ -360,7 +342,7 @@ function PriceSvgRenderer(params) {
                 startIndex: firstItem.DateIndex,
                 endDate: lastItem.Date,
                 endIndex: lastItem.DateIndex,
-                counter: (last - first + 1),
+                counter: (lastIndex - firstIndex + 1),
                 max: max,
                 min: min,
                 levelDifference: max - min
@@ -375,7 +357,7 @@ function PriceSvgRenderer(params) {
             setData: setData,
             setDataInfo: setDataInfo,
             getQuotations: getQuotations,
-            getTrendlins: getTrendlines,
+            getTrendlines: getTrendlines,
             getDataInfo: getDataInfo,
             getPartDataInfo: getPartDataInfo
         };
@@ -385,15 +367,28 @@ function PriceSvgRenderer(params) {
     self.pathCalculator = (function () {
         var dataInfo = {};
         var quotations = [];
+        var trendlines = [];
         var params = {};
+        //SVG paths.
         var ascendingPaths = [];
         var descendingPaths = [];
-        var trendlines = [];
+        var trendlinePaths = [];
+        
 
         function calculate() {
             dataInfo = self.data.getDataInfo();
             quotations = self.data.getQuotations();
+            trendlines = self.data.getTrendlines();
             updateSizeParams();
+
+            prepareQuotationsSvgPaths();
+            prepareTrendlinesSvgPaths();
+
+            return getCombinedPaths();
+
+        }
+
+        function prepareQuotationsSvgPaths() {
             for (var i = 0; i < quotations.length; i++) {
                 var item = quotations[i];
                 var pathInfo = calculateQuotationPath(item.quotation);
@@ -403,9 +398,14 @@ function PriceSvgRenderer(params) {
                     descendingPaths.push(pathInfo.path);
                 };
             }
+        }
 
-            return getCombinedPaths();
-
+        function prepareTrendlinesSvgPaths() {
+            for (var i = 0; i < trendlines.length; i++) {
+                var item = trendlines[i];
+                var pathInfo = calculateTrendlinePath(item);
+                trendlinePaths.push(pathInfo.path);
+            }
         }
 
         function updateSizeParams(){
@@ -438,6 +438,28 @@ function PriceSvgRenderer(params) {
 
         }
 
+        function calculateTrendlinePath(item) {
+            var startIndex = item.StartIndex - 3;
+            var endIndex = (item.EndIndex ? item.EndIndex : quotations.length - 1) + 3;
+            var startLevel = (startIndex - item.BaseStartIndex) * item.Slope + item.BaseLevel;
+            var endLevel = (endIndex - item.BaseStartIndex) * item.Slope + item.BaseLevel;
+
+            var startX = getX(startIndex);
+            var startY = getY(startLevel);
+            var endX = getX(endIndex);
+            var endY = getY(endLevel);
+
+            var path = 'M' + startX + ',' + startY + 'L' + endX + ',' + endY;
+            return {
+                type: 'trendline',
+                path: path
+            };
+
+        }
+
+
+
+        //Helper methods.
         function getX(value) {
             var candlesFromFirst = value - dataInfo.startIndex;
             return candlesFromFirst * params.singleItemWidth + params.candlePadding;
@@ -446,6 +468,10 @@ function PriceSvgRenderer(params) {
         function getY(value) {
             var pointsDistance = dataInfo.max - value;
             return pointsDistance * params.oneHeight;
+        }
+
+        function getItemForX(x) {
+            return Math.min(Math.floor(x / params.singleItemWidth), dataInfo.counter - 1);
         }
 
         function getCombinedPaths() {
@@ -467,7 +493,7 @@ function PriceSvgRenderer(params) {
                 }
             });
             result.push({
-                path: trendlines.join(''),
+                path: trendlinePaths.join(''),
                 attr: {
                     'stroke': 'black',
                     'stroke-width': 0.3,
@@ -481,10 +507,6 @@ function PriceSvgRenderer(params) {
 
 
         //Reverse engineering.
-        function getItemForX(x) {
-            return Math.min(Math.floor(x / params.singleItemWidth), dataInfo.counter - 1);
-        }
-
         function getItemsRange(left, right) {
             var firstItem = getItemForX(left);
             var lastItem = getItemForX(right);
@@ -685,83 +707,6 @@ mielk.objects.extend(AbstractSvgRenderer, PriceSvgRenderer);
 
 //}
 
-////Funkcja zwraca wszystkie obiekty, które mają zostać narysowane na tym wykresie.
-//self.getDrawObjects = function (quotations) {
-
-//    //Calculate offsets and ranges.
-//    calculateHorizontalBound(quotations);
-//    calculateVerticalBounds(quotations, self.size.height);
-
-//    //Params calculated here for performance reasons.
-//    var params = {
-//        width: STOCK.CONFIG.candle.width,
-//        space: STOCK.CONFIG.candle.width * STOCK.CONFIG.candle.space,
-//        other: self.parent.properties
-//    };
-
-//    //Create SVG path for each single quotation.
-//    var items = new Array(quotations.length);
-//    for (var i = self.params.firstItem; i <= self.params.lastItem; i++) {
-//        var invertedIndex = quotations.length - i;
-//        if (quotations[i])
-//            items[i] = self.createBasePath(invertedIndex, quotations[i], params);
-//    }
-
-
-//    //Join all SVG paths together and return them.
-//    return self.totalPaths(items);
-
-//}
-
-////Funkcja zwracająca linie trendu do narysowania w formacie ścieżek SVG.
-//self.getDrawTrendlines = function (trendlines) {
-
-//    var paths = {
-//        finished: '',
-//        active: ''
-//    };
-
-//    var params = {
-//        width: STOCK.CONFIG.candle.width,
-//        space: STOCK.CONFIG.candle.width * STOCK.CONFIG.candle.space,
-//        other: self.parent.properties
-//    };
-
-//    if (trendlines) {
-//        trendlines.forEach(function (trendline) {
-//            if (trendline.ShowOnChart) {
-//                var res = self.createTrendlinePath(trendline, params);
-//                if (item.IsFinished) {
-//                    paths.finished += res.path;
-//                } else {
-//                    paths.active += res.path;
-//                }
-//            }
-//        });
-//    }
-
-//    //Add properties for each path.
-//    var array = [];
-//    array.push({
-//        path: paths.finished,
-//        attr: {
-//            'stroke': '#888',
-//            'stroke-width': 1
-//        }
-//    });
-
-//    array.push({
-//        path: paths.active,
-//        attr: {
-//            'stroke': 'black',
-//            'stroke-width': 1
-//        }
-//    });
-
-//    return array;
-
-//}
-
 ////Funkcja obliczająca pozycję pionową dla danej wartości (w zależności od wysokości kontenera).
 //self.getY = function (value) {
 //    return self.size.height * (this.params.top - value) / (this.params.top - this.params.bottom);
@@ -795,35 +740,11 @@ mielk.objects.extend(AbstractSvgRenderer, PriceSvgRenderer);
 //    return self.quotations[foundItemIndex];
 //}
 
-////Funkcja odświeża notowania przypisane do tego wykresu. Wywoływana kilka razy podczas pobierania
-////danych z bazy, ponieważ notowania są pobierane paczkami.
-//self.updateQuotations = function (quotations, complete) {
-//    self.quotations = quotations;
-//    self.params.complete = complete;
-
-//    if (self.params.complete && self.params.runWhenComplete) {
-//        self.startAnalysis();
-//    }
-
-//}
-
-
 //self.updateTrendlines = function (trendlines) {
 //    self.trendlines = trendlines;
 
 //    if (self.params.complete && self.params.runWhenComplete) {
 //        self.startAnalysis();
 //    }
-
-//}
-
-//self.startAnalysis = function () {
-//    var analyzer = self.parent.type.analyzer();
-
-//    if (analyzer) {
-//        analyzer.run(self.quotations);
-//    }
-
-//    self.parent.render();
 
 //}

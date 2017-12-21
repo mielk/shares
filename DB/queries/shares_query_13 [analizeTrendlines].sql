@@ -579,7 +579,8 @@ BEGIN
 		UPDATE 
 			#TrendlinesTemp
 		SET 
-			[AnalysisStartPoint] = [BaseStartIndex];
+			[AnalysisStartPoint] = [BaseStartIndex],
+			[LookForPeaks] = [BaseIsPeak]
 	
 		IF (@displayRightSidePreviewTables = 1) SELECT '#TrendlinesBreaks.BeforeStart', * FROM #TrendlinesTemp; --WHERE [TrendlineId] = 24019795 ORDER BY DateIndex ASC;
 
@@ -656,7 +657,7 @@ BEGIN
 					--Leave loop if there is no trendlines left without break.
 					IF (SELECT COUNT(*) FROM #RsTrendlinesWithoutBreak) = 0 
 					BEGIN
-						DROP TABLE #TrendlinesWithoutBreak;
+						DROP TABLE #RsTrendlinesWithoutBreak;
 						BREAK;
 					END
 
@@ -822,7 +823,7 @@ BEGIN
 				FROM
 					#ExtremumGroups eg
 				WHERE
-					eg.[StartIndex] BETWEEN @minRsExtremumIndex AND @maxRsExtremumIndex;
+					eg.[EndIndex] >= @minRsExtremumIndex AND eg.[StartIndex] <= @maxRsExtremumIndex;
 
 				DROP TABLE #RsBorderExtremaPoints;
 
@@ -851,6 +852,7 @@ BEGIN
 				FROM
 					#RsTrendlinesWithCalculatingFields tt
 
+
 				--Get table with possible matches Trendline-ExtremumGroup.
 				SELECT
 					-- Trendline properties
@@ -872,8 +874,9 @@ BEGIN
 					#RsExtremumGroups_Temp eg
 					ON
 							eg.[IsPeak] = tfhm.[LookForPeaksAsBit]
-						AND eg.[StartIndex] BETWEEN tfhm.[MatchingLeftBorder] AND tfhm.[MatchingRightBorder]
+						AND eg.[EndIndex] >= tfhm.[MatchingLeftBorder] AND eg.[StartIndex] <= tfhm.[MatchingRightBorder]
 		
+
 				--Append trendline level.
 				SELECT
 					[TrendlineId],
@@ -909,7 +912,7 @@ BEGIN
 			BEGIN
 
 				INSERT INTO #TrendlinesHits([TrendlineId], [ExtremumGroupId], [DateIndex])
-				SELECT
+				SELECT DISTINCT
 					[TrendlineId],
 					[ExtremumGroupId],
 					[ExtremumStartIndex]
@@ -1551,6 +1554,7 @@ BEGIN
 
 			--Clean up
 			DROP TABLE #BreakPriceHolesInfo;
+			DROP TABLE #BreakEveModifiedPrices;
 
 		END
 
@@ -1634,6 +1638,8 @@ BEGIN
 		trmv.[OpenCloseVariation],
 		COALESCE(eg1.[Value], -0.5) AS [BaseHitValue],
 		COALESCE(eg2.[Value], -0.5) AS [CounterHitValue]
+	INTO 
+		#TrendRangesPartValues
 	FROM
 		#TrendRanges tr
 		LEFT JOIN #ExtremumPriceCrossingPenaltyPoints epcpp ON tr.[Id] = epcpp.[Id]
@@ -1660,26 +1666,44 @@ BEGIN
 		DROP TABLE #OCPriceCrossingPenaltyPoints;
 		DROP TABLE #TrendRangesWithAverageVariation;
 		DROP TABLE #TrendRangesMaxVariations;
+		DROP TABLE #TrendRangesPartValues;
 
 	END
-
 
 END
 
 
 
-select * from #TrendlinesTemp;
+--select * from #TrendlinesTemp;
 
 
 
 DROP TABLE #TrendlinesBreaks;
 DROP TABLE #TrendlinesHits;
-DROP TABLE #TrendlinesTemp;
 DROP TABLE #Trendlines;
 DROP TABLE #TrendRanges;
+DROP TABLE #ExtremumGroups;
+DROP TABLE #Quotes;
 
 
-ROLLBACK TRANSACTION
+
+UPDATE t 
+SET
+	[StartDateIndex] = tt.[StartDateIndex],
+	[EndDateIndex] = tt.[EndDateIndex],
+	[~IsOpenFromLeft] = tt.[~IsOpenFromLeft],
+	[~IsOpenFromRight] = tt.[~IsOpenFromRight]
+FROM	
+	[dbo].[trendlines] t
+	INNER JOIN #TrendlinesTemp tt
+	ON t.[Id] = tt.[Id]
+
+
+DROP TABLE #TrendlinesTemp;
+
+SELECT * FROM [dbo].[trendlines];
+
+COMMIT TRANSACTION
 
 
 

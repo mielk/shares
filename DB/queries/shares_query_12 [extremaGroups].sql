@@ -336,8 +336,8 @@ FROM
 		#ExtremumGroups eg1
 		INNER JOIN #ExtremumGroups eg2
 		ON eg2.[StartIndex] - eg1.[StartIndex] BETWEEN @minDistanceInTrendlinePoints AND LOG(1+(IIF(eg1.[Value] > eg2.[Value], eg1.[Value], eg2.[Value])-49)/20,2.5) * 260
-	WHERE eg1.[StartIndex] = 988 AND eg2.[StartIndex] = 1071;
-	--WHERE eg1.[StartIndex] = 1258 AND eg2.[StartIndex] = 1297;
+	--WHERE eg1.[StartIndex] = 988 AND eg2.[StartIndex] = 1071;
+	WHERE eg1.[StartIndex] = 1258 AND eg2.[StartIndex] = 1297;
 		
 
 
