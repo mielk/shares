@@ -16,6 +16,9 @@
         },
         dataInfoLoaded: function (e) {
             dataInfoLoaded(e.params);
+        },
+        postTimelineResize: function (e) {
+            runPostTimelineResizeAction(e.params);
         }
     });
 
@@ -30,31 +33,94 @@
         var r = self.renderer;
         r.setData(params.data);
         r.render();
+        self.trigger({
+            type: 'postRender',
+            params: getPostRenderProperties()
+        });
+    }
+
+    function getPostRenderProperties() {
+        var dataInfo = self.renderer.data.getDataInfo();
+        var position = self.layout.getPosition();
+        var result = {
+            maxValue: dataInfo.max,
+            minValue: dataInfo.min,
+            viewHeight: position.viewHeight,
+            viewWidth: position.viewWidth,
+            top: position.top,
+            left: position.left,
+            svgWidth: position.svgWidth,
+            svgHeight: position.svgHeight,
+            svgBaseWidth: self.baseSize.width,
+            svgBaseHeight: self.baseSize.height
+        };
+        return result;
+    }
+
+    function runPostTimelineResizeAction(params) {
+        if (params.resized) {
+            self.renderer.sizer.resizeHorizontally(params);
+        } else if (params.relocated) {
+            self.renderer.sizer.moveHorizontally(params);
+        }
     }
 
 
-
     //[UI]
+    self.baseSize = {
+        width: STOCK.CONFIG.svgPanel.width,
+        height: STOCK.CONFIG.svgPanel.height
+    }; 
     self.ui = (function () {
 
         var parentContainer = params.container;
-        var size = {
-            width: STOCK.CONFIG.svgPanel.width,
-            height: STOCK.CONFIG.svgPanel.height
-        };
 
         //Append SVG container.
         var svgContainer = $('<div/>', {
             'class': 'chart-svg-panel',
             id: self.key
         }).css({
-            'height': size.height + 'px',
-            'width': size.width + 'px',
+            'height': self.baseSize.height + 'px',
+            'width': self.baseSize.width + 'px',
             'left': 0,
             'top': 0
         }).appendTo(parentContainer);
 
         var svg = Raphael(self.key);
+        svg.setViewBox(0, 0, self.baseSize.width, self.baseSize.height, true);
+        svg.canvas.setAttribute('preserveAspectRatio', 'none');
+
+
+
+        function resize(e) {
+            var resized = false;
+            if (e.height) {
+                $(svgContainer).height(e.height);
+                resized = true;
+            }
+            if (e.width) {
+                $(svgContainer).width(e.width);
+                resized = true;
+            }
+            if (e.top) {
+                $(svgContainer).css({ top: e.top + 'px' });
+            }
+            if (e.left) {
+                $(svgContainer).css({ left: e.left + 'px' });
+            }
+
+            if (resized) {
+                self.renderer.pathCalculator.updateSizeParams();
+            }
+
+            self.trigger({
+                type: 'resize',
+                height: e.height,
+                width: e.width,
+                top: e.top,
+                left: e.left
+            });
+        }
 
         return {
             getContainer: function(){
@@ -74,7 +140,8 @@
             },
             getSvg: function() {
                 return svg;
-            }
+            },
+            resize: resize
         };
 
     })();
@@ -82,6 +149,47 @@
         parent: self,
         svg: self.ui.getSvg()
     });
+
+
+    //Layout service.
+    self.layout = function () {
+
+        var parentDiv = self.ui.getContainer();
+        var svgDiv = self.ui.getSvgContainer();
+
+        function getPosition() {
+            var position = $(svgDiv).position();
+            var width = $(parentDiv).width();
+            var height = $(parentDiv).height();
+            var right = position.left + width;
+            var bottom = position.top + height;
+            return {
+                left: position.left,
+                top: position.top,
+                right: right,
+                bottom: bottom,
+                svgWidth: $(svgDiv).width(),
+                svgHeight: $(svgDiv).height(),
+                viewLeftX: -position.left,
+                viewRightX: -position.left + width,
+                viewWidth: width,
+                viewHeight: height
+            };
+        };
+
+        function getSvgSize() {
+            return {
+                width: $(svgDiv).width(),
+                height: $(svgDiv).height()
+            }
+        }
+
+        return {
+            getPosition: getPosition,
+            getSvgSize: getSvgSize
+        };
+
+    }();
 
 
     //function findQuotation(x) {
@@ -99,8 +207,6 @@
     //}
 
     //API.
-    //self.render = render;
-    //self.loadQuotations = loadQuotations;
     //self.findQuotation = findQuotation;
     //self.getInfo = getInfo;
 
@@ -111,9 +217,6 @@ SvgPanel.prototype.bind = function (e) {
 SvgPanel.prototype.trigger = function (e) {
     $(self).trigger(e);
 }
-
-
-
 
 function AbstractSvgRenderer(params) {
 
@@ -130,6 +233,42 @@ function AbstractSvgRenderer(params) {
     };
 
 
+    //Services.
+    self.sizer = function () {
+
+        function adjustVertically() {
+            var layout = self.parent.layout.getPosition();
+            var itemsRange = self.pathCalculator.getItemsRange(layout.viewLeftX, layout.viewRightX);
+            var dataInfo = self.data.getPartDataInfo(itemsRange.firstIndex, itemsRange.lastIndex);
+            var verticalAdjustments = self.pathCalculator.calculateVerticalAdjustments(dataInfo, layout.viewHeight);
+            self.parent.ui.resize({ height: verticalAdjustments.height, top: verticalAdjustments.top });
+        }
+
+        function resizeHorizontally(params) {
+            var layout = self.parent.layout.getPosition();
+            var width = layout.viewWidth / params.relativeWidth;
+            var left = params.relativeLeft * layout.svgWidth * (-1);
+            self.parent.ui.resize({ left: left, width: width });
+            adjustVertically();
+        }
+
+        function moveHorizontally(params) {
+            var layout = self.parent.layout.getPosition();
+            var left = params.relativeLeft * layout.svgWidth * (-1);
+            self.parent.ui.resize({ left: left });
+            adjustVertically();
+        }
+
+        return {
+            adjustVertically: adjustVertically,
+            resizeHorizontally: resizeHorizontally,
+            moveHorizontally: moveHorizontally
+        };
+
+    }();
+
+
+
     //API.
     self.render = function () {
         var paths = self.pathCalculator.calculate();
@@ -139,6 +278,7 @@ function AbstractSvgRenderer(params) {
                 self.svg.path(item.path).attr(item.attr);
             }
         });
+        self.sizer.adjustVertically();
     };
 
     self.setDataInfo = function (e) {
@@ -149,17 +289,7 @@ function AbstractSvgRenderer(params) {
         self.data.setData(e);
     }
 
-    self.getSvgSize = function () {
-        var width = self.svg.width;
-        var height = self.svg.height;
-        return {
-            width: width,
-            height: height
-        };
-    }
-
 }
-
 
 function PriceSvgRenderer(params) {
 
@@ -214,6 +344,29 @@ function PriceSvgRenderer(params) {
             return trendlines;
         }
 
+        function getPartDataInfo(first, last) {
+            var firstItem = quotations[first];
+            var lastItem = quotations[last];
+            var max = firstItem.quotation.High;
+            var min = firstItem.quotation.Low;
+            for (var i = first + 1; i <= last; i++) {
+                var item = quotations[i];
+                if (item.quotation.High > max) max = item.quotation.High;
+                if (item.quotation.Low < min) min = item.quotation.Low;
+            }
+
+            return {
+                startDate: firstItem.Date,
+                startIndex: firstItem.DateIndex,
+                endDate: lastItem.Date,
+                endIndex: lastItem.DateIndex,
+                counter: (last - first + 1),
+                max: max,
+                min: min,
+                levelDifference: max - min
+            };
+            
+        }
 
 
         return {
@@ -223,7 +376,8 @@ function PriceSvgRenderer(params) {
             setDataInfo: setDataInfo,
             getQuotations: getQuotations,
             getTrendlins: getTrendlines,
-            getDataInfo: getDataInfo
+            getDataInfo: getDataInfo,
+            getPartDataInfo: getPartDataInfo
         };
 
     })();
@@ -239,7 +393,7 @@ function PriceSvgRenderer(params) {
         function calculate() {
             dataInfo = self.data.getDataInfo();
             quotations = self.data.getQuotations();
-            calculateSizes();
+            updateSizeParams();
             for (var i = 0; i < quotations.length; i++) {
                 var item = quotations[i];
                 var pathInfo = calculateQuotationPath(item.quotation);
@@ -254,8 +408,8 @@ function PriceSvgRenderer(params) {
 
         }
 
-        function calculateSizes() {
-            var svgSize = self.getSvgSize();
+        function updateSizeParams(){
+            var svgSize = self.parent.layout.getSvgSize();
             params.singleItemWidth = svgSize.width / dataInfo.counter;
             params.oneHeight = svgSize.height / dataInfo.levelDifference;
             params.candlePadding = params.singleItemWidth * STOCK.CONFIG.candle.space / 2;
@@ -325,50 +479,48 @@ function PriceSvgRenderer(params) {
 
         }
 
+
+        //Reverse engineering.
+        function getItemForX(x) {
+            return Math.min(Math.floor(x / params.singleItemWidth), dataInfo.counter - 1);
+        }
+
+        function getItemsRange(left, right) {
+            var firstItem = getItemForX(left);
+            var lastItem = getItemForX(right);
+            return {
+                firstIndex: firstItem,
+                lastIndex: lastItem
+            }
+        }
+
+        function calculateVerticalAdjustments(partDataInfo, visibleHeight) {
+            var modifiedMin = partDataInfo.min * 0.97;
+            var modifiedMax = partDataInfo.max * 1.03;
+            var levelDifference = Math.abs(modifiedMin - modifiedMax);
+            var coefficient = dataInfo.levelDifference / levelDifference;
+
+            var newHeight = Math.ceil(visibleHeight * coefficient);
+            var newTop = (dataInfo.max - modifiedMax) * (newHeight / dataInfo.levelDifference);
+
+            return {
+                height: newHeight,
+                top: Math.floor(-newTop)
+            };
+        }
+
+
         return {
-            calculate: calculate
+            calculate: calculate,
+            updateSizeParams: updateSizeParams,
+            getItemsRange: getItemsRange,
+            calculateVerticalAdjustments: calculateVerticalAdjustments
         };
 
     })();
 
 }
 mielk.objects.extend(AbstractSvgRenderer, PriceSvgRenderer);
-
-
-PriceSvgRenderer.prototype = {
-
-    fetchCircleObjects: function (items) {
-        var array = [];
-        items.forEach(function (item) {
-            if (item.extrema.length) {
-                item.extrema.forEach(function (extremum) {
-                    array.push(extremum);
-                });
-            }
-        });
-
-        return array;
-
-    },
-
-    getInfo: function (quotation) {
-        var info = (quotation ?
-                        'Open: ' + quotation.open + ' | ' +
-                        'Low: ' + quotation.low + ' | ' +
-                        'High: ' + quotation.high + ' | ' +
-                        'Close: ' + quotation.close
-                        : '');
-        
-        return info;
-
-    }
-
-};
-
-
-
-
-
 
 
 
