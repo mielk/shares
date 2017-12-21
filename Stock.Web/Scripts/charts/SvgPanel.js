@@ -16,6 +16,9 @@
         },
         dataInfoLoaded: function (e) {
             dataInfoLoaded(e.params);
+        },
+        postTimelineResize: function (e) {
+            runPostTimelineResizeAction(e.params);
         }
     });
 
@@ -42,8 +45,8 @@
         var result = {
             maxValue: dataInfo.max,
             minValue: dataInfo.min,
-            viewHeight: position.height,
-            viewWidth: position.width,
+            viewHeight: position.viewHeight,
+            viewWidth: position.viewWidth,
             top: position.top,
             left: position.left,
             svgWidth: position.svgWidth,
@@ -54,6 +57,13 @@
         return result;
     }
 
+    function runPostTimelineResizeAction(params) {
+        if (params.resized) {
+            self.renderer.sizer.resizeHorizontally(params);
+        } else if (params.relocated) {
+            self.renderer.sizer.moveHorizontally(params);
+        }
+    }
 
 
     //[UI]
@@ -83,8 +93,25 @@
 
 
         function resize(e) {
-            if (e.height) $(svgContainer).height(e.height);
-            if (e.top) $(svgContainer).css({ top: e.top + 'px' });
+            var resized = false;
+            if (e.height) {
+                $(svgContainer).height(e.height);
+                resized = true;
+            }
+            if (e.width) {
+                $(svgContainer).width(e.width);
+                resized = true;
+            }
+            if (e.top) {
+                $(svgContainer).css({ top: e.top + 'px' });
+            }
+            if (e.left) {
+                $(svgContainer).css({ left: e.left + 'px' });
+            }
+
+            if (resized) {
+                self.renderer.pathCalculator.updateSizeParams();
+            }
 
             self.trigger({
                 type: 'resize',
@@ -94,7 +121,6 @@
                 left: e.left
             });
         }
-
 
         return {
             getContainer: function(){
@@ -142,15 +168,25 @@
                 top: position.top,
                 right: right,
                 bottom: bottom,
-                width: width,
-                height: height,
                 svgWidth: $(svgDiv).width(),
-                svgHeight: $(svgDiv).height()
+                svgHeight: $(svgDiv).height(),
+                viewLeftX: -position.left,
+                viewRightX: -position.left + width,
+                viewWidth: width,
+                viewHeight: height
             };
         };
 
+        function getSvgSize() {
+            return {
+                width: $(svgDiv).width(),
+                height: $(svgDiv).height()
+            }
+        }
+
         return {
-            getPosition: getPosition
+            getPosition: getPosition,
+            getSvgSize: getSvgSize
         };
 
     }();
@@ -171,8 +207,6 @@
     //}
 
     //API.
-    //self.render = render;
-    //self.loadQuotations = loadQuotations;
     //self.findQuotation = findQuotation;
     //self.getInfo = getInfo;
 
@@ -198,32 +232,37 @@ function AbstractSvgRenderer(params) {
         created: true
     };
 
-    //Events.
-    self.parent.bind({
-        resize: function (e) {
-            //if (e.height) $(self.svg).css({ 'height': e.height + 'px' });
-        }
-    });
-
 
     //Services.
     self.sizer = function () {
 
         function adjustVertically() {
             var layout = self.parent.layout.getPosition();
-            var itemsRange = self.pathCalculator.getItemsRange(layout.left, layout.right);
+            var itemsRange = self.pathCalculator.getItemsRange(layout.viewLeftX, layout.viewRightX);
             var dataInfo = self.data.getPartDataInfo(itemsRange.firstIndex, itemsRange.lastIndex);
-            var verticalAdjustments = self.pathCalculator.calculateVerticalAdjustments(dataInfo, layout.height);
+            var verticalAdjustments = self.pathCalculator.calculateVerticalAdjustments(dataInfo, layout.viewHeight);
             self.parent.ui.resize({ height: verticalAdjustments.height, top: verticalAdjustments.top });
         }
 
-        function scale() {
+        function resizeHorizontally(params) {
+            var layout = self.parent.layout.getPosition();
+            var width = layout.viewWidth / params.relativeWidth;
+            var left = params.relativeLeft * layout.svgWidth * (-1);
+            self.parent.ui.resize({ left: left, width: width });
+            adjustVertically();
+        }
 
+        function moveHorizontally(params) {
+            var layout = self.parent.layout.getPosition();
+            var left = params.relativeLeft * layout.svgWidth * (-1);
+            self.parent.ui.resize({ left: left });
+            adjustVertically();
         }
 
         return {
             adjustVertically: adjustVertically,
-            scale: scale
+            resizeHorizontally: resizeHorizontally,
+            moveHorizontally: moveHorizontally
         };
 
     }();
@@ -248,15 +287,6 @@ function AbstractSvgRenderer(params) {
 
     self.setData = function (e) {
         self.data.setData(e);
-    }
-
-    self.getSvgSize = function () {
-        var width = self.svg.width;
-        var height = self.svg.height;
-        return {
-            width: width,
-            height: height
-        };
     }
 
 }
@@ -363,7 +393,7 @@ function PriceSvgRenderer(params) {
         function calculate() {
             dataInfo = self.data.getDataInfo();
             quotations = self.data.getQuotations();
-            calculateSizes();
+            updateSizeParams();
             for (var i = 0; i < quotations.length; i++) {
                 var item = quotations[i];
                 var pathInfo = calculateQuotationPath(item.quotation);
@@ -378,8 +408,8 @@ function PriceSvgRenderer(params) {
 
         }
 
-        function calculateSizes() {
-            var svgSize = self.getSvgSize();
+        function updateSizeParams(){
+            var svgSize = self.parent.layout.getSvgSize();
             params.singleItemWidth = svgSize.width / dataInfo.counter;
             params.oneHeight = svgSize.height / dataInfo.levelDifference;
             params.candlePadding = params.singleItemWidth * STOCK.CONFIG.candle.space / 2;
@@ -482,6 +512,7 @@ function PriceSvgRenderer(params) {
 
         return {
             calculate: calculate,
+            updateSizeParams: updateSizeParams,
             getItemsRange: getItemsRange,
             calculateVerticalAdjustments: calculateVerticalAdjustments
         };
@@ -490,42 +521,6 @@ function PriceSvgRenderer(params) {
 
 }
 mielk.objects.extend(AbstractSvgRenderer, PriceSvgRenderer);
-
-
-PriceSvgRenderer.prototype = {
-
-    fetchCircleObjects: function (items) {
-        var array = [];
-        items.forEach(function (item) {
-            if (item.extrema.length) {
-                item.extrema.forEach(function (extremum) {
-                    array.push(extremum);
-                });
-            }
-        });
-
-        return array;
-
-    },
-
-    getInfo: function (quotation) {
-        var info = (quotation ?
-                        'Open: ' + quotation.open + ' | ' +
-                        'Low: ' + quotation.low + ' | ' +
-                        'High: ' + quotation.high + ' | ' +
-                        'Close: ' + quotation.close
-                        : '');
-        
-        return info;
-
-    }
-
-};
-
-
-
-
-
 
 
 

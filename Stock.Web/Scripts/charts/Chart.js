@@ -34,11 +34,12 @@ function Chart(parentContainer, params) {
         parent: self,
         key: self.key,
         timelineFrameId: 'timeline-frame',
-        timelinePointerId: 'timeline-pointer',
-        timelinePointerBorderWeight: 3
+        timelinePointerContainerId: 'timeline-pointer-container',
+        timelinePointerBorderId: 'timeline-pointer-border',
+        timelinePointerInsideId: 'timeline-pointer-inside',
+        timelinePointerLeftExpanderId: 'timeline-pointer-left-expander',
+        timelinePointerRightExpanderId: 'timeline-pointer-right-expander'
     });
-
-
 
 
 
@@ -59,6 +60,14 @@ function Chart(parentContainer, params) {
             }
         });
 
+        timescale.bind({
+            postResize: function (e) {
+                self.trigger({
+                    type: 'postTimelineResize',
+                    params: e.params
+                });
+            }
+        });
 
     })();
 
@@ -211,6 +220,9 @@ Chart.prototype.bind = function (e) {
 Chart.prototype.trigger = function (e) {
     $(this).trigger(e);
 }
+
+
+
 
 
 function ChartEventsLayer(params) {
