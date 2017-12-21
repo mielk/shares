@@ -144,44 +144,6 @@
     border-right: 0.5px solid #999999;
 }
 
-.timeline-container {
-    display: block;
-    position: relative;
-    float: left;
-    box-sizing: border-box;
-    height: 40px;
-    width: 100%;
-    margin-top: 6px;
-    background-color: white;
-}
-
-
-.timeline {
-    display: block;
-    position: absolute;
-    float: left;
-    box-sizing: border-box;
-    left: 3px;
-    right: 3px;
-    top: 4px;
-    height: 32px;
-    border: 1px solid #AAAAAA;
-}
-
-.timeline-pointer {
-    display: block;
-    position: absolute;
-    float: left;
-    box-sizing: border-box;
-    width: 32px;
-    height: 36px;
-    left: 21px;
-    top: 2px;
-    border: 3px solid red;
-    background-color: transparent;
-}
-
-
 
 .values-container {
     display: block;
@@ -198,9 +160,16 @@
 
 
 /* SVG */
+svg { 
+    height: 100%; 
+    width: 100%; 
+    float: left;
+}
+
 .chart-svg-layer-container {
     display: block;
     position: relative;
+    float: left;
     box-sizing: border-box;
     background-color: white;
     border: none;
@@ -211,6 +180,7 @@
 .chart-svg-layer {
     display: block;
     position: absolute;
+    float: left;
     box-sizing: border-box;
     background-color: white;
     border: none;
@@ -224,6 +194,7 @@
 .chart-svg-panel-container {
     display: block;
     position: relative;
+    float: left;
     box-sizing: border-box;
     background-color: white;
     height: 100%;
@@ -233,6 +204,7 @@
 .chart-svg-panel {
     display: block;
     position: absolute;
+    float: left;
     box-sizing: border-box;
     background-color: white;
     border: none;
@@ -516,3 +488,38 @@ span.info {
 
 
 /* Timeline container */
+.timeline-container {
+    display: block;
+    position: relative;
+    float: left;
+    box-sizing: border-box;
+    height: 40px;
+    width: 100%;
+    margin-top: 6px;
+    background-color: white;
+}
+
+.timeline-frame {
+    display: block;
+    position: absolute;
+    float: left;
+    box-sizing: border-box;
+    left: 3px;
+    right: 3px;
+    top: 4px;
+    height: 32px;
+    border: 1px solid #AAAAAA;
+}
+
+.timeline-pointer {
+    display: block;
+    position: absolute;
+    float: left;
+    box-sizing: border-box;
+    width: 32px;
+    height: 36px;
+    left: 21px;
+    top: 2px;
+    border: 3px solid red;
+    background-color: transparent;
+}

@@ -14,21 +14,35 @@ function Chart(parentContainer, params) {
     var parent = parentContainer;
     var controller = parent.getController();
 
-    //UI.
+    //UI components.
     var chartDivId = 'actual-chart-container';
     var infoDivId = 'quote-info-panel';
     var svgDiv = 'chart-svg-panel-container';
     var chartDiv = document.getElementById(chartDivId);
     var infoDiv = document.getElementById(infoDivId);
     var svgDiv = document.getElementById(svgDiv);
+
+    //UI classes.
     var svg = new SvgPanel({
         parent: self,
         key: self.key,
         container: svgDiv,
         type: self.type
-    });;
+    });
 
-    //Events.
+    var timescale = new TimescaleLine({
+        parent: self,
+        key: self.key,
+        timelineFrameId: 'timeline-frame',
+        timelinePointerId: 'timeline-pointer',
+        timelinePointerBorderWeight: 3
+    });
+
+
+
+
+
+    //Bind events.
     (function bindEvents() {
         parent.bind({
             dataInfoLoaded: function (e) {
@@ -38,6 +52,14 @@ function Chart(parentContainer, params) {
                 dataLoaded(e.params);
             }
         });
+
+        svg.bind({
+            postRender: function (e) {
+                runPostRenderActions(e.params);
+            }
+        });
+
+
     })();
 
     function dataInfoLoaded(params) {
@@ -54,6 +76,12 @@ function Chart(parentContainer, params) {
         });
     }
 
+    function runPostRenderActions(params) {
+        self.trigger({
+            type: 'postRender',
+            params: params
+        });
+    }
 
 
 

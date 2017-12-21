@@ -30,31 +30,71 @@
         var r = self.renderer;
         r.setData(params.data);
         r.render();
+        self.trigger({
+            type: 'postRender',
+            params: getPostRenderProperties()
+        });
+    }
+
+    function getPostRenderProperties() {
+        var dataInfo = self.renderer.data.getDataInfo();
+        var position = self.layout.getPosition();
+        var result = {
+            maxValue: dataInfo.max,
+            minValue: dataInfo.min,
+            viewHeight: position.height,
+            viewWidth: position.width,
+            top: position.top,
+            left: position.left,
+            svgWidth: position.svgWidth,
+            svgHeight: position.svgHeight,
+            svgBaseWidth: self.baseSize.width,
+            svgBaseHeight: self.baseSize.height
+        };
+        return result;
     }
 
 
 
     //[UI]
+    self.baseSize = {
+        width: STOCK.CONFIG.svgPanel.width,
+        height: STOCK.CONFIG.svgPanel.height
+    }; 
     self.ui = (function () {
 
         var parentContainer = params.container;
-        var size = {
-            width: STOCK.CONFIG.svgPanel.width,
-            height: STOCK.CONFIG.svgPanel.height
-        };
 
         //Append SVG container.
         var svgContainer = $('<div/>', {
             'class': 'chart-svg-panel',
             id: self.key
         }).css({
-            'height': size.height + 'px',
-            'width': size.width + 'px',
+            'height': self.baseSize.height + 'px',
+            'width': self.baseSize.width + 'px',
             'left': 0,
             'top': 0
         }).appendTo(parentContainer);
 
         var svg = Raphael(self.key);
+        svg.setViewBox(0, 0, self.baseSize.width, self.baseSize.height, true);
+        svg.canvas.setAttribute('preserveAspectRatio', 'none');
+
+
+
+        function resize(e) {
+            if (e.height) $(svgContainer).height(e.height);
+            if (e.top) $(svgContainer).css({ top: e.top + 'px' });
+
+            self.trigger({
+                type: 'resize',
+                height: e.height,
+                width: e.width,
+                top: e.top,
+                left: e.left
+            });
+        }
+
 
         return {
             getContainer: function(){
@@ -74,7 +114,8 @@
             },
             getSvg: function() {
                 return svg;
-            }
+            },
+            resize: resize
         };
 
     })();
@@ -82,6 +123,37 @@
         parent: self,
         svg: self.ui.getSvg()
     });
+
+
+    //Layout service.
+    self.layout = function () {
+
+        var parentDiv = self.ui.getContainer();
+        var svgDiv = self.ui.getSvgContainer();
+
+        function getPosition() {
+            var position = $(svgDiv).position();
+            var width = $(parentDiv).width();
+            var height = $(parentDiv).height();
+            var right = position.left + width;
+            var bottom = position.top + height;
+            return {
+                left: position.left,
+                top: position.top,
+                right: right,
+                bottom: bottom,
+                width: width,
+                height: height,
+                svgWidth: $(svgDiv).width(),
+                svgHeight: $(svgDiv).height()
+            };
+        };
+
+        return {
+            getPosition: getPosition
+        };
+
+    }();
 
 
     //function findQuotation(x) {
@@ -112,9 +184,6 @@ SvgPanel.prototype.trigger = function (e) {
     $(self).trigger(e);
 }
 
-
-
-
 function AbstractSvgRenderer(params) {
 
     'use strict';
@@ -129,6 +198,37 @@ function AbstractSvgRenderer(params) {
         created: true
     };
 
+    //Events.
+    self.parent.bind({
+        resize: function (e) {
+            //if (e.height) $(self.svg).css({ 'height': e.height + 'px' });
+        }
+    });
+
+
+    //Services.
+    self.sizer = function () {
+
+        function adjustVertically() {
+            var layout = self.parent.layout.getPosition();
+            var itemsRange = self.pathCalculator.getItemsRange(layout.left, layout.right);
+            var dataInfo = self.data.getPartDataInfo(itemsRange.firstIndex, itemsRange.lastIndex);
+            var verticalAdjustments = self.pathCalculator.calculateVerticalAdjustments(dataInfo, layout.height);
+            self.parent.ui.resize({ height: verticalAdjustments.height, top: verticalAdjustments.top });
+        }
+
+        function scale() {
+
+        }
+
+        return {
+            adjustVertically: adjustVertically,
+            scale: scale
+        };
+
+    }();
+
+
 
     //API.
     self.render = function () {
@@ -139,6 +239,7 @@ function AbstractSvgRenderer(params) {
                 self.svg.path(item.path).attr(item.attr);
             }
         });
+        self.sizer.adjustVertically();
     };
 
     self.setDataInfo = function (e) {
@@ -159,7 +260,6 @@ function AbstractSvgRenderer(params) {
     }
 
 }
-
 
 function PriceSvgRenderer(params) {
 
@@ -214,6 +314,29 @@ function PriceSvgRenderer(params) {
             return trendlines;
         }
 
+        function getPartDataInfo(first, last) {
+            var firstItem = quotations[first];
+            var lastItem = quotations[last];
+            var max = firstItem.quotation.High;
+            var min = firstItem.quotation.Low;
+            for (var i = first + 1; i <= last; i++) {
+                var item = quotations[i];
+                if (item.quotation.High > max) max = item.quotation.High;
+                if (item.quotation.Low < min) min = item.quotation.Low;
+            }
+
+            return {
+                startDate: firstItem.Date,
+                startIndex: firstItem.DateIndex,
+                endDate: lastItem.Date,
+                endIndex: lastItem.DateIndex,
+                counter: (last - first + 1),
+                max: max,
+                min: min,
+                levelDifference: max - min
+            };
+            
+        }
 
 
         return {
@@ -223,7 +346,8 @@ function PriceSvgRenderer(params) {
             setDataInfo: setDataInfo,
             getQuotations: getQuotations,
             getTrendlins: getTrendlines,
-            getDataInfo: getDataInfo
+            getDataInfo: getDataInfo,
+            getPartDataInfo: getPartDataInfo
         };
 
     })();
@@ -325,8 +449,41 @@ function PriceSvgRenderer(params) {
 
         }
 
+
+        //Reverse engineering.
+        function getItemForX(x) {
+            return Math.min(Math.floor(x / params.singleItemWidth), dataInfo.counter - 1);
+        }
+
+        function getItemsRange(left, right) {
+            var firstItem = getItemForX(left);
+            var lastItem = getItemForX(right);
+            return {
+                firstIndex: firstItem,
+                lastIndex: lastItem
+            }
+        }
+
+        function calculateVerticalAdjustments(partDataInfo, visibleHeight) {
+            var modifiedMin = partDataInfo.min * 0.97;
+            var modifiedMax = partDataInfo.max * 1.03;
+            var levelDifference = Math.abs(modifiedMin - modifiedMax);
+            var coefficient = dataInfo.levelDifference / levelDifference;
+
+            var newHeight = Math.ceil(visibleHeight * coefficient);
+            var newTop = (dataInfo.max - modifiedMax) * (newHeight / dataInfo.levelDifference);
+
+            return {
+                height: newHeight,
+                top: Math.floor(-newTop)
+            };
+        }
+
+
         return {
-            calculate: calculate
+            calculate: calculate,
+            getItemsRange: getItemsRange,
+            calculateVerticalAdjustments: calculateVerticalAdjustments
         };
 
     })();

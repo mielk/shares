@@ -278,8 +278,6 @@
     <Content Include="Scripts\charts\TimescaleLine.js" />
     <Content Include="Scripts\charts\DateTimeLine.js" />
     <Content Include="Scripts\charts\ValuePanel.js" />
-    <Content Include="Scripts\charts\SvgPanelOld.js" />
-    <Content Include="Scripts\charts\TimeframeChartsContainer.js" />
     <Content Include="Scripts\charts\SvgPanel.js" />
     <Content Include="Scripts\unit-tests\AjaxServiceMock.js" />
     <Content Include="Scripts\unit-tests\mielk\mielk.dates.tests.js" />
