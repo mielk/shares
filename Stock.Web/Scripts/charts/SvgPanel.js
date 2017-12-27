@@ -254,7 +254,16 @@ function AbstractSvgRenderer(params) {
         var paths = self.pathCalculator.calculate();
         self.svg.clear();
         paths.forEach(function (item) {
-            if (item.path) {
+            if (item.isCirclesSet) {
+                item.sets.forEach(function (obj) {
+                    var circle = self.svg.circle(obj.x, obj.y, obj.radius);
+                    circle.attr({
+                        'stroke': obj.stroke,
+                        'stroke-width': 1,
+                        'fill': obj.fill
+                    });
+                });
+            } else if (item.path) {
                 self.svg.path(item.path).attr(item.attr);
             }
         });
@@ -373,6 +382,7 @@ function PriceSvgRenderer(params) {
         var ascendingPaths = [];
         var descendingPaths = [];
         var trendlinePaths = [];
+        var extremaCircles = [];
 
 
         function calculate() {
@@ -383,29 +393,37 @@ function PriceSvgRenderer(params) {
 
             prepareQuotationsSvgPaths();
             prepareTrendlinesSvgPaths();
+            //prepareExtremaPaths();
 
             return getCombinedPaths();
 
         }
 
         function prepareQuotationsSvgPaths() {
-            for (var i = 0; i < quotations.length; i++) {
-                var item = quotations[i];
+            quotations.forEach(function (item) {
                 var pathInfo = calculateQuotationPath(item.quotation);
-                if (pathInfo.isAscending) {
-                    ascendingPaths.push(pathInfo.path);
-                } else {
-                    descendingPaths.push(pathInfo.path);
-                };
-            }
+                var arr = pathInfo.isAscending ? ascendingPaths : descendingPaths;
+                arr.push(pathInfo.path);
+            });
         }
 
         function prepareTrendlinesSvgPaths() {
-            for (var i = 0; i < trendlines.length; i++) {
-                var item = trendlines[i];
+            trendlines.forEach(function (item) {
                 var pathInfo = calculateTrendlinePath(item);
                 trendlinePaths.push(pathInfo.path);
-            }
+            });
+        }
+
+        function prepareExtremaPaths() {
+            quotations.forEach(function (item) {
+                var price = item.price;
+                if (price) {
+                    var pathInfo = calculateExtremaPaths(item);
+                    if (pathInfo) {
+                        extremaCircles.push(pathInfo);
+                    }
+                }
+            });
         }
 
         function updateSizeParams() {
@@ -428,8 +446,8 @@ function PriceSvgRenderer(params) {
 
             var path = 'M' + left + ',' + bodyBottom + 'L' + left + ',' + bodyTop + 'L' +
                        right + ',' + bodyTop + 'L' + right + ',' + bodyBottom + 'Z' +
-                       'M' + middle + ',' + shadeBottom + 'L' + middle + ',' + bodyBottom + 'Z' +
-                       'M' + middle + ',' + shadeTop + 'L' + middle + ',' + bodyTop + 'Z';
+                       'M' + middle + ',' + shadeTop + 'L' + middle + ',' + bodyTop + 'Z' +
+                       'M' + middle + ',' + shadeBottom + 'L' + middle + ',' + bodyBottom + 'Z';
 
             return {
                 isAscending: isAscending,
@@ -454,6 +472,55 @@ function PriceSvgRenderer(params) {
                 type: 'trendline',
                 path: path
             };
+
+        }
+
+        function calculateExtremaPaths(item) {
+            var price = item.price;
+            var distance = STOCK.CONFIG.peaks.distance;
+            var value = 0;
+            var isMin = null;
+
+            if (price.PeakByClose || price.PeakByHigh) {
+                value = Math.max(price.PeakByClose ? price.PeakByClose.Value : 0, price.PeakByHigh ? price.PeakByHigh.Value : 0);
+                isMin = false;
+            } else if (price.TroughByClose || price.TroughByLow) {
+                value = Math.max(price.TroughByClose ? price.TroughByClose.Value : 0, price.TroughByLow ? price.TroughByLow.Value : 0);
+                isMin = true;
+            } else {
+                return null;
+            }
+
+            var scale = Math.min(1, value / 50);
+            var greyscale = 255 * (1 - scale);
+            var x = getX(item.DateIndex) + (params.bodyWidth / 2);
+            var y = isMin ? getY(item.quotation.Low) + distance : getY(item.quotation.High) - distance;
+
+            return {
+                item: item,
+                x: x,
+                y: y,
+                radius: Math.min(value / 5, 10),
+                stroke: 'rgb(' + greyscale + ',' + greyscale + ',' + greyscale + ')',
+                fill: 'rgba(' + (isMin ? '255, 0' : '0, 255') + ', 0, ' + scale + ')'
+            };
+
+
+        }
+
+
+
+        //Add peak/through indicators.
+        function addExtremumLabel(extrema, isMin) {
+            var dist = STOCK.CONFIG.peaks.distance;
+            var extremum = isMin ?
+                Math.max(item.troughByClose ? item.troughByClose.Value : 0, item.troughByLow ? item.troughByLow.Value : 0) :
+                Math.max(item.peakByClose ? item.peakByClose.Value : 0, item.peakByHigh ? item.peakByHigh.Value : 0);
+            if (!extremum) return;
+
+
+
+            return true;
 
         }
 
@@ -499,6 +566,10 @@ function PriceSvgRenderer(params) {
                     'stroke-width': 0.3,
                     'fill': STOCK.CONFIG.trendlines.color
                 }
+            });
+            result.push({
+                isCirclesSet: true,
+                sets: extremaCircles
             });
 
             return result;
@@ -563,160 +634,6 @@ mielk.objects.extend(AbstractSvgRenderer, PriceSvgRenderer);
 
 
 
-
-
-////Parameters specific for this type of chart.
-//self.size = params.size;
-//self.quotations = params.quotations;
-//self.trendlines = params.trendlines;
-//self.paths = {};
-//self.offset = 0;
-
-
-//function calculateHorizontalBound(items) {
-//    var singleWidth = STOCK.CONFIG.candle.width;
-//    var totalWidth = items.length * singleWidth;
-
-//    self.offset = self.parent.parent.offset();
-//    //self.params.firstItem = items.length - 1 - Math.floor((self.offset + self.size.width) / singleWidth);
-//    self.params.firstItem = 0;
-//    //self.params.lastItem = items.length - 1 - Math.floor(self.offset / singleWidth);
-//    self.params.lastItem = items.length - 1;
-//    self.params.singleWidth = singleWidth;
-//    self.params.totalWidth = totalWidth;
-
-//}
-
-//function findFirstNonEmptyIndex(index, direction) {
-//    var step = (direction ? (direction / Math.abs(direction)) : 1);
-//    var quotation = null;
-
-//    for (var i = index; i >= 0 && i <= self.quotations.length; i += step) {
-//        quotation = self.quotations[index];
-//        if (quotation) {
-//            return i;
-//        }
-//    }
-
-//    return index;
-
-//}
-
-////Function to calculate vertical limits for the current chart and measures for a single unit.
-//function calculateVerticalBounds(items, height) {
-
-//    //Find [min] and [max] value.
-
-//    //[Handling gaps in prices]
-//    //Function [findFirstNonEmptyIndex] implement for handling gaps in prices.
-//    //If user moves to the screen where there are only gaps, range.min and range.max are null
-//    //and this function cannot proceed.
-//    var range = self.findVerticalRange(items, 
-//                        findFirstNonEmptyIndex(self.params.firstItem, 1), 
-//                        findFirstNonEmptyIndex(self.params.lastItem, -1));
-
-//    //[Handling gaps in prices]
-//    //If user moves to the screen where there are only gaps, range.min and range.max are null
-//    //and this function cannot proceed.
-//    if (range.min === null && range.max === null) {
-//        range = self.findVerticalRange(items);
-//    }
-
-//    var min = range.min;
-//    var max = range.max;
-//    var difference = max - min;
-
-//    var bottom = min - STOCK.CONFIG.chart.margin * difference;
-//    bottom = self.params.minAllowed !== null ? Math.max(bottom, self.params.minAllowed) : bottom;
-//    var top = max + STOCK.CONFIG.chart.margin * difference;
-//    top = self.params.maxAllowed !== null ? Math.min(top, self.params.maxAllowed) : top;
-//    var distance = top - bottom;
-//    var unitHeight = height / distance;
-
-//    //Add vertical bounds of the chart.
-//    mielk.objects.addProperties(
-//        self.params,
-//        {   min: min,
-//            max: max,
-//            top: top,
-//            bottom: bottom,
-//            unitHeight: unitHeight  }
-//    );
-
-//}
-
-////Funkcja zwraca najniższą i najwyższą wartość dla zakresu ograniczonego 
-////przez indeksy [first] i [last] w zestawie danych [items].
-//self.findVerticalRange = function (items, first, last) {
-//    var $first = first || 0;
-//    var $last = last || items.length - 1;
-
-//    var min = mielk.arrays.getMin(items, self.fnMinEvaluation, $first, $last);
-//    var max = mielk.arrays.getMax(items, self.fnMaxEvaluation, $first, $last);
-
-//    return {
-//        min: min,
-//        max: max
-//    };
-
-//}
-
-//self.countTrendlineValue = function(trendline, index){
-//    return (index - trendline.BaseStartIndex) * trendline.Slope + trendline.BaseLevel;
-//}
-
-//self.createTrendlinePath = function (trendline, params) {
-//    var INITIAL_OFFSET = 2;
-//    var AFTER_OFFSET = 20;
-//    var bodyWidth = params.width - params.space;
-//    var initialIndex = Math.max(0, trendline.StartIndex - INITIAL_OFFSET);
-//    //var endIndex = Math.max(0, trendline.EndIndex - INITIAL_OFFSET);
-//    var endIndex = Math.max(0, trendline.CounterStartIndex - INITIAL_OFFSET);
-//    if (self.quotations[initialIndex].coordinates) {
-//        var x1 = self.quotations[initialIndex].coordinates.middle;
-//        var value1 = self.countTrendlineValue(trendline, initialIndex);
-//        var y1 = self.getY(value1);
-//        var boundIndex = Math.min(trendline.CounterStartIndex + AFTER_OFFSET, self.quotations.length - 1);
-//        var x2 = self.quotations[boundIndex].coordinates.middle;// + (AFTER_OFFSET * params.width);
-//        var value2 = self.countTrendlineValue(trendline, boundIndex);
-//        var y2 = self.getY(value2);
-
-//        var attr = {
-//            'stroke': '#888',
-//            'stroke-width': 1
-//        };
-
-//        //Calculate coordinates.
-//        var path = 'M' + x1 + ',' + y1 + 'L' + x2 + ',' + y2;
-
-//    }
-
-//    //Save the coordinates of this item's candle 
-//    //(used later to display values on the chart and to scale charts).
-//    trendline.coordinates = {
-//        x1: x1,
-//        y1: y1,
-//        x2: x2,
-//        y2: y2
-//    };
-
-//    return {
-//        path: path,
-//        attr: attr
-//    }
-
-//}
-
-////Funkcja obliczająca pozycję pionową dla danej wartości (w zależności od wysokości kontenera).
-//self.getY = function (value) {
-//    return self.size.height * (this.params.top - value) / (this.params.top - this.params.bottom);
-//};
-
-////Funkcja zwraca proporcje pomiędzy podanym zakresem a całym zakresem dla aktualnego zestawu danych.
-//self.getRatio = function (range) {
-//    var ratio = (range.max - range.min) / (self.params.top - self.params.bottom);
-//    return ratio;
-//}
 
 ////Funkcja zwraca notowanie, którego świeca jest aktualnie wyświetlona w odległości [x] od lewej
 ////krawędzi ramki z notowaniami.

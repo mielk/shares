@@ -4,10 +4,11 @@ GO
 
 BEGIN TRANSACTION;
 
-DECLARE @shareId INT, @minWorse AS INT, @maxChecked AS INT, @firstQuote AS INT, @lastQuote AS INT;
+DECLARE @shareId INT, @minWorse AS INT, @maxChecked AS INT, @firstQuote AS INT, @lastQuote AS INT, @minValue AS INT;
 SET @shareId = 1;
 SET @minWorse = 5;
 SET @maxChecked = 260;
+SET @minValue = 55;
 
 --Temporary tables.
 SELECT [DateIndex], IIF([Close] > [Open], [Close], [Open]) AS [Close] INTO #MaxOpenClosePrices FROM [quotes] WHERE [ShareId] = @shareId;
@@ -1048,17 +1049,22 @@ BEGIN
 				) p
 			ON e.[Id] = p.[Id];
 
-	DELETE 
-	FROM 
-		[dbo].[extrema]
-	WHERE
-		[Value] < 50 OR [Value] IS NUll;
 
-	UPDATE
-		[dbo].[extrema]
-	SET
-		[Value] = ([Value] - 50) * 2;
+	--Filter extrema with too low value.
+	BEGIN
 
+		DELETE 
+		FROM 
+			[dbo].[extrema]
+		WHERE
+			[Value] < @minValue OR [Value] IS NUll;
+
+		UPDATE
+			[dbo].[extrema]
+		SET
+			[Value] = ([Value] - 50) * 2;
+
+	END
 
 END
 

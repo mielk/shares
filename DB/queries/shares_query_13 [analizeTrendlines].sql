@@ -2,16 +2,43 @@
 
 GO
 
+DROP PROCEDURE [dbo].[evaluateTrendlines];
+
+GO
+
+CREATE PROCEDURE [dbo].[evaluateTrendlines] @shareId INT, @baseExtremumId INT, @counterExtremumId INT
+
+AS
+
 BEGIN TRANSACTION
 
-DECLARE @shareId INT, @distanceIterations INT, @maxIterationCounter INT;
+--Clear previous results.
+BEGIN
+
+	UPDATE
+		[dbo].[Trendlines]
+	SET
+		[StartDateIndex] = NULL,
+		[EndDateIndex] = NULL,
+		[~IsOpenFromLeft] = 1,
+		[~IsOpenFromRight] = 1,
+		[ShowOnChart] = 0
+	WHERE 
+		[ShareId] = @shareId AND 
+		[BaseId] = @baseExtremumId AND 
+		[CounterId] = @counterExtremumId;
+
+END
+
+
+
+DECLARE @distanceIterations INT, @maxIterationCounter INT;
 DECLARE @trendlineStartOffset INT, @maxDeviationFromTrendline FLOAT;
 DECLARE @displayLeftSidePreviewTables BIT, @displayRightSidePreviewTables BIT;
 DECLARE @i INT, @j INT;
 DECLARE @minQuoteIndex INT, @maxQuoteIndex INT;
 DECLARE @minDistanceFromExtremumToBreak INT, @quotesAnalyzedForBreakEvaluation INT;
 ----------------------------------------------------------------------------------------------------------------
-SET @shareId = 1;
 SET @maxIterationCounter = 10;
 SET @minDistanceFromExtremumToBreak = 5;
 SET @quotesAnalyzedForBreakEvaluation = 5;
@@ -25,7 +52,7 @@ SET @displayRightSidePreviewTables = 0;
 
 
 --Temporary tables.
-SELECT * INTO #Trendlines FROM [dbo].[trendlines] WHERE [ShareId] = @shareId;
+SELECT * INTO #Trendlines FROM [dbo].[trendlines] WHERE [ShareId] = @shareId AND [BaseId] = @baseExtremumId AND [CounterId] = @counterExtremumId AND [~IsOpenFromRight] = 1;
 SELECT * INTO #ExtremumGroups FROM [dbo].[extremumGroups] WHERE [ShareId] = @shareId;
 SELECT [DateIndex], [Date], [Open], [Low], [High], [Close], [Volume] INTO #Quotes FROM [dbo].[quotes] WHERE [ShareId] = @shareId;
 
@@ -464,6 +491,21 @@ BEGIN
 					[SupResFactor] * [PriceTrendlineDistance] * [TrendlineAboveZero] < @maxDeviationFromTrendline;
 
 			END
+
+
+			--Remove duplicates from #TrendlinesHits table.
+			BEGIN
+				
+				WITH CTE AS(
+				   SELECT [TrendlineId], [ExtremumGroupId], [DateIndex], RN = ROW_NUMBER()
+				   OVER(PARTITION BY [TrendlineId], [ExtremumGroupId], [DateIndex] ORDER BY [TrendlineId], [ExtremumGroupId], [DateIndex])
+				   FROM #TrendlinesHits
+				)
+				DELETE FROM CTE WHERE RN > 1
+
+			END
+
+
 
 			--Clean up after looking for trend hits.
 			BEGIN
@@ -922,6 +964,19 @@ BEGIN
 					[SupResFactor] * [PriceTrendlineDistance] * [TrendlineAboveZero] < @maxDeviationFromTrendline;
 
 			END
+
+			--Remove duplicates from #TrendlinesHits table.
+			BEGIN
+				
+				WITH CTE AS(
+				   SELECT [TrendlineId], [ExtremumGroupId], [DateIndex], RN = ROW_NUMBER()
+				   OVER(PARTITION BY [TrendlineId], [ExtremumGroupId], [DateIndex] ORDER BY [TrendlineId], [ExtremumGroupId], [DateIndex])
+				   FROM #TrendlinesHits
+				)
+				DELETE FROM CTE WHERE RN > 1
+
+			END
+
 
 			--Clean up after looking for trend hits.
 			BEGIN
@@ -1674,34 +1729,99 @@ END
 
 
 
---select * from #TrendlinesTemp;
+select 'TrendlinesTemp', * from #TrendlinesTemp;
+select 'TrendlinesHits', * from #TrendlinesHits ORDER BY [TrendlineId] ASC;
+
+-----------------
+
+
+-- POST-ANALYSIS QUERIES
+BEGIN
+
+	--Create table with counter of hits for each trendline.
+	SELECT
+		tt.[Id],
+		COUNT(th.[TrendlineId]) AS [Counter]
+	INTO
+		#HitCounters
+	FROM	
+		#TrendlinesTemp tt
+		LEFT JOIN #TrendlinesHits th
+		ON tt.[Id] = th.[TrendlineId]
+	GROUP BY
+		tt.[Id];
+
+	--Create table with IDs of trendlines to be removed (less than 3 hits, closed from right side)
+	SELECT
+		t.[Id]
+	INTO
+		#TrendlinesToBeRemoved
+	FROM
+		#TrendlinesTemp t
+		LEFT JOIN #HitCounters hc
+		ON t.[Id] = hc.[Id]
+	WHERE
+		hc.[Counter] <= 2 AND
+		t.[~IsOpenFromRight] = 0;
+
+	--Delete trendlines mentioned above.
+	DELETE
+	FROM
+		[dbo].[trendlines]
+	WHERE
+		[Id] IN (SELECT [Id] FROM #TrendlinesToBeRemoved);
+
+	DELETE
+	FROM
+		#TrendlinesTemp
+	WHERE
+		[Id] IN (SELECT [Id] FROM #TrendlinesToBeRemoved);
+		
+	-----------------
+
+	UPDATE t 
+	SET
+		[StartDateIndex] = tt.[StartDateIndex],
+		[EndDateIndex] = tt.[EndDateIndex],
+		[~IsOpenFromLeft] = tt.[~IsOpenFromLeft],
+		[~IsOpenFromRight] = tt.[~IsOpenFromRight],
+		[ShowOnChart] = 1
+	FROM	
+		[dbo].[trendlines] t
+		INNER JOIN #TrendlinesTemp tt
+		ON t.[Id] = tt.[Id]
+
+	-----------------
+
+	SELECT 
+		* 
+	FROM 
+		[dbo].[trendlines]
+	WHERE
+		[ShareId] = @shareId AND
+		[BaseId] = @baseExtremumId AND
+		[CounterId] = @counterExtremumId
+
+END
 
 
 
-DROP TABLE #TrendlinesBreaks;
-DROP TABLE #TrendlinesHits;
-DROP TABLE #Trendlines;
-DROP TABLE #TrendRanges;
-DROP TABLE #ExtremumGroups;
-DROP TABLE #Quotes;
 
+-- CLEAN-UP
+BEGIN
 
+	DROP TABLE #TrendlinesBreaks;
+	DROP TABLE #TrendlinesHits;
+	DROP TABLE #Trendlines;
+	DROP TABLE #TrendRanges;
+	DROP TABLE #ExtremumGroups;
+	DROP TABLE #Quotes;
+	DROP TABLE #TrendlinesTemp;
+	DROP TABLE #HitCounters;
+	DROP TABLE #TrendlinesToBeRemoved;
 
-UPDATE t 
-SET
-	[StartDateIndex] = tt.[StartDateIndex],
-	[EndDateIndex] = tt.[EndDateIndex],
-	[~IsOpenFromLeft] = tt.[~IsOpenFromLeft],
-	[~IsOpenFromRight] = tt.[~IsOpenFromRight]
-FROM	
-	[dbo].[trendlines] t
-	INNER JOIN #TrendlinesTemp tt
-	ON t.[Id] = tt.[Id]
+END
 
-
-DROP TABLE #TrendlinesTemp;
-
-SELECT * FROM [dbo].[trendlines];
 
 COMMIT TRANSACTION
 

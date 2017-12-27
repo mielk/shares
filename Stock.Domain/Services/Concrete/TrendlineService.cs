@@ -31,7 +31,7 @@ namespace Stock.Domain.Services
                 var trendline = Trendline.FromDto(dto);
                 result.Add(trendline);
             }
-            return result;
+            return result.Where(t => t.ShowOnChart).Take(100);
         }
 
         public Trendline GetTrendlineById(int id)

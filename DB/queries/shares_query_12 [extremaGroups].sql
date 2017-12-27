@@ -320,7 +320,8 @@ FROM
 
 
 --Selecting possible pairs for trendlines.
-	--Filter out all pairs with too long distance between.
+
+	--Prepare data with value for logarithm.
 	SELECT 
 		eg1.[Id] AS [baseId],
 		eg1.[StartIndex] AS [baseStartIndex], 
@@ -329,19 +330,33 @@ FROM
 		eg2.[Id] AS [counterId],
 		eg2.[StartIndex] AS [counterStartIndex],
 		eg2.[IsPeak] AS [counterIsPeak] ,
-		eg2.[Value] AS [counterValue]
+		eg2.[Value] AS [counterValue],
+		IIF(eg1.[Value] > eg2.[Value], eg1.[Value], eg2.[Value]) / 40 + 1.05 AS [LogBase],
+		eg2.[StartIndex] - eg1.[StartIndex] AS [StartIndicesDifference]
+	INTO
+		#ExtremumGroupsInitialPairing
+	FROM
+		#ExtremumGroups eg1
+		LEFT JOIN #ExtremumGroups eg2
+		ON (eg2.[StartIndex] - eg1.[StartIndex]) >= @minDistanceInTrendlinePoints;
+
+
+
+	--Filter out all pairs with too long distance between.
+	SELECT 
+		*
 	INTO
 		#PotentialPairs
 	FROM
-		#ExtremumGroups eg1
-		INNER JOIN #ExtremumGroups eg2
-		ON eg2.[StartIndex] - eg1.[StartIndex] BETWEEN @minDistanceInTrendlinePoints AND LOG(1+(IIF(eg1.[Value] > eg2.[Value], eg1.[Value], eg2.[Value])-49)/20,2.5) * 260
-	--WHERE eg1.[StartIndex] = 988 AND eg2.[StartIndex] = 1071;
-	WHERE eg1.[StartIndex] = 1258 AND eg2.[StartIndex] = 1297;
+		#ExtremumGroupsInitialPairing egip
+	WHERE
+		egip.[StartIndicesDifference] <= LOG(egip.[LogBase], 2.5) * 260
+	
+	--AND egip.[baseStartIndex] = 1258 AND egip.[counterStartIndex] = 1297;
 		
 
 
-	SELECT * FROM #PotentialPairs;
+	--SELECT * FROM #PotentialPairs;
 
 
 	--Creating all possible trendlines.
@@ -383,14 +398,14 @@ FROM
 		ON pp.[counterId] = ecp2.[Id]
 
 
---SELECT
---		COUNT(*)
---	FROM
---		#PotentialPairs pp
---		LEFT JOIN #ExtremaCrossPoints ecp1
---		ON pp.[baseId] = ecp1.[Id]
---		LEFT JOIN #ExtremaCrossPoints ecp2
---		ON pp.[counterId] = ecp2.[Id]
+----SELECT
+----		COUNT(*)
+----	FROM
+----		#PotentialPairs pp
+----		LEFT JOIN #ExtremaCrossPoints ecp1
+----		ON pp.[baseId] = ecp1.[Id]
+----		LEFT JOIN #ExtremaCrossPoints ecp2
+----		ON pp.[counterId] = ecp2.[Id]
 
 
 
@@ -403,6 +418,7 @@ DROP TABLE #TroughsByLow;
 DROP TABLE #ExtremumGroups;
 DROP TABLE #PriceLevels;
 DROP TABLE #ExtremaCrossPoints;
+DROP TABLE #ExtremumGroupsInitialPairing;
 DROP TABLE #PotentialPairs;
 
 

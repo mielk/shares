@@ -17,7 +17,8 @@ SELECT
 INTO 
 	#TempRequiredQuotes
 FROM
-	(SELECT * FROM [dbo].[dates] WHERE [Date] < DATEADD(day, -1, GETDATE())) d,
+	--(SELECT * FROM [dbo].[dates] WHERE [Date] < DATEADD(day, -1, GETDATE())) d,
+	(SELECT * FROM [dbo].[dates] WHERE [Date] < '2017-12-09') d,
 	(SELECT * FROM #TempFirstQuotes) fqs
 
 WHERE
@@ -86,6 +87,7 @@ BEGIN
 	DROP TABLE #TempGeneratedQuotes;
 
 	SET @missingCounter = (SELECT COUNT(*) FROM #TempMissingQuotes);
+	SELECT * FROM #TempMissingQuotes;
 	SET @message = CONCAT('Still missing: ', @missingCounter);
 	RAISERROR( @message, 10,1) WITH NOWAIT
 
