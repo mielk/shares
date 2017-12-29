@@ -1679,8 +1679,18 @@ BEGIN
 
 	END
 
-
 	
+	--[HITS VALUES]
+	SELECT
+		th.*,
+		eg.[Value] AS [Value]
+	INTO
+		#TrendlineHitsValues
+	FROM
+		#TrendlinesHits th
+		LEFT JOIN #ExtremumGroups eg
+		ON th.[ExtremumGroupId] = eg.[Id];
+
 	--Combine all evaluation data for trend ranges.
 	SELECT
 		tr.*,
@@ -1691,8 +1701,8 @@ BEGIN
 		trwav.[AverageVariation],
 		trmv.[ExtremumVariation],
 		trmv.[OpenCloseVariation],
-		COALESCE(eg1.[Value], -0.5) AS [BaseHitValue],
-		COALESCE(eg2.[Value], -0.5) AS [CounterHitValue]
+		COALESCE(thv1.[Value], -0.5) AS [BaseHitValue],
+		COALESCE(thv2.[Value], -0.5) AS [CounterHitValue]
 	INTO 
 		#TrendRangesPartValues
 	FROM
@@ -1702,9 +1712,13 @@ BEGIN
 		LEFT JOIN #OCPriceCrossingPenaltyPoints ocpp ON tr.[Id] = ocpp.[Id]
 		LEFT JOIN #TrendRangesWithAverageVariation trwav ON tr.[Id] = trwav.[Id]
 		LEFT JOIN #TrendRangesMaxVariations trmv ON tr.[Id] = trmv.[Id]
-		LEFT JOIN #ExtremumGroups eg1 ON tr.[BaseDateIndex] = eg1.[MasterIndex]
-		LEFT JOIN #ExtremumGroups eg2 ON tr.[CounterDateIndex] = eg2.[MasterIndex]
+		LEFT JOIN #TrendlineHitsValues thv1 ON (tr.[BaseIsHit] = 1 AND tr.[BaseId] = thv1.[Id])
+		LEFT JOIN #TrendlineHitsValues thv2 ON (tr.[CounterIsHit] = 1 AND tr.[CounterId] = thv2.[Id])
 
+
+	--SELECT 'TrendlinesTemp', * FROM #TrendlinesTemp;
+	--SELECT 'TrendlinesHits', * FROM #TrendlinesHits ORDER BY [TrendlineId] ASC;
+	SELECT * FROM #TrendRangesPartValues ORDER BY [BaseDateIndex] ASC;
 
 
 	--Clean up
@@ -1722,6 +1736,7 @@ BEGIN
 		DROP TABLE #TrendRangesWithAverageVariation;
 		DROP TABLE #TrendRangesMaxVariations;
 		DROP TABLE #TrendRangesPartValues;
+		DROP TABLE #TrendlineHitsValues;
 
 	END
 
@@ -1729,8 +1744,6 @@ END
 
 
 
-select 'TrendlinesTemp', * from #TrendlinesTemp;
-select 'TrendlinesHits', * from #TrendlinesHits ORDER BY [TrendlineId] ASC;
 
 -----------------
 

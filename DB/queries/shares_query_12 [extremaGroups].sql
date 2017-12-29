@@ -12,7 +12,7 @@ DECLARE @maxDistanceInTrendlinePoints INT, @minDistanceInTrendlinePoints INT;
 SET @shareId = 1;
 SET @stepPrecision = 1;
 SET @stepFactor = POWER(1, @stepPrecision);
-SET @maxDistanceInTrendlinePoints = 260;
+SET @maxDistanceInTrendlinePoints = 150; --;
 SET @minDistanceInTrendlinePoints = 3;
 
 
@@ -350,7 +350,7 @@ FROM
 	FROM
 		#ExtremumGroupsInitialPairing egip
 	WHERE
-		egip.[StartIndicesDifference] <= LOG(egip.[LogBase], 2.5) * 260
+		egip.[StartIndicesDifference] <= LOG(egip.[LogBase], 2.5) * @maxDistanceInTrendlinePoints
 	
 	--AND egip.[baseStartIndex] = 1258 AND egip.[counterStartIndex] = 1297;
 		
@@ -422,4 +422,4 @@ DROP TABLE #ExtremumGroupsInitialPairing;
 DROP TABLE #PotentialPairs;
 
 
-COMMIT TRANSACTION
+ROLLBACK TRANSACTION
