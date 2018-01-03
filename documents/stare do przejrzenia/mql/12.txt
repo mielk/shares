@@ -1,0 +1,746 @@
+12 - Petla Do … Loop?
+Glównym tematem tej lekcji bedzie drugi z trzech dostepnych w VBA rodzajów petli - petla Do ... Loop. Petla ta umozliwia wykonywanie jakichs operacji bez uprzedniego okreslania ilosci powtórzen, jak to mialo miejsce w omówionej w lekcji dziesiatej petli For ... Next.
+
+Oprócz tego dowiemy sie jak wymusic wczesniejsze wyjscie z procedury i funkcji lub wczesniejsze zakonczenie calego makra.
+
+Na zakonczenie tej lekcji poznamy tez instrukcje Go To pozwalajaca na przenoszenie wykonywania makra w dowolne miejsce kodu.
+
+Lekcja zostala podzielona na nastepujace czesci:
+Schemat dzialania petli Do ... Loop
+Wymuszanie opuszczenia petli Do ... Loop
+Wymuszanie opuszczenia procedur, funkcji i makr
+Przenoszenie wykonywania makra do dowolnego miejsca kodu
+Podstawowe informacje o petlach Do ... Loop
+W lekcji dziesiatej poznales petle For ... Next, która wykonywala przypisany do niej blok operacji okreslona liczbe razy, uzalezniona od poczatkowej wartosci iteratora oraz górnej granicy petli.
+
+Czesto zdarza sie jednak, ze petla powinna wykonywac jakies operacje tak dlugo, az zmienne osiagna okreslona wartosc, i w momencie wywolania tej petli zupelnie nie wiadomo ilu powtórzen tej petli bedzie to wymagalo.
+
+W lekcji poswieconej petli For ... Next omówiony zostal sposób opuszczenia petli w momencie osiagniecia okreslonego stanu przez któras ze zmiennych (Exit For). Zauwaz jednak, ze przedstawiona w tamtym przykladzie petla analizowala po kolei kazdy pojedynczy znak jakiegos tekstu, nie bylo wiec problemu z okresleniem górnej granicy petli (iterator mógl osiagnac maksymalnie taka wartosc, ile znaków liczyl rozpatrywany tekst). Zastosowanie w tej petli polecenia Exit For mialo sluzyc jedynie temu, aby caly kod dzialal szybciej i nie wykonywal kolejnych powtórzen petli w momencie, gdy znany byl juz wynik dzialania calej funkcji. W zwiazku z tym, nawet po usunieciu z tego przykladu polecenia Exit For funkcja dzialalaby prawidlowo, tyle ze niezbyt efektywnie.
+
+Zdarzaja sie jednak sytuacje, ze w momencie rozpoczecia dzialania petli, okreslenie górnej granicy petli, chocby w przyblizeniu, jest zupelnie niemozliwe. Wyobraz sobie przykladowo makro, która ma za zadanie wypisywac w komórkach arkusza kolejne potegi jakiejs liczby (np. 1.01), tak dlugo, az wartosc potegi osiagnie okreslony limit (np. 1 000 000). W takim przypadku nie sposób nawet w przyblizeniu okreslic ile potwórzen tej petli bedzie potrzebnych, aby osiagnac zamierzony cel.
+
+Jedynym sposobem na uporanie sie z tym problemem za pomoca zwyklej petli For ... Next jest wykorzystanie nieskonczonej petli. Sposób ten zostal przedstawiony w ponizszej ramce z kodem: 1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+Sub wypisujPotegi(podstawa As Double, limit As Double)
+    Dim potega As Double            'wartosc potegi
+    Dim n As Long                   'numer wiersza
+    Dim i As Long                   'iterator
+
+    potega = 1
+
+    For i = 1 To 1 Step 0
+        potega = potega * podstawa
+        If potega > limit Then
+            Exit For
+        Else
+            n = n + 1
+            Cells(n, 1) = potega
+        End If
+    Next i
+End Sub
+
+Powyzsza procedura posiada dwa argumenty wejsciowe:
+podstawa - typu Double; okresla liczbe, która bedzie podnoszona do potegi,
+limit - równiez typu Double; okresla przy jakiej wartosci potegi makro powinno zakonczyc wypisywanie poteg w arkuszu.
+Ponadto w procedurze zadeklarowane zostaly trzy dodatkowe zmienne:
+potega - typu Double; przechowuje wartosci kolejnych poteg; przy kazdym powtórzeniu petli wartosc tej zmiennej jest mnozona przez wartosc argumentu podstawa, tworzac tym samym jej kolejna potege,
+n - typu Long; ta zmienna okresla z kolei numer wiersza, w którym ma zostac wyswietlona aktualna wartosc zmiennej potega; przy kazdym powtórzeniu petli wartosc tej zmiennej jest zwiekszana o 1, dzieki czemu kazda kolejna potega znajdzie sie w jednym wierszu ponizej poprzedniej,
+i - typu Byte; zmienna ta bedzie pelnila role iteratora w petli; poniewaz znajdujaca sie w powyzszym przykladzie petla jest petla nieskonczona, wartosc zmiennej iteracyjnej caly czas bedzie wynosila 1, dlatego bez obaw mozna ja zadeklarowac jako najmniejszy typ - Byte.
+W wierszu 6 zmiennej potega zostaje nadana wartosc 1. Do tego momentu wartosc tej zmiennej wynosila 0 i gdyby nie przypisano do niej wartosci 1, mnozenie jej przez argument podstawa, które jest wykonywane przy kazdym powtórzeniu petli, nie dawaloby absolutnie zadnego rezultatu i wartosc zmiennej potega caly czas wynosilaby 0, zamiast przyjmowac wartosci poszczególnych poteg.
+
+W ósmym wierszu opisywanej procedury rozpoczyna sie wspomniana juz wczesniej nieskonczona petla. Na koncu wiersza otwarcia tej petli znajduje sie polecenie Step 0. Dla przypomnienia, oznacza ono, ze przy kazdym powtórzeniu petli wartosc iteratora bedzie sie zwiekszac o 0, czyli pozostanie na tym samym poziomie, w zwiazku z czym nigdy nie przekroczy okreslonej w wierszu otwarcia górnej granicy petli, co czyni te petle nieskonczona.
+
+Wewnatrz omawianej petli znajduje sie operacja pomnozenia zmiennej potega przez liczbe podnoszona do potegi (która jest przechowywana w zmiennej podstawa), w efekcie czego zmienna potega przyjmuje wartosc kolejnej potegi.
+
+Drugim elementem wnetrza petli jest instrukcja warunkowa If ... Then, która przy kazdym powtórzeniu petli sprawdza czy wartosc zmiennej potega nie przekroczyla okreslonego wczesniej limitu.
+
+Jezeli warunek ten (potega > limit) jest spelniony, a wiec wartosc aktualnej potegi przekroczyla limit, wywolywane jest polecenie Exit For (wiersz 11), wymuszajace natychmiastowe opuszczenie petli.
+
+Jesli natomiast warunek zawarty w tej instrukcji warunkowej nie jest spelniony (czyli zmienna potega nie przekroczyla jeszcze limitu), najpierw zwiekszana jest wartosc zmiennej n, tak aby reprezentowala ona kolejny wiersz arkusza, a nastepnie w tym wierszu i pierwszej kolumnie drukowana jest aktualna wartosc zmiennej potega.
+
+Wynik dzialania opisanej powyzej procedury jest zgodny z wczesniejszymi zalozeniami - w arkuszu wyprintowane zostaly wartosci poszczególnych poteg zadanej liczby az do momentu przekroczenia przez nie okreslonego limitu. Wykorzystanie petli nieskonczonej pozwolilo w sprytny sposób uniknac koniecznosci okreslania górnej granicy petli, co byloby w tym przypadku niewykonalne.
+
+Mimo ze przedstawione rozwiazanie dziala prawidlowo, przy tworzeniu aplikacji powinno sie unikac tego typu rozwiazan. W skladni jezyka VBA znajduje sie konstrukcja przeznaczona specjalnie do tego typu zadan - petla Do ... Loop, która jest o wiele bardziej przejrzysta, zrozumiala i zajmuje znacznie mniej miejsca.
+
+Petla Do ... Loop jest kombinacja petli oraz instrukcji warunkowej. W wierszu otwarcia lub zamkniecia petli nalezy okreslic warunek, której spelnienie lub niespelnienie (w zaleznosci od uzytego slowa kluczowego) spowoduje opuszczenie petli.
+
+Petla Do ... Loop moze wystepowac w czterech odmianach:
+Do ... Loop Until [warunek] - warunek jest okreslony w wierszu zamkniecia petli, a petla konczy dzialanie w razie jego niespelnienia,
+Do ... Loop While [warunek] - warunek jest okreslony w wierszu zamkniecia petli, a petla konczy dzialanie w razie jego spelnienia,
+Do Until [warunek] ... Loop - warunek jest okreslony w wierszu otwarcia petli, a petla konczy dzialanie w razie jego niespelnienia,
+Do While [warunek] ... Loop - warunek jest okreslony w wierszu otwarcia petli, a petla konczy dzialanie w razie jego spelnienia.
+Jak widzisz, petle ze slowem kluczowym Until róznia sie od petli zawierajacych slowo While tylko tym, ze w tych pierwszych opuszczenie petli nastepuje w przypadku niespelnienia warunku, natomiast w drugich w razie jego spelnienia. Z uwagi na to bardzo latwo jest zamienic jedna petle w druga - wystarczy zmienic slowo kluczowe, a do warunku dodac operator logiczny Not. Ogólna zasada jest taka, aby wybierac zawsze typ petli z takim slowem kluczowym (Until lub While), który w warunku nie bedzie wymagal operatora Not.
+
+Ponizej przedstawiono omawiane wczesniej makro, wypisujace w arkuszu potege zadanej liczby az do osiagniecia okreslonego limitu, w którym zamiast nieskonczonej petli For ... Next wykorzystano juz petle Do ... Loop. 1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+Sub wypisujPotegi(podstawa As Double, limit As Double)
+    Dim potega As Double              'wartosc potegi
+    Dim n As Long                     'numer wiersza
+
+    potega = 1
+
+    Do Until potega > limit
+        n = n + 1
+        potega = potega * podstawa
+        Cells(n, 1) = potega
+    Loop
+End Sub
+
+Juz na pierwszy rzut oka widac, ze w obecnej postaci makro jest o wiele krótsze i bardziej przejrzyste.
+
+Petle Do ... Loop, w przeciwienstwie do petli For ... Next nie korzystaja ze zmiennych iteracyjnych, dlatego tez z sekcji deklaracji zmiennych usunieta zostala zmienna i, która w poprzedniej wersji makra pelnila wlasnie role iteratora w nieskonczonej petli. Pozostale zadeklarowane zmienne oraz argumenty wejsciowe sa identyczne jak w poprzedniej wersji makra.
+
+W wierszach 7-11 powyzszego kodu znajduje sie petla Do ... Loop. Do sprawdzania jak dlugo powinna dzialac ta petla uzyty zostal warunek potega > limit. Slowem kluczowym poprzedzajacym ten warunek jest Until, dlatego tez petla bedzie wykonywana tak dlugo, jak warunek ten bedzie falszywy (w momencie, kiedy warunek zostanie spelniony, czyli wartosc zmiennej potega przekroczy limit, petla zostanie opuszczona i wykonywanie kodu zostanie przeniesione tuz za wiersz jej zamkniecia, czyli do wiersza 12).
+
+Zauwaz, ze warunek zostal umieszczony juz w wierszu otwarcia petli, dlatego tez moze zdarzyc sie sytuacja, w której petla nie zostanie ani razu wykonana. Jezeli przykladowo przy wywolywaniu tej procedury jako argument limit zostanie podana liczba 0, to juz przy otwarciu petli warunek jej opuszczenia zostanie spelniony (poniewaz stwierdzenie 1 > 0 jest prawdziwe) i kompilator przeniesie wykonywanie kodu do wiersza 12, czyli za wiersz zamkniecia tej petli.
+
+Na tym polega wlasnie jedyna róznica pomiedzy petlami zawierajacymi warunek w wierszu otwarcia, a petlami z warunkiem w wierszu zamkniecia. W tych drugich, w momencie wejscia do petli warunek nie jest jeszcze sprawdzany, wiec wszystkie operacje znajdujace sie w jej wnetrzu sa zawsze wykonywane przynajmniej raz. Dopiero po wykonaniu polecen z wnetrza petli i dotarciu kodu do wiersza zamkniecia sprawdzany jest warunek i ewentualnie dochodzi do opuszczenia petli.
+
+Gdyby wiec w powyzszym przykladzie warunek opisujacy moment wyjscia z petli zostal umieszczony w wierszu zamkniecia:
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+Sub wypisujPotegi(podstawa As Double, limit As Double)
+    Dim potega As Double            'wartosc potegi
+    Dim n As Long                   'numer wiersza
+
+    potega = 1
+
+    Do Until
+        n = n + 1
+        potega = potega * podstawa
+        Cells(n, 1) = potega
+    Loop Until potega > limit
+End Sub
+to makro wyswietliloby w arkuszu pierwsza potege zadanej liczby, mimo tego, ze przekracza ona okreslony limit.
+
+Schemat dzialania znajdujacej sie w powyzszym przykladzie petli Do ... Loop jest niemal identyczny jak w przykladzie wykorzystujacym nieskonczona petle For ... Next.
+
+Przy kazdym powtórzeniu petli najpierw zwiekszana jest wartosc zmiennej n, dzieki czemu kazda kolejna wartosc potegi wyswietlana jest w nastepnym wierszu. Nastepnie wartosc zmiennej potega mnozona jest przez wartosc argumentu podstawa, który przechowuje liczba podnoszona do potegi, dajac w efekcie kolejna potege tej liczby. Wreszcie w ostatniej operacji umieszczonej we wnetrzu petli aktualna wartosc potegi wypisywana jest w odpowiednim wierszu aktywnego arkusza.
+
+W zdecydowanej wiekszosci przypadków tak naprawde jest zupelnie bez znaczenia czy warunek opisany jest w wierszu otwarcia czy zamkniecia petli (aczkolwiek w poprzednim przykladzie sprawialo to subtelna róznice). Zdarzaja sie jednak sytuacje, ze umiejscowienie warunku w istotny sposób plywa na wykonywanie petli. Za przyklad moze posluzyc przedstawione ponizej makro, którego schemat dzialania jest nastepujacy: po jego uruchomieniu na ekranie pojawia sie okno InputBox, w którym uzytkownik wpisuje jakies wartosci (np. imiona i nazwiska). Po kazdorazowym wpisaniu wartosci, jest ona dopisywana w kolejnym wierszu arkusza, a na ekranie pojawia sie nowe, puste okno InputBox. Proces ten jest powtarzany tak dlugo, az uzytkownik zamknie okno, kliknie przycisk Cancel lub zatwierdzi pusty wpis (czyli wcisnie przycisk OK nie wpisawszy wczesniej zadnej wartosci).
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+Sub podajWartosci()
+    Dim value As String            'wartosc wpisywana w InputBoxie
+    Dim n As Long                  'numer wiersza
+
+    Do
+        value = InputBox("Wpisz wartosc")
+        n = n + 1
+        Cells(n, 1) = value
+    Loop While Len(value)
+End Sub
+W powyzszym makrze zadeklarowane sa dwie zmienne:
+value - do tej zmiennej przypisywane beda wyniki funkcji InputBox, a wiec de facto wartosci wprowadzane przez uzytkownika w polu tekstowym okna InputBox,
+n - ta zmienna reprezentuje aktualy wiersz w arkuszu; przy kazdym powtórzeniu petli zmienna ta bedzie zwiekszana o 1, dzieki czemu kazda kolejna wartosc znajdzie sie w jednym wierszu ponizej poprzedniej.
+Glówna czesc kodu stanowi petla Do, znajdujaca sie w wierszach 5-9. Warunkiem okreslonym dla tej petli jest funkcja Len(value), poprzedzona slowem kluczowym While. Oznacza to, ze petla jest wykonywana tak dlugo, jak wartosc tej funkcji jest równoznaczna wartosci logicznej True. Dla przypomnienia - funkcja Len(value) zwraca wartosc liczbowa, która odpowiada dlugosci tekstu value, a wartosc liczbowa jest równowazna wartosci True, jezeli jest rózna od zera. W zwiazku z tym cale wyrazenie jest prawdziwe, jezeli wartosc funkcji Len(value) jest rózna od zera, a wiec jesli tekst przechowywany w argumencie value nie jest pustym ciagiem znaków.
+
+W trakcie dzialania petli, do zmiennej value przypisywane sa poszczególne wyniki funkcji InputBox (wiersz 6). W dwóch kolejnych wierszach wartosc zmiennej n jest zwiekszana o 1, tak aby odpowiadala kolejnemu wierszowi, a nastepnie wartosc zmiennej value (czyli to, co uzytkownik wpisal chwile wczesniej w oknie InputBox) jest printowana w arkuszu.
+
+Jak dowiedziales sie w lekcji ósmej, jezeli okno funkcji InputBox zostanie zamkniete krzyzykiem w prawym górnym rogu lub wcisniety zostanie przycisk Cancel, to niezaleznie od tego, co jest wpisane w polu tekstowym tego okna, funkcja zwróci pusty ciag znaków. Pusty ciag zostanie zwrócony równiez w sytuacji, gdy uzytkownik pozostawi puste pole tekstowe i wcisnie przycisk OK.
+
+W powyzszych trzech sytuacjach (zamkniecie okna krzyzykiem, wcisniecie Cancel i pozostawienie pustego pola tekstowego) do zmiennej value przypisany zostanie wiec pusty ciag znaków, w zwiazku z czym warunek Len(value) bedzie równowazny wartosci logicznej False i petla zakonczy swoje dzialanie.
+
+Zwróc uwage, ze do zmiennej value jakakolwiek wartosc jest po raz pierwszy przypisywana podczas pierwszego powtórzenia petli, w wierszu 6. Do tego czasu zmienna ta przechowuje pusty ciag znaków.
+
+W zwiazku z tym, gdyby warunek tej petli umieszczony byl w wierszu jej otwarcia, to juz przy pierwszym uruchomieniu petli kompilator stwierdzilby, ze petla powinna zostac zakonczona i przeszedlby od razu do instrukcji umieszczonych za ta petla, ani razu nie wykonujac jej wnetrza. W tym konkretnym przypadku polozenie warunku opisujacego petle Do jest wiec bardzo wazne i moze zasadniczo wplynac na wynik dzialania calej procedury.
+
+Korzystajac z petli Do ... Loop mozna stworzyc petle nieskonczona jeszcze latwiej, niz za pomoca petli For ... Next.
+
+Wystarczy stworzyc petle Do ... Loop, która ani w wierszu otwarcia, ani w wierszu zamkniecia nie zawiera warunku opuszczenia petli:
+Do
+    'operacje znajdujace sie we wnetrzu petli
+Loop
+
+Powrót do poczatku lekcji Wczesniejsze opuszczanie petli Do ... Loop
+Podobnie jak to mialo miejsce w przypadku petli For ... Next, jezyk VBA umozliwia opuszczenie petli Do ... Loop wczesniej, niz wynikaloby to z przypisanych do tej petli warunków.
+
+Ponizej znajduje sie przykladowa procedura korzystajaca z polecenia Exit Do, które pozwala wymusic natychmiastowe opuszczenie petli Do ... Loop.
+
+Uzytkownik musi w niej wprowadzic haslo, zezwalajace na uruchomienie dalszych czynnosci.
+
+W razie trzykrotnego podania nieprawidlowego hasla, procedura wykonuje okreslone operacje zabezpieczajace (np. tymczasowe zablokowanie dostepu do makra z danego konta lub powiadomienie administratora o próbie uruchomienia makra przez niepowolana osobe). Rozwiazania takie czesto spotykane sa przy logowaniu do internetowych kont bankowych - kazdemu moze sie zdarzyc jedna lub nawet dwie pomylki podczas wprowadzania hasla, ale jesli taka sytuacja powtarza sie trzy razy z rzedu, istnieje duze prawdopodobienstwo, ze ktos próbuje zlamac haslo i nalezy w takiej sytuacji podjac jakies kroki zaradcze.
+
+Jezeli natomiast uzytkownik pomyslnie przejdzie weryfikacje hasla, wykonywane sa dalsze czynnosci przewidziane dla tego makra (w przykladzie zostaly one zastapione komentarzem, poniewaz nie maja zadnego znaczenia dla omawianego zagadnienia).
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+Sub weryfikacjaHasla()
+    Dim haslo As String
+    Dim podaneHaslo As String
+    Dim czyPrawidlowe As Boolean
+    Dim i As Byte
+
+    haslo = "qwerty"
+
+    Do While i < 3
+        podaneHaslo = InputBox("Podaj haslo", "Haslo")
+        i = i + 1
+
+        If podaneHaslo = haslo Then
+            czyPrawidlowe = True
+            Exit Do
+        Else
+            Call MsgBox("Podane haslo jest nieprawidlowe." & vbCrLf & "Pozostalo prób: " & 3 - i)
+       End If
+    Loop
+
+    If czyPrawidlowe Then
+        'wlasciwa czesc makra
+    Else
+        'operacje zabezpieczajace, np. zablokowanie dostepu do makra na
+        'najblizsza godzine z danego komputera lub poinformowanie
+        'administratora o próbie zlamania hasla
+    End If
+
+End Sub
+W procedurze zadeklarowane sa cztery zmienne:
+haslo - zmienna typu tekstowego, do której przypisane jest prawidlowe haslo,
+podaneHaslo - zmienna typu tekstowego; w dalszej czesci makra przypisywane jest do niej haslo podawane przez uzytkownika w oknie InputBox,
+czyPrawidlowe - zmienna typu Boolean; przyjmuje wartosc True, jezeli uzytkownik podal prawidlowe haslo, oraz wartosc False, jezeli podane przez niego haslo jest bledne,
+i - zmienna typu Byte; liczy ile razy próbowano juz wpisac haslo; maksymalna liczba prób wynosi 3, dlatego bez problemu mozna nadac tej zmiennej typ Byte.
+W wierszu 7 do zmiennej haslo zostaje przypisane prawidlowe haslo czyli tekst qwerty.
+
+W wierszach 9-20 znajduje sie petla Do ... Loop, której warunkiem ograniczajacym jest i < 3 ze slowem kluczowym While, co oznacza, ze petla zakonczy swoje dzialanie, jezeli wartosc zmiennej i bedzie wynosila co najmniej 3 (a wiec, jesli uzytkownik wykonal juz trzy próby wpisania hasla).
+
+Przy kazdym powtórzeniu petli uzytkownik jest proszony o wpisanie w oknie InputBox hasla, które jest potem przypisywane do zmiennej podaneHaslo.
+
+Po kazdej takiej próbie wpisania hasla, zmienna i jest zwiekszana o 1, poniewaz jak wczesniej wspomniano, zmienna ta sluzy jako licznik wykonanych prób.
+
+Nastepnie kompilator sprawdza czy haslo podane przez uzytkownika zgadza sie z haslem zapisanym jako prawidlowe (wiersz 13).
+
+Jezeli oba hasla sa identyczne, do zmiennej czyPrawidlowe zostaje przypisana wartosc True i wywolywane jest polecenie Exit Do, oznaczajace natychmiastowe opuszczenie petli. Gdyby w tym miejscu zabraklo tego polecenia, jedyna mozliwoscia wyjscia z petli byloby osiagniecie przez zmienna i wartosci 3, a wiec uzytkownik za kazdym razem musialby trzykrotnie wpisywac haslo, nawet jesli juz za pierwszym razem podalby prawidlowe haslo. Byloby to oczywiscie bardzo nieefektywne, a przede wszystkim irytujace dla uzytkowników.
+
+Jezeli natomiast uzytkownik podal bledne haslo, na ekranie wyswietlany jest komunikat, ze podane przez niego haslo jest nieprawidlowe wraz z informacja o liczbie pozostalych prób (3-i).
+
+Petla jest wiec powtarzana tak dlugo, az uzytkownik poda prawidlowe haslo lub trzykrotnie poda bledne haslo.
+
+Po wyjsciu z petli, kompilator sprawdza jaki byl wynik weryfikacji hasla (przechowywany w zmiennej czyPrawidlowe) i, jesli jest on pozytywny, wykonuje wlasciwe operacje. Jezeli natomiast zmienna czyPrawidlowe wynosi False, uruchamiane sa operacje zabezpieczajace, jak np. powiadomienie administratora czy zablokowanie na jakis czas mozliwosc korzystania z makra na danym komputerze (przyklad ma tylko obrazowac wykorzystanie polecenia Exit Do, wiec równiez nie ma sensu w tym miejscu szczególowo opisywac tych operacji).
+
+Powszechna sytuacja, w której uzycie polecenia Exit Do moze przyniesc wiele pozytku, jest operowanie na obiektach RecordSet, czyli zestawach danych pobranych bezposrednio z bazy danych. Jednak z uwagi na to, ze temat ten znacznie wykracza poza material przerobiony w dotychczasowych lekcjach, przyklady obrazujace wykorzystanie polecenia Exit Do w tego typu procedurach pojawia sie sie dopiero podczas szczególowego omawiania baz danych.
+
+Powrót do poczatku lekcji Wczesniejsze opuszczanie procedur, funkcji i makr
+Jezyk VBA pozwala tez wymusic wczesniejsze opuszczenie okreslonej funkcji lub procedury, a nawet calego makra.
+
+Ponizej znajduje sie prosty przyklad obrazujacy opuszczenie procedury, jeszcze zanim wykonywanie kodu dotrze do wiersza jej zamkniecia.
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+Sub sprawdzanieHasla()
+    Dim haslo As String                'prawidlowe haslo
+    Dim podaneHaslo As String          'haslo podane przez uzytkownika
+
+    haslo = "qwerty"
+    podaneHaslo = InputBox("Podaj haslo", "Haslo")
+
+    If haslo <> podaneHaslo Then Exit Sub
+
+    'dalsze instrukcje wykonywane przez makro
+    'Call podprocedura_1
+    '(...)
+    'Call podprocedura_n
+End Sub
+Powyzsza procedura zawiera dwie zmienne tekstowe: haslo (przechowujaca prawidlowe haslo) oraz wpisaneHaslo (przechowujaca haslo wpisane przez uzytkownika).
+
+W wierszach 5-6 do tych dwóch zmiennych przypisywane sa odpowiednie wartosci: do zmiennej haslo ciag znaków qwerty, natomiast do zmiennej podaneHaslo wynik dzialania funkcji InputBox, czyli haslo, które uzytkownik wpisuje w polu tekstowym okna InputBox.
+
+W wierszu 8 znajduje sie instrukcja warunkowa, sprawdzajaca czy haslo wpisane przez uzytkownika zgadza sie z prawidlowym haslem. Jezeli oba hasla sa od siebie rózne, oznacza to, ze uzytkownik podal bledne haslo i nie jest uprawniony do uruchomienia makra, w zwiazku z czym wywolywane jest polecenie Exit Sub, które oznacza natychmiastowe opuszczenie tej procedury.
+
+Tak naprawde dotychczasowa czesc makra sluzyla tylko weryfikacji uzytkownika. Zasadnicza czesc makra znajduje sie w wierszach 10-13 i zostala zastapiona komentarzem, gdyz nieistotne jest w tym momencie, co mialoby wykonywac to makro. Jezeli jednak uzytkownik nie przejdzie wczesniejszej weryfikacji (a wiec wpisze nieprawidlowe haslo), wykonywanie kodu nigdy nie dojdzie do tego miejsca, poniewaz opusci te procedure juz w wierszu 8 w wyniku dzialania polecenia Exit Sub.
+
+Zwróc uwage, ze polecenie Exit Sub nie jest w tej sytuacji niezbedne. Makro dzialaloby dokladnie tak samo, gdyby wszystkie operacje umieszczone w wierszach 10-13 znalazly sie we wnetrzu instrukcji If ... Then, w bloku przeznaczonym dla spelnionego warunku. Kod wygladalby w tej sytuacji tak, jak w ponizszej ramce (nowe fragmenty zaznaczono na czerwono): 1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+Sub sprawdzanieHasla()
+    Dim haslo As String                'prawidlowe haslo
+    Dim podaneHaslo As String          'haslo podane przez uzytkownika
+
+    haslo = "qwerty"
+    podaneHaslo = InputBox("Podaj haslo", "Haslo")
+
+    If haslo = podaneHaslo Then
+        'instrukcje wykonywane jezeli oba hasla sie zgadzaja
+        'Call podprocedura_1
+        '(...)
+        'Call podprocedura_n
+    End If
+End Sub
+
+W tej postaci makra, po ustaleniu prawidlowego hasla oraz pobraniu hasla od uzytkownika (wiersze 5-6) podobnie jak poprzednio, kod trafia na instrukcje warunkowa If ... Then. Warunek przypisany do tej instrukcji jest jednak teraz dokladnie odwrotny.
+
+Cala zasadnicza czesc makra umieszczona zostala wewnatrz instrukcji warunkowej, w bloku dla spelnionego warunku, dlatego tez bedzie wykonana tylko wtedy, jezeli warunek przypisany dla tej instrukcji (haslo = podaneHaslo) bedzie prawdziwy, a wiec jesli uzytkownika poda prawidlowe haslo.
+
+Jezeli natomiast uzytkownik poda bledne haslo, warunek przypisany do instrukcji warunkowej bedzie falszywy. Z uwagi na to, ze w instrukcji warunkowej nie przewidziano zadnych operacji dla niespelnionego warunku, wykonywanie kodu zostanie przeniesione do wiersza zamkniecia instrukcji warunkowej (wiersz 13), po którym nastepuje juz tylko zakonczenie calej procedury.
+
+Mozliwosc wyeliminowania polecenia Exit Sub (lub Exit Function, bo poza tym, ze jedno z nich uzywane jest w procedurach, a drugie w funkcjach, absolutnie sie od siebie nie róznia) przez takie niewielkie modyfikacje kodu nie jest niczym nadzwyczajnym. Tak naprawde jest to regula i w zasadzie mozna byloby zaryzykowac stwierdzenie, ze kazde polecenie Exit Sub (Exit Function) moze byc zastapione innym elementem jezyka VBA bez utraty funkcjonalnosci makra.
+
+Jezeli wyeliminowanie polecenia Exit Sub (Exit Function) jest tak proste, jak w powyzszym przykladzie, zawsze lepiej jest stosowac wersje niezawierajaca tego polecenia, poniewaz jego obecnosc w kodzie moze w niektórych sytuacjach znacznie utrudnic pózniejsza analize kodu aplikacji.
+
+Zdarzaja sie jednak sytuacje, ze zastosowanie polecenia Exit Sub (Exit Function) pozwala uproscic kod, a nawet przyspieszyc nieco dzialanie danej procedury lub funkcji, i wtedy jego uzycie jest jak najbardziej wskazane.
+
+Bardzo czesto spotykanym przykladem takiej sytuacji sa funkcje sprawdzajace kompletnosc danych wprowadzonych przez uzytkownika w formularzu.
+
+Zalózmy, ze makro wyswietla uzytkownikowi nastepujacy formularz, w którym pola oznaczone gwiazdka sa obowiazkowe do wypelnienia:
+
+Formularz z danymi uzytkownika
+
+Po kliknieciu przycisku OK, dane z formularza powinny sie zapisywac w bazie danych. Przed ich zapisaniem do bazy nalezy jednak sprawdzic, czy wprowadzone dane sa kompletne, czyli czy uzytkownik wypelnil wszystkie pola oznaczone jako wymagane.
+
+Oczywiscie nie bedziemy sie w tym miejscu zajmowac tworzeniem tego typu formularzy, ani zapisywaniem ich do bazy danych - na to wszystko przyjdzie pora w dalszej czesci kursu. W tym momencie istotna jest tylko funkcja sprawdzajaca kompletnosc danych.
+
+Spójrz najpierw na kod i analize tej funkcji przy zalozeniu, ze w ogóle nie wykorzystuje ona polecenia Exit Function: 1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+Function czyKompletneDane(Imie As String, Nazwisko As String, _
+            PESEL As String, Dowod As String, NIP As String, _
+            Ulica As String, Numer As String, KodPocztowy As String, _
+            Miasto As String, Telefon As String) As Boolean
+
+    If Len(Imie) Then
+        If Len(Nazwisko) Then
+            If Len(PESEL) Then
+                If Len(Dowod) Then
+                    If Len(NIP) Then
+                        If Len(Ulica) Then
+                            If Len(Numer) Then
+                                If Len(KodPocztowy) Then
+                                    If Len(Miasto) Then
+                                        If Len(Telefon) Then
+                                            czyKompletneDane = True
+                                        End If
+                                    End If
+                                End If
+                            End If
+                        End If
+                    End If
+                End If
+            End If
+        End If
+    End If
+End Function
+
+Funkcja czyKompletneDane posiada 10 argumentów wejsciowych, z których kazdy odpowiada wartosci jednego z obowiazkowych pól na formularzu.
+
+Na przyklad przy tak wypelnieniu formularzu:
+Wypelniony formularz z danymi uzytkownika
+
+poszczególne argumenty posiadaja nastepujace wartosci:
+Imie = "Krzysztof", Nazwisko = "Jarzyna", PESEL = "53050312114", Dowod = "AAA000001", NIP = "503-520-12-14", Ulica = "", Numer = "", KodPocztowy = "70-003", Miasto = "Szczecin", Telefon = "601-540-321".
+Funkcja czyKompletneDane posiada typ Boolean, a wiec moze zwrócic tylko wartosc True (jezeli dane sa kompletne) lub wartosc False (jezeli uzytkownik nie uzupelnil któregos z wymaganych pól).
+
+Na poczatku funkcja przechowuje wartosc False, poniewaz taka jest domyslna wartosc dla zmiennej typu logicznego, jezeli nie przypisano do niej zadnej innej wartosci.
+
+W wierszach 6-26 znajduje sie dziesiec zagniezdzonych instrukcji warunkowych, z których kazda sprawdza jedna z wartosci formularza. Poniewaz kazda z tych zagniezdzonych instrukcji rozpatruje inna zmienna, niemozliwe jest zastapienie ich instrukcja Select Case (instrukcja Select Case rozpatruje rózne warianty pojedynczej zmiennej, w zwiazku z tym moze zastepowac tylko zagniezdzone instrukcje warunkowe, które równiez rozpatruja tylko pojedyncza zmienna).
+
+Kompilator sprawdza po kolei kazda z instrukcji warunkowych i, jezeli warunek w niej zawarty jest prawdziwy (czyli sprawdzana w tej instrukcji wartosc zostala przez uzytkownika uzupelniona), przechodzi do sprawdzania kolejnej itd. Jezeli sprawdzone zostana juz wszystkie instrukcje i wszystkie beda prawdziwe, wykonanie kodu dociera do wiersza 16, w którym do funkcji zostaje przypisana wartosc True. Kazda kolejna instrukcja warunkowa jest zagniezdzona w swojej poprzedniczce w bloku przewidzianym dla spelnionego warunku. Oznacza to, ze jezeli przy którejkolwiek instrukcji warunkowej okaze sie, ze przypisany do niej warunek nie jest spelniony (czyli uzytkownik nie wpisal tej wartosci w formularzu), wykonanie kodu nigdy nie dotrze do wiersza, w którym do funkcji zostaje przypisana wartosc True. Jest to oczywiscie zgodne z zalozeniem, gdyz w przypadku braku chocby jednej wartosci, funkcja ma zwracac wartosc False.
+
+Powyzsza postac funkcji dziala wprawdzie prawidlowo, jednak tworzenie tak wielu zagniezdzonych petli nigdy nie jest dobrym pomyslem, poniewaz znacznie wydluza caly kod, a przy tym latwo w takiej sytuacji o pomylke. Spójrz teraz na umieszczony ponizej kod, który wykonuje dokladnie to samo zadanie, jednak zamiast zagniezdzania instrukcji warunkowych wykorzystano w nim instrukcje Exit Function: 1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+Function czyKompletneDane(Imie As String, Nazwisko As String, _
+            PESEL As String, Dowod As String, NIP As String, _
+            Ulica As String, Numer As String, KodPocztowy As String, _
+            Miasto As String, Telefon As String) As Boolean
+
+    If Len(Imie) = 0 Then Exit Function
+    If Len(Nazwisko) = 0 Then Exit Function
+    If Len(PESEL) = 0 Then Exit Function
+    If Len(Dowod) = 0 Then Exit Function
+    If Len(NIP) = 0 Then Exit Function
+    If Len(Ulica) = 0 Then Exit Function
+    If Len(Numer) = 0 Then Exit Function
+    If Len(KodPocztowy) = 0 Then Exit Function
+    If Len(Miasto) = 0 Then Exit Function
+    If Len(Telefon) = 0 Then Exit Function
+
+    czyKompletneDane = True
+
+End Function
+
+Ta postac funkcji równiez posiada dziesiec argumentów wejsciowych, z których kazdy odpowiada jednemu polu na formularzu. Poczatkowa wartosc funkcji wynosi False.
+
+W wierszach 6-15 znajduje sie 10 jednowierszowych instrukcji warunkowych If ... Then. Kazda z tych instrukcji posiada warunek, który sprawdza czy poszczególna wartosc jest pustym ciagiem znaków. Jezeli warunek ten jest spelniony (co jest równoznaczne z tym, ze uzytkownik nie wpisal jej w formularzu), wywolywane jest polecenie Exit Function, które wymusza natychmiastowe opuszczenie funkcji. Jezeli kompilator zostal zmuszony do takiego naglego wyjscia z funkcji, wynikiem dzialania tej funkcji jest wartosc, jaka posiadala ona w momencie jej opuszczania - w tym przypadku jest to wiec ciagle domyslna wartosc False, gdyz dotychczas w zadnym miejscu kodu nie przypisano do tej funkcji innej wartosci. Jest to oczywiscie zgodne z poczatkowym zalozeniem, poniewaz jesli jakakolwiek wartosc nie zostala uzupelniona w formularzu, funkcja miala zwracac wartosc False.
+
+Jezeli kompilator sprawdzi wszystkie 10 instrukcji warunkowych i przy zadnej z nich nie wywola polecenia Exit Function (co oznacza, ze nie brakuje zadnej wartosci), wykonywanie kodu dochodzi do wiersza 16, w którym do funkcji zostaje przypisana wartosc True. Kolejnym wierszem jest juz zakonczenie calej funkcji, wiec jej ostatecznym wynikiem bedzie True, co oczywiscie równiez jest zgodne z zalozeniem (nie brakuje zadnej wartosci, wiec funkcja zwraca wartosc True).
+
+W tym przypadku zastosowanie polecenia Exit Function niesie wiec ze soba wiele korzysci, poniewaz funkcja, nie dosc ze jest zdecydowanie krótsza i bardziej przejrzysta, to jeszcze dziala troche szybciej niz jej wersja wykorzystujaca zagniezdzone instrukcje warunkowe.
+
+Jezyk VBA posiada równiez polecenie End, umozliwiajace natychmiastowe zatrzymanie i zakonczenie calej dzialajacej aktualnie aplikacji.
+
+Wróc do przykladu znajdujacego sie na poczatku tego podrozdzialu, w którym w przypadku wpisania przez uzytkownika nieprawidlowego hasla wykonywanie kodu natrafialo na polecenie Exit Sub, co oznaczalo natychmiastowe opuszczenie tej procedury: 1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+Sub sprawdzanieHasla()
+    Dim haslo As String                'prawidlowe haslo
+    Dim podaneHaslo As String          'haslo podane przez uzytkownika
+
+    haslo = "qwerty"
+    podaneHaslo = InputBox("Podaj haslo", "Haslo")
+
+    If haslo <> podaneHaslo Then Exit Sub
+
+    'dalsze instrukcje wykonywane przez makro
+    'Call podprocedura_1
+    '(...)
+    'Call podprocedura_n
+End Sub
+
+W przykladzie tym zasadnicza czesc makra (wiersze 10-13) polegala na wywolywaniu podprocedur wykonujacych poszczególne zadania. Zauwaz, ze czesc poswiecona weryfikacji uzytkownika (wiersz 2-6) jako jedyna nie zostala przeniesiona do oddzielnej procedury, lecz umieszczona w glównej procedurze.
+
+Gdyby przeniesc czesc weryfikacyjna do oddzielnej procedury, kod wygladalby tak: 1
+2
+3
+4
+5
+6
+Sub aplikacja()
+    Call weryfikacja
+    'Call podprocedura_1
+    '(...)
+    'Call podprocedura_n
+End Sub
+1
+2
+3
+4
+5
+6
+7
+8
+9
+Sub weryfikacja()
+    Dim haslo As String                'prawidlowe haslo
+    Dim podaneHaslo As String          'haslo podane przez uzytkownika
+
+    haslo = "qwerty"
+    podaneHaslo = InputBox("Podaj haslo", "Haslo")
+
+    If haslo <> podaneHaslo Then Exit Sub
+End Sub
+
+Po uruchomieniu makra jako pierwsza uruchamiana jest podprocedura weryfikacja, która ma sprawdzac czy uzytkownik jest w ogóle uprawniony do korzystania z makra. Wykonywanie kodu zostaje wiec przeniesione z procedury aplikacja do procedury weryfikacja. W procedurze weryfikacja odbywa sie proces, który zostal juz omówiony wczesniej (przy okazji omawiania polecenia Exit Sub), czyli przypisanie prawidlowego hasla, pobranie hasla od uzytkownika i sprawdzanie zgodnosci obu tych hasel.
+
+Zalózmy teraz, ze uzytkownik wpisal nieprawidlowe haslo - w takiej sytuacji makro powinno zakonczyc dzialanie i nie wykonywac juz zadnych innych czynnosci. Tak sie jednak nie stanie. Gdy kompilator stwierdzi, ze haslo systemowe (qwerty) oraz haslo podane przez uzytkownika (przechowywane w zmiennej podaneHaslo) nie zgadzaja sie ze soba (wiersz 8 procedury weryfikacja) to wywola polecenie Exit Sub, oznaczajace natychmiastowe opuszczenie aktualnej procedury. Jezeli wiec opuszczona zostanie aktualna procedura (czyli weryfikacja), to wykonywanie kodu powróci do procedury dla niej nadrzednej, która ja wywolala (a wiec aplikacja) i bedzie kontynuowala wykonywanie zawartych w niej polecen. W zwiazku z tym, mimo ze haslo podane przez uzytkownika bylo nieprawidlowe, makro jak gdyby nigdy nic wykona wszystkie przewidziane w nim operacje: podprocedura_1, podprocedura_2, itd.!
+
+Jedynym sposobem na ominiecie tego problemu jest zastapienie polecenia Exit Sub poleceniem End: 1
+2
+3
+4
+5
+6
+7
+8
+9
+Sub weryfikacja()
+    Dim haslo As String                'prawidlowe haslo
+    Dim podaneHaslo As String          'haslo podane przez uzytkownika
+
+    haslo = "qwerty"
+    podaneHaslo = InputBox("Podaj haslo", "Haslo")
+
+    If haslo <> podaneHaslo Then End
+End Sub
+
+W takiej postaci makra, jesli kompilator stwierdzi, ze haslo podane przez uzytkownika nie zgadza sie z haslem systemowym, wywolane zostanie polecenie End, które oznacza natychmiastowe zakonczenie dzialania calej aplikacji, niezaleznie od tego, w której procedurze znajduje sie aktualnie wykonywanie kodu.
+
+Mimo ze przedstawiony powyzej kod, korzystajacy z polecenia End, z formalnego punktu widzenia jest calkowicie poprawny, to trzeba zaznaczyc, ze uzywanie tego polecenia nie nalezy do dobrych praktyk programistycznych.
+
+Glównym powodem jest to, ze w przypadku natrafienia kodu na instrukcje End, oprócz zakonczenia dzialania makra, resetowane sa wartosci wszystkich zmiennych publicznych. Na razie nie poznales jeszcze nawet pojecia zmiennej publicznej, wiec zapewne nie widzisz nic zlego i niepokojacego w tym, ze ich wartosc moglaby byc wyzerowana. Temat zmiennych publicznych zostanie dokladnie omówiony w jednej z kolejnych lekcji, jednak juz przy tej okazji mozna wspomniec, ze zmienne publiczne powinny zachowywac swoja wartosc od momentu uruchomienia aplikacji, az do czasu calkowitego zamkniecia Excela. Ich zresetowanie poprzez uzycie polecenia End sprawia wiec, ze traca one swoja glówna zalete, jaka jest dlugotrwale przechowywanie wartosci.
+
+Zdarza sie tez, ze jakis niewielki blad w kodzie aplikacji prowadzi do niepozadanego wywolania uzytego w tym kodzie polecenia End, przez co makro nieoczekiwanie konczy swoje dzialanie, irytujac uzytkowników koncowych. Odnalezienie miejsca w kodzie, w którym znajduje sie to polecenie End, jest bardzo trudne, nawet z uzyciem skrótu klawiaturowego CTRL + F sluzacego do przeszukiwania calego kodu, poniewaz oprócz polecen End w kodzie znajduje sie o wiele wiecej slów End, które stanowia czesc takich polecen jak np. End Sub , End Function czy End Enum.
+
+Powrót do poczatku lekcji Przenoszenie wykonywania makra do dowolnego miejsca kodu
+W normalnych sytuacjach kompilator wykonuje poszczególne linijki kodu w takiej kolejnosci, w jakiej znajduja sie one w edytorze VBA. Najpierw wykonywana jest linijka 1, potem 2 itd. Zdazyles juz jednak poznac kilka instrukcji (a w zasadzie wiekszosc z nich), które pozwalaja ingerowac w kolejnosc wykonywania linii kodu, np. po natrafieniu w kodzie na instrukcje warunkowa If ... Then, w której warunek jest spelniony, kompilator ominie te linijki, które opisuja operacje dla niespelnionych warunków, a po natrafieniu na petle For ... Next, a konkretnie na wiersz jej zamkniecia (Next), kompilator wróci o kilka linijek kodu do wiersza jej otwarcia.
+
+W VBA istnieje ponadto polecenie GoTo, które równiez pozwala wymuszac zmiane kolejnosci wykonywania wierszy i umozliwia cofniecie sie lub przeskoczenie o kilka linijek kodu do przodu.
+
+Juz na wstepie warto jednak zaznaczyc, ze korzystanie z GoTo powinno byc ograniczone do minimum i w wiekszosci przypadków moze, a nawet powinno byc zastapione któras z wczesniej omówionych instrukcji sterujacych. Jedyna sytuacja, gdzie uzycie polecenia GoTo nie budzi watpliwosci i nie ma zadnej alternatywy, jest obsluga bledów, która bedzie tematem jednej z kolejnych lekcji.
+
+Mimo iz korzystanie z tego polecenia jest zalecane tylko w niewielu sytuacjach, nalezy je omówic, poniewaz bedziesz go czasem potrzebowal przy wspomnianej obsludze bledów, a poza tym moze sie w przyszlosci zdarzyc, ze bedziesz musial pracowac z aplikacja stworzona przez inna osobe, chetnie korzystajaca z GoTo.
+
+Ponizej znajduje sie przyklad prostego makra wykorzystujacego instrukcje GoTo (chociaz optymalnym rozwiazaniem byloby tu zastapienie jej instrukcja If ... Then): 1
+2
+3
+4
+5
+6
+7
+Sub wykorzystanieGoTo(i As Long)
+    If i <= 0 Then GoTo koniec
+    Call MsgBox("Podana liczba jest wieksza od 0")
+
+koniec:
+    Call MsgBox("Koniec dzialania makra")
+End Sub
+
+Procedura z powyzszego przykladu wymaga podania jednego argumentu wejsciowego typu Long. W trzeciej linijce kodu znajduje sie instrukcja warunkowa sprawdzajaca, czy liczba podana jako argument jest mniejsza lub równa 0. Jezeli warunek ten jest spelniony wywolywane jest polecenie GoTo koniec.
+
+Zwróc uwage, ze taka sama nazwa - koniec - tyle, ze z dwukropkiem, znajduje sie w piatym wierszu omawianego przykladu. Nazwa znajdujaca sie w piatym wierszu to tzw. etykieta, czyli tak jakby adres tego miejsca w kodzie, do którego mozna potem przeskoczyc za pomoca instrukcji GoTo.
+
+Etykieta moga byc liczby lub teksty (oczywiscie z zachowaniem zasad nadawania nazw omówionych w lekcji drugiej). Jezeli jako etykieta wykorzystany jest tekst, trzeba po nim postawic dwukropek, gdyz w przeciwnym przypadku traktowany jest on jako nazwa zmiennej lub procedury do wywolania. Liczby, uzyte jako etykiety, moga ale nie musza posiadac na koncu dwukropka.
+
+Ponizej znajduje sie kilka przykladowych etykiet wraz z komentarzem:
+
+ETYKIETA	KOMENTARZ
+koniec:	prawidlowa nazwa etykiety - etykieta jest tekstem, wiec zawiera na koncu dwukropek
+0:	prawidlowa nazwa etykiety - etykieta bedaca liczba moze, ale nie musi zawierac na koncu dwukropek
+koniec	nieprawidlowa nazwa etykiety - etykieta jest tekstem, a nie ma po niej dwukropka
+0	prawidlowa nazwa etykiety - etykieta bedaca liczba moze, ale nie musi zawierac na koncu dwukropek
+Edytor VBA traktuje jako etykiete kazdy wiersz, w którym znajduje sie pojedyncza liczba (z dwukropkiem na koncu lub bez niego) oraz wszystkie wiersze, w których znajduja sie tylko pojedyncze nazwy bez cudzyslowów, ale z dwukropkiem na koncu.
+
+W kazdej procedurze lub funkcji moze znalezc sie dowolna liczba etykiet, nie moga sie one jednak powtarzac w obrebie pojedynczej procedury lub funkcji.
+
+Za kazdym razem, kiedy umiescisz w kodzie etykiete, edytor VBA automatycznie wyrówna ja do lewej strony i nie ma mozliwosci przesuniecia jej w prawo.
+
+Wrócmy z powrotem do analizy kodu. W momencie, w którym kompilator natrafil na polecenie GoTo koniec, wyszukuje on w tej procedurze etykiete o takiej wlasnie nazwie i przenosi wykonywanie kodu do linijki znajdujacej sie bezposrednio za ta etykieta. W omawianym przypadku etykieta koniec: znajduje sie w wierszu 5, wiec wykonywanie kodu zostanie przeniesione do wiersza 6, w którym znajduje sie operacja wyswietlenia na ekranie okna MsgBox z komunikatem Koniec dzialania makra.
+
+Gdyby w drugim wierszu powyzszego kodu warunek i <= 0 nie zostal spelniony, kompilator pominalby polecenie GoTo i wykonywanie kodu dalej biegloby swoim zwyklym torem. Nie oznacza to bynajmniej, ze etykieta koniec: i to, co znajduje sie po niej zostaloby w takiej sytuacji pominiete. Jezeli kompilator natrafi w toku dzialania na wiersz etykiety, traktuje go po prostu jak komentarz i wykonuje operacje znajdujace sie w dalszej czesci kodu. W zwiazku z tym, jezeli w omawianym przykladzie zmienna i miala wartosc wieksza od zera, najpierw na ekranie pojawilby sie komunikat Podana liczba jest wieksza od 0, a nastepnie komunikat Koniec dzialania makra.
+
+Jezeli po slowie kluczowym GoTo wpiszesz nazwe etykiety, która nie wystepuje w danej procedurze lub funkcji, to w momencie, kiedy wykonywanie kodu dojdzie do tej funkcji lub procedury, wyswietlony zostanie blad: Compile error: label not defined.
+
+Jak wspomniano jednak na wstepie, polecenie GoTo jest zazwyczaj marnym substytutem innych instrukcji sterujacych i powyzsza procedura powinna raczej wykorzystywac instrukcje warunkowa If ... Then, zamiast GoTo: 1
+2
+3
+4
+5
+6
+7
+Sub IfThen_Zamiast_GoTo(i As Long)
+    If i > 0 Then
+        Call MsgBox("Podana liczba jest wieksza od 0")
+    End If
+
+    Call MsgBox("Koniec dzialania makra")
+End Sub
+
+Ponizej znajduje sie jeszcze jeden przyklad korzystajacy z polecenia GoTo.
+
+Oczywiscie, równiez tutaj istnieje mozliwosc zastapienia go inna instrukcja sterujaca (a konkretnie petla Do ... Loop), jednak jest to jeden z nielicznych przypadków, w którym uzycie GoTo jest calkiem rozsadnym pomyslem.
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+Sub pobieranieNazwy()
+    Dim nazwa As String
+
+retry:
+    nazwa = InputBox("Podaj nazwe uzytkownika." & vbCrLf & _
+        "Nazwa musi liczyc co najmniej 4 znaki" , "Nazwa")
+
+    If Len(nazwa) < 4 Then
+        Call MsgBox("Nazwa musi liczyc co najmniej 4 znaki", vbExclamation, "Za krótka nazwa")
+        GoTo retry
+   End If
+
+    'dalsze operacje, np. zapisanie nazwy do bazy danych
+
+End Sub
+Dzialanie procedury polega na pobraniu od uzytkownika nazwy, która musi liczyc co najmniej 4 znaki, a nastepnie wykonanie z ta nazwa jakiejs operacji (np. zapisanie jej do bazy danych; tak naprawde w kontekscie tego przykladu i omawiania instrukcji GoTo nie ma to najmniejszego znaczenia). Jezeli uzytkownik poda za krótka nazwe makro powinno wyswietlic odpowiedni komunikat i ponowic prosbe o wpisanie nazwy.
+
+Procedura posiada jedna zmienna tekstowa - nazwa, do której w trakcie dzialania makra przypisywana jest wartosc wpisana przez uzytkownika.
+
+W czwartym wierszu kompilator napotyka na etykiete retry:. Jednak, jak wczesniej wspomniano, napotkanie przez kompilator etykiety nie wiaze sie z wykonywaniem zadnych operacji, poniewaz etykieta nie jest zadnym poleceniem, lecz czyms w rodzaju adresu w kodzie.
+
+W kolejnym wierszu wywolywana jest funkcja InputBox, w której uzytkownik musi wprowadzic nazwe uzytkownika, liczaca co najmniej 4 znaki. Nazwa ta jest nastepnie przypisywana do zmiennej nazwa.
+
+W wierszu ósmym znajduje sie instrukcja warunkowa, która sprawdza czy podana przez uzytkownika nazwa jest krótsza niz 4 znaki. Jezeli kompilator stwierdzi, ze wprowadzona nazwa rzeczywiscie jest zbyt krótka, wyswietla najpierw okno z odpowiednim komunikatem (wiersz 9), a nastepnie wywoluje polecenie GoTo retry, które przenosi wykonywanie kodu z powrotem do wiersza 5. Uzytkownik ponownie jest wiec proszony o wpisanie nazwy. Schemat ten jest powtarzany tak dlugo, az uzytkownik poda w koncu nazwe liczaca co najmniej 4 znaki.
+
+Jezeli nazwa podana przez uzytkownika bedzie liczyla co najmniej 4 znaki, warunek przypisany do instrukcji warunkowej, z wiersza 8 bedzie falszywy i kompilator przejdzie do wykonywania operacji znajdujacych sie za ta instrukcja (w powyzszym przykladzie operacje te zastapiono jedynie komentarzem).
+
+Gdyby w powyzszym przykladzie instrukcja GoTo miala byc zastapiona petla Do ... Loop, kod wygladalby tak, jak w ponizszej ramce: 1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+Sub pobieranieNazwy()
+    Dim nazwa As String
+
+    Do
+        nazwa = InputBox("Podaj nazwe uzytkownika." & vbCrLf & _
+                "Nazwa musi liczyc co najmniej 4 znaki" , "Nazwa")
+
+        If Len(nazwa) < 4 Then
+               Call MsgBox("Nazwa musi liczyc co najmniej 4 znaki", vbExclamation, "Za krótka nazwa")
+        End If
+    Loop While Len(nazwa) < 4
+
+    'dalsze operacje, np. zapisanie nazwy do bazy danych
+
+End Sub
+
+Znajdujaca sie w tej procedurze petla Do ... Loop zawiera warunek Len(nazwa) < 4 poprzedzony slowem kluczowym While, co oznacza, ze jest ona wykonywana tak dlugo, jak zmienna nazwa przechowuje tekst krótszy niz 4 znaki.
+
+Zauwaz jednak, ze jesli makro ma wyswietlac komunikat informujacy uzytkownika o zbyt krótkiej nazwie, wewnatrz tej petli trzeba umiescic instrukcje warunkowa, sprawdzajaca dokladnie ten sam warunek, który jest przypisany do petli: Len(nazwa) < 4. Oznacza to, ze przy kazdym wywolaniu petli warunek ten bedzie sprawdzany dwukrotnie, co jest zlamaniem podstawowej zasady, mówiacej o unikaniu powtarzania tych samych czynnosci.
+
+Mozna byloby wstawic wspomniany komunikat MsgBox w wierszu 5, przed przypisaniem do zmiennej nazwa wyniku funkcji InputBox. Jednak w takiej sytuacji komunikat o zbyt krótkiej nazwie pokazalby sie na ekranie jeszcze zanim uzytkownik zdazyl podac jakakolwiek nazwe, co jest równiez nie do przyjecia.
+
+Jezeli komus bardzo zalezaloby na uzyciu w powyzszym przykladzie petli Do ... Loop zamiast polecenia GoTo, móglby spróbowac rozwiazac to za pomoca nieskonczonej petli i wykorzystania polecenia Exit Do, jednak wydaje sie, ze uzycie w tej sytuacji instrukcji GoTo jest calkowicie akceptowalnym rozwiazaniem.

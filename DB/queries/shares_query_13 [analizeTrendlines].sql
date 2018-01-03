@@ -12,8 +12,21 @@ AS
 
 BEGIN TRANSACTION
 
+SELECT @shareId, @baseExtremumId, @counterExtremumId;
+
 --Clear previous results.
 BEGIN
+
+	SELECT
+		[Id]
+	INTO
+		#CurrentPairTrendlineIds
+	FROM
+		[dbo].[Trendlines]
+	WHERE
+		[ShareId] = @shareId AND 
+		[BaseId] = @baseExtremumId AND 
+		[CounterId] = @counterExtremumId;
 
 	UPDATE
 		[dbo].[Trendlines]
@@ -24,9 +37,18 @@ BEGIN
 		[~IsOpenFromRight] = 1,
 		[ShowOnChart] = 0
 	WHERE 
-		[ShareId] = @shareId AND 
-		[BaseId] = @baseExtremumId AND 
-		[CounterId] = @counterExtremumId;
+		[Id] IN (SELECT * FROM #CurrentPairTrendlineIds);
+
+	DELETE FROM [dbo].[trendlinesBreaks]
+	WHERE [TrendlineId] IN (SELECT * FROM #CurrentPairTrendlineIds);
+
+	DELETE FROM [dbo].[TrendlinesHits]
+	WHERE [TrendlineId] IN (SELECT * FROM #CurrentPairTrendlineIds);
+
+	DELETE FROM [dbo].[TrendRanges]
+	WHERE [TrendlineId] IN (SELECT * FROM #CurrentPairTrendlineIds);
+
+	DROP TABLE #CurrentPairTrendlineIds;
 
 END
 
@@ -52,7 +74,8 @@ SET @displayRightSidePreviewTables = 0;
 
 
 --Temporary tables.
-SELECT * INTO #Trendlines FROM [dbo].[trendlines] WHERE [ShareId] = @shareId AND [BaseId] = @baseExtremumId AND [CounterId] = @counterExtremumId AND [~IsOpenFromRight] = 1;
+--SELECT * INTO #Trendlines FROM [dbo].[trendlines] WHERE [ShareId] = @shareId AND [BaseId] = @baseExtremumId AND [CounterId] = @counterExtremumId AND [~IsOpenFromRight] = 1;
+SELECT * INTO #Trendlines FROM [dbo].[trendlines] WHERE [Id] = 1350568;
 SELECT * INTO #ExtremumGroups FROM [dbo].[extremumGroups] WHERE [ShareId] = @shareId;
 SELECT [DateIndex], [Date], [Open], [Low], [High], [Close], [Volume] INTO #Quotes FROM [dbo].[quotes] WHERE [ShareId] = @shareId;
 
@@ -67,16 +90,16 @@ BEGIN
 		[TrendlineId] [int] NOT NULL,
 		[DateIndex] [int] NOT NULL,
 		[BreakFromAbove] [int] NOT NULL,
-		CONSTRAINT [PK_trendlinesBreaks] PRIMARY KEY CLUSTERED ([Id] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+		CONSTRAINT [PK_temp_trendlinesBreaks] PRIMARY KEY CLUSTERED ([Id] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 	) ON [PRIMARY];
 
-	CREATE NONCLUSTERED INDEX [ixId_trendlinesBreaks] ON #TrendlinesBreaks
+	CREATE NONCLUSTERED INDEX [ixId_temp_trendlinesBreaks] ON #TrendlinesBreaks
 	([Id] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
-	CREATE NONCLUSTERED INDEX [ixTrendlineId_trendlinesBreaks] ON #TrendlinesBreaks
+	CREATE NONCLUSTERED INDEX [ixTrendlineId_temp_trendlinesBreaks] ON #TrendlinesBreaks
 	([TrendlineId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
-	CREATE NONCLUSTERED INDEX [ixDateIndex_trendlinesBreaks] ON #TrendlinesBreaks
+	CREATE NONCLUSTERED INDEX [ixDateIndex_temp_trendlinesBreaks] ON #TrendlinesBreaks
 	([DateIndex] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
 
@@ -85,16 +108,16 @@ BEGIN
 		[TrendlineId] [int] NOT NULL,
 		[ExtremumGroupId] [int] NOT NULL,
 		[DateIndex] [int] NOT NULL,
-		CONSTRAINT [PK_trendlinesHits] PRIMARY KEY CLUSTERED ([Id] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+		CONSTRAINT [PK_temp_trendlinesHits] PRIMARY KEY CLUSTERED ([Id] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 	) ON [PRIMARY];
 
-	CREATE NONCLUSTERED INDEX [ixId_trendlinesHits] ON #TrendlinesHits
+	CREATE NONCLUSTERED INDEX [ixId_temp_trendlinesHits] ON #TrendlinesHits
 	([Id] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
-	CREATE NONCLUSTERED INDEX [ixTrendlineId_trendlinesHits] ON #TrendlinesHits
+	CREATE NONCLUSTERED INDEX [ixTrendlineId_temp_trendlinesHits] ON #TrendlinesHits
 	([TrendlineId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
-	CREATE NONCLUSTERED INDEX [ixDateIndex_trendlinesHits] ON #TrendlinesHits
+	CREATE NONCLUSTERED INDEX [ixDateIndex_temp_trendlinesHits] ON #TrendlinesHits
 	([DateIndex] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
 
@@ -108,25 +131,25 @@ BEGIN
 		[CounterIsHit] [int] NOT NULL,
 		[CounterDateIndex] [int] NOT NULL,
 		[IsPeak] [int] NOT NULL DEFAULT(0),
-		CONSTRAINT [PK_trendRanges] PRIMARY KEY CLUSTERED ([Id] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+		CONSTRAINT [PK_temp_trendRanges] PRIMARY KEY CLUSTERED ([Id] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 	) ON [PRIMARY];
 
-	CREATE NONCLUSTERED INDEX [ixId_trendRanges] ON #TrendRanges
+	CREATE NONCLUSTERED INDEX [ixId_temp_trendRanges] ON #TrendRanges
 	([Id] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
-	CREATE NONCLUSTERED INDEX [ixTrendlineId_trendRanges] ON #TrendRanges
+	CREATE NONCLUSTERED INDEX [ixTrendlineId_temp_trendRanges] ON #TrendRanges
 	([TrendlineId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
-	CREATE NONCLUSTERED INDEX [ixBaseId_trendRanges] ON #TrendRanges
+	CREATE NONCLUSTERED INDEX [ixBaseId_temp_trendRanges] ON #TrendRanges
 	([BaseId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
-	CREATE NONCLUSTERED INDEX [ixBaseDateIndex_trendRanges] ON #TrendRanges
+	CREATE NONCLUSTERED INDEX [ixBaseDateIndex_temp_trendRanges] ON #TrendRanges
 	([BaseDateIndex] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
-	CREATE NONCLUSTERED INDEX [ixCounterId_trendRanges] ON #TrendRanges
+	CREATE NONCLUSTERED INDEX [ixCounterId_temp_trendRanges] ON #TrendRanges
 	([CounterId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
-	CREATE NONCLUSTERED INDEX [ixCounterDateIndex_trendRanges] ON #TrendRanges
+	CREATE NONCLUSTERED INDEX [ixCounterDateIndex_temp_trendRanges] ON #TrendRanges
 	([CounterDateIndex] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
 
@@ -264,6 +287,8 @@ BEGIN
 						#TrendlinesWithoutBreakWithDatesRange t
 						INNER JOIN #Quotes_Temp q
 						ON q.[DateIndex] BETWEEN t.[BatchStartIndex] AND t.[BatchEndIndex]
+
+--SELECT '#TrendlineQuotePairs', * from #TrendlineQuotePairs;
 
 					--Filter only those pairs where Close and Open prices are above Resistance line or below Support line.
 					SELECT
@@ -622,7 +647,7 @@ BEGIN
 			#TrendlinesTemp
 		SET 
 			[AnalysisStartPoint] = [BaseStartIndex],
-			[LookForPeaks] = [BaseIsPeak]
+			[LookForPeaks] = IIF([BaseIsPeak] = 1, 1, -1)
 	
 		IF (@displayRightSidePreviewTables = 1) SELECT '#TrendlinesBreaks.BeforeStart', * FROM #TrendlinesTemp; --WHERE [TrendlineId] = 24019795 ORDER BY DateIndex ASC;
 
@@ -1431,8 +1456,9 @@ BEGIN
 				SELECT
 					e.[Id],
 					SUM([CrossRange]) AS CrossRangeSum,
-					AVG([CrossRange]) AS CrossRangeCounter,
-					STDEVP([CrossRange]) AS CrossRangeStandardDeviation
+					AVG([CrossRange]) AS CrossRangeAverage,
+					STDEVP([CrossRange]) AS CrossRangeStandardDeviation,
+					COUNT([CrossRange]) AS CrossRangeCounter
 				INTO
 					#ExtremumPriceCrossingTrendline_Stats
 				FROM
@@ -1443,7 +1469,8 @@ BEGIN
 				--Calculate penalty points for extremum price crossing trendline.
 				SELECT
 					e.[Id],
-					e.[CrossRangeSum] + e.[CrossRangeCounter] + e.[CrossRangeStandardDeviation] AS [ExtremumPriceCrossPenaltyPoints]
+					e.[CrossRangeSum] + e.[CrossRangeAverage] + e.[CrossRangeStandardDeviation] AS [ExtremumPriceCrossPenaltyPoints],
+					e.[CrossRangeCounter] AS [ExtremumPriceCrossCounter]
 				INTO
 					#ExtremumPriceCrossingPenaltyPoints
 				FROM
@@ -1476,12 +1503,15 @@ BEGIN
 				WHERE
 					tpc.[ModifiedOpenClosePrice] > tpc.[ModifiedTrendlineLevel]
 
+--select '#OCPriceCrossingTrendline', * from #OCPriceCrossingTrendline;
+
 				--Get statistics for extremum price crossing trendline.
 				SELECT
 					e.[Id],
 					SUM([CrossRange]) AS CrossRangeSum,
-					AVG([CrossRange]) AS CrossRangeCounter,
-					STDEVP([CrossRange]) AS CrossRangeStandardDeviation
+					AVG([CrossRange]) AS CrossRangeAverage,
+					STDEVP([CrossRange]) AS CrossRangeStandardDeviation,
+					COUNT([CrossRange]) AS CrossRangeCounter
 				INTO
 					#OCPriceCrossingTrendline_Stats
 				FROM
@@ -1492,7 +1522,8 @@ BEGIN
 				--Calculate penalty points for extremum price crossing trendline.
 				SELECT
 					e.[Id],
-					e.[CrossRangeSum] + e.[CrossRangeCounter] + e.[CrossRangeStandardDeviation] AS [OCPriceCrossPenaltyPoints]
+					e.[CrossRangeSum] + e.[CrossRangeAverage] + e.[CrossRangeStandardDeviation] AS [OCPriceCrossPenaltyPoints],
+					e.[CrossRangeCounter] AS [OCPriceCrossCounter]
 				INTO
 					#OCPriceCrossingPenaltyPoints
 				FROM
@@ -1695,8 +1726,10 @@ BEGIN
 	SELECT
 		tr.*,
 		epcpp.[ExtremumPriceCrossPenaltyPoints],
+		epcpp.[ExtremumPriceCrossCounter],
 		tbe.[Value],
 		ocpp.[OCPriceCrossPenaltyPoints],
+		ocpp.[OCPriceCrossCounter],
 		trwav.[TotalCandles],
 		trwav.[AverageVariation],
 		trmv.[ExtremumVariation],
@@ -1718,7 +1751,7 @@ BEGIN
 
 	--SELECT 'TrendlinesTemp', * FROM #TrendlinesTemp;
 	--SELECT 'TrendlinesHits', * FROM #TrendlinesHits ORDER BY [TrendlineId] ASC;
-	SELECT * FROM #TrendRangesPartValues ORDER BY [BaseDateIndex] ASC;
+	--SELECT * FROM #TrendRangesPartValues ORDER BY [BaseDateIndex] ASC;
 
 
 	--Clean up
@@ -1735,7 +1768,7 @@ BEGIN
 		DROP TABLE #OCPriceCrossingPenaltyPoints;
 		DROP TABLE #TrendRangesWithAverageVariation;
 		DROP TABLE #TrendRangesMaxVariations;
-		DROP TABLE #TrendRangesPartValues;
+		--DROP TABLE #TrendRangesPartValues;
 		DROP TABLE #TrendlineHitsValues;
 
 	END
@@ -1806,14 +1839,77 @@ BEGIN
 
 	-----------------
 
-	SELECT 
-		* 
-	FROM 
-		[dbo].[trendlines]
+	--Save info about hits/breaks/ranges.
+
+	INSERT INTO [dbo].[trendlinesBreaks]([TrendlineId], [DateIndex], [BreakFromAbove])
+	SELECT
+		[TrendlineId], [DateIndex], [BreakFromAbove]
+	FROM
+		#TrendlinesBreaks
 	WHERE
-		[ShareId] = @shareId AND
-		[BaseId] = @baseExtremumId AND
-		[CounterId] = @counterExtremumId
+		[TrendlineId] IN (SELECT [Id] FROM #TrendlinesTemp);
+
+	INSERT INTO [dbo].[TrendlinesHits]([TrendlineId], [ExtremumGroupId], [DateIndex])
+	SELECT
+		[TrendlineId], [ExtremumGroupId], [DateIndex]
+	FROM
+		#TrendlinesHits
+	WHERE
+		[TrendlineId] IN (SELECT [Id] FROM #TrendlinesTemp);
+
+	INSERT INTO [dbo].[TrendRanges](	
+		[TrendlineId], 
+		[BaseId],
+		[BaseIsHit],
+		[BaseDateIndex],
+		[CounterId],
+		[CounterIsHit],
+		[CounterDateIndex],
+		[IsPeak],
+		[ExtremumPriceCrossPenaltyPoints],
+		[ExtremumPriceCrossCounter],
+		[OCPriceCrossPenaltyPoints], 
+		[OCPriceCrossCounter], 
+		[TotalCandles], 
+		[AverageVariation], 
+		[ExtremumVariation], 
+		[OpenCloseVariation], 
+		[BaseHitValue], 
+		[CounterHitValue], 
+		[Value])
+	SELECT
+		[TrendlineId], 
+		[BaseId],
+		[BaseIsHit],
+		[BaseDateIndex],
+		[CounterId],
+		[CounterIsHit],
+		[CounterDateIndex],
+		[IsPeak],
+		[ExtremumPriceCrossPenaltyPoints],
+		[ExtremumPriceCrossCounter],
+		[OCPriceCrossPenaltyPoints], 
+		[OCPriceCrossCounter], 
+		[TotalCandles], 
+		[AverageVariation], 
+		[ExtremumVariation], 
+		[OpenCloseVariation], 
+		[BaseHitValue], 
+		[CounterHitValue], 
+		[Value]
+	FROM
+		#TrendRangesPartValues
+	WHERE
+		[TrendlineId] IN (SELECT [Id] FROM #TrendlinesTemp);
+
+	--SELECT 
+	--	* 
+	--FROM 
+	--	[dbo].[trendlines]
+	--WHERE
+	--	[ShareId] = @shareId AND
+	--	[BaseId] = @baseExtremumId AND
+	--	[CounterId] = @counterExtremumId
 
 END
 
@@ -1832,6 +1928,7 @@ BEGIN
 	DROP TABLE #TrendlinesTemp;
 	DROP TABLE #HitCounters;
 	DROP TABLE #TrendlinesToBeRemoved;
+	DROP TABLE #TrendRangesPartValues;
 
 END
 

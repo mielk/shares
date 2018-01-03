@@ -1,0 +1,486 @@
+09 - Instrukcje warunkowe?
+Tematem tej lekcji beda instrukcje warunkowe. Nauczymy sie sterowac wykonywaniem programu za pomoca warunku If ... Then, poznamy tez operatory logiczne, których glównym zastosowaniem sa wlasnie instrukcje warunkowe.
+
+Przy okazji, zgodnie z obietnica z poprzedniej lekcji, nauczymy sie jak zabezpieczyc aplikacje przed wpisaniem przez uzytkownika niewlasciwego typu danych w oknie InputBox oraz jak sprawdzic, który przycisk zostal wcisniety przez uzytkownika w oknie MsgBox i uzaleznic od niego dalsze wykonywanie makra.
+
+Lekcja zostala podzielona na nastepujace czesci:
+Sterowanie programem za pomoca warunków
+Zagniezdzanie i zwijanie instrukcji warunkowych
+Pomijanie bloku Else
+Operatory logiczne
+Odczytywanie przycisku wcisnietego przez uzytkownika
+Sterowanie programem za pomoca warunków
+Bardzo czesto zdarza sie, ze program ma wykonywac jakies czynnosci, ale tylko wówczas, gdy spelnione sa okreslone warunki.
+
+Przyklady takich sytuacji wymieniono juz w poprzedniej lekcji omawiajacej komunikacje z uzytkownikiem. Jedna z nich bylo uzaleznienie dalszego wykonywania makra od przycisku, który wcisnal uzytkownik, druga natomiast sprawdzanie, jaka wartosc wpisal uzytkownik w oknie InputBox, i wyswietlenie informacji o nieprawidlowym typie danych, jezeli wpisano tekst zamiast liczby.
+
+Ponizej znajduje sie makro obliczajace pensje netto, w której wartosc pensji brutto jest pobierana od uzytkownika za pomoca okna InputBox. Makro to bylo omawiane w poprzedniej lekcji i, jak wówczas wspomniano, nie mialo zadnego zabezpieczenia przed wpisaniem przez uzytkownika nieprawidlowego typu danych (np. tekstu xyz w miejscu, gdzie powinna byc podana wysokosc pensji brutto) - w takiej sytuacji makro po prostu przestawalo dzialac, a na ekranie ukazywal sie wygenerowany przez VBA komunikat z informacja o bledzie Run-time error '13': Type mismatch, co jest oczywiscie zupelnie niezrozumiale dla koncowego uzytkownika.
+
+W ponizszym kodzie do makra dodano instrukcje warunkowa, która w przypadku podania przez uzytkownika nieprawidlowego typu danych wyswietla odpowiedni komunikat (wiersze kodu dodane w tej wersji makra zostaly oznaczone na czerwono).
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+Sub zarobki()
+    Dim s As String
+    Dim pensjaBrutto As Long
+    Dim pensjaNetto As Long
+
+    s = InputBox("Podaj wysokosc pensji brutto", "Pensja brutto")
+
+    If IsNumeric(s) Then
+        pensjaBrutto = s
+        pensjaNetto = pensjaPoOpodatkowaniu(pensjaBrutto)
+
+        Call MsgBox("Pensja brutto: " & pensjaBrutto & vbCrLf & _
+            "Pensja netto: " & pensjaNetto, , "Pensja netto")
+    Else
+        Call MsgBox("Nieprawidlowa wartosc pensji brutto" & _
+            vbCrLf & "Podana wartosc musi byc liczba", _
+            vbOKOnly + vbExclamation, "Nieprawidlowa wartosc")
+    End If
+
+End Sub
+1
+2
+3
+Function pensjaPoOpodatkowaniu(podstawa As Long) As Long
+    pensjaPoOpodatkowaniu = podstawa - (podstawa * 0.18)
+End Function
+W sekcji deklaracji zmiennych, obok zmiennych pensjaBrutto i pensjaNetto, zostala jeszcze zadeklarowana pomocnicza zmienna typu tekstowego s. W omawianym przykladzie niezbedna jest wlasnie zmienna tekstowa, tak by mogla byc do niej przypisana dowolna wartosc wprowadzona przez uzytkownika w oknie InputBox. Wczesniej, kiedy wartosc wpisana przez uzytkownika byla przypisywana bezposrednio do zmiennej liczbowej pensjaBrutto, generowany byl blad w sytuacji, gdy uzytkownik wprowadzil wartosc tekstowa zamiast liczby.
+
+W wierszu 6 do zmiennej s zostaje przypisany wynik dzialania funkcji InputBox, czyli wartosc wpisana przez uzytkownika. Zmienna s, jako zmienna typu tekstowego, moze przyjac kazda wartosc nie generujac przy tym zadnych bledów.
+
+W wierszu 8 pojawia sie wreszcie instrukcja warunkowa, bedaca tematem dzisiejszej lekcji.
+
+Postac ogólna instrukcji warunkowej przedstawia sie nastepujaco: 1
+2
+3
+4
+5
+If [warunek] Then
+    'instrukcje wykonywane, jezeli warunek jest spelniony
+Else
+    'instrukcje wykonywane, jezeli warunek nie jest spelniony
+End If
+
+Miedzy slowami kluczowymi If oraz Then nalezy wstawic tzw. warunek, czyli dzialanie, którego wynikiem bedzie wartosc logiczna True lub False.
+
+Jezeli warunek okreslony w wierszu If ... Then jest spelniony zostana wykonane instrukcje zawarte miedzy linijkami If ... Then oraz Else (oznaczone na powyzszym schemacie ogólnym instrukcji warunkowej zielonym komentarzem), a nastepnie wykonywanie makra przenosi sie do koncowego wiersza instrukcji warunkowej - End If (pomijany jest wiec blok instrukcji znajdujacy sie pomiedzy slowami kluczowymi Else a End If, oznaczony na powyzszym schemacie na czerwono).
+
+Analogicznie w sytuacji, gdy warunek zwróci wartosc False - makro pomija blok instrukcji oznaczony na schemacie na zielono i przeskakuje do bloku polecen umieszczonego pomiedzy linijkami Else oraz End If (oznaczonego na czerwono), a nastepnie kontynuuje swoje dzialanie za instrukcja warunkowa.
+
+Najczesciej jako warunki decydujace o dalszych losach wykonywania kodu wykorzystywane sa zmienne typu Boolean lub funkcje zwracajace taki typ danych.
+
+Jak jednak wspomniano w lekcji czwartej, jezeli zamiast wymaganej wartosci logicznej kompilator natrafi na inny typ danych, próbuje automatycznie przekonwertowac te napotkana wartosc do wymaganego typu logicznego (tak samo zreszta dzieje sie z innymi typami zmiennych). Dzieki tej automatycznej konwersji, jako warunek instrukcji warunkowej mozna podstawic równiez wszystkie liczby, teksty True oraz False, a takze funkcje zwracajace te wartosci. Dla przypomnienia - jako wartosc True interpretowane sa wszystkie liczby rózne od 0 oraz tekst True, natomiast tekst False oraz liczba 0 sa równoznaczne z wartoscia logiczna False.
+
+W zwiazku z powyzszym prawidlowe sa na przyklad takie zapisy:
+If 0 Then (w tym przypadku warunek nie jest spelniony),
+If 2 Then (warunek spelniony),
+If -1 Then (warunek spelniony),
+If 0.0132 Then (warunek spelniony),
+If 2 * (4-5) Then (warunek spelniony),
+If Sqr(5) Then (warunek spelniony),
+If "True" Then (warunek spelniony),
+If "False" Then (warunek nie jest spelniony).
+
+Ale juz na przyklad zapis If "Prawda" Then spowoduje wygenerowanie bledu Run-time error '13': Type mismatch.
+
+W powyzszym przykladzie warunkiem rozpatrywanym przez wyrazenie If ... Then jest funkcja IsNumeric, w której jako argument podano zmienna s. Jak dowiedziales sie w lekcji opisujacej funkcje wbudowane funkcja IsNumeric zwraca wartosc True, jezeli argument jest liczba lub tekstowa reprezentacja liczby. Wartosc False jest natomiast zwracana dla kazdej innej wartosci argumentu.
+
+Dlatego tez, jezeli uzytkownik wpisze w oknie InputBox tekst nie dajacy sie przelozyc na liczbe lub pozostawi puste pole, funkcja IsNumeric zwróci wartosc False i wykonywanie makra zostanie przeniesione do polecen znajdujacych sie pomiedzy slowami kluczowymi Else a End If. W sekcji tej znajduje sie tylko jedna instrukcja - wywolanie okna zatytulowanego Nieprawidlowa wartosc z ikona ostrzezenia i komunikatem Nieprawidlowa wartosc pensji brutto. Podana wartosc musi byc liczba.
+
+Jezeli natomiast uzytkownik wpisze w oknie InputBox wartosc liczbowa, wartosc zmiennej s bedzie tekstowa reprezentacja liczby i funkcja IsNumeric zwróci wartosc True. W takiej sytuacji aplikacja bedzie kontynuowala swoje dzialanie wykonujac polecenia zawarte w bloku znajdujacym sie pomiedzy linia If ... Then, a slowem kluczowym Else. Najpierw do zmiennej pensjaBrutto zostanie wiec przypisana liczba reprezentowana przez tekst s (wiersz 9), a nastepnie wywolywana bedzie funkcja pensjaPoOpodatkowaniu, w której argumentem jest wlasnie ta liczba (wiersz 10). Ostatecznie makro wyswietli koncowy wynik w oknie z komunikatem, przedstawiajac informacje o wysokosci podanej przez uzytkownika pensji brutto i wyliczonej na tej podstawie pensji netto (wiersze 12-13). Po wykonaniu wszystkich instrukcji znajdujacych sie w tym bloku, makro ominie blok przewidziany dla niespelnionego warunku i przejdzie do wiersza End If zamykajacego instrukcji warunkowej (czyli do wiersza 18).
+
+Powrót do poczatku lekcji Zagniezdzanie i zwijanie instrukcji warunkowych
+Ponizej znajdziesz kolejny przyklad zastosowania instrukcji If ... Then, w którym zaprezentowano dwie jej wazne cechy - mozliwosc zagniezdzania jednego warunku w drugim oraz zwijanie calej instrukcji do jednej linijki.
+
+Zaprezentowane makro wymaga najpierw od uzytkownika podania liczby, a nastepnie wyswietla okno z komunikatem czy podana przez niego liczba jest parzysta. Przed sprawdzeniem parzystosci liczby, podobnie jak w poprzednim przykladzie, zastosowano oczywiscie zweryfikowanie poprawnosci podanej przez uzytkownika wartosci, gdyz niemozliwe byloby sprawdzanie parzystosci np. tekstu abc.
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+Sub zarobki()
+    Dim s As String
+    Dim opis As String
+
+    s = InputBox("Podaj liczbe", "Liczba wejsciowa")
+
+    If IsNumeric(s) Then
+
+        If s Mod 2 Then opis = "nieparzysta" Else opis = "parzysta"
+        Call MsgBox("Podana przez Ciebie liczba jest " & opis, vbOkOnly)
+
+    Else
+        Call MsgBox("Nieprawidlowa wartosc." & _
+            vbCrLf & "Podana wartosc musi byc liczba", _
+            vbOKOnly + vbExclamation, "Nieprawidlowa wartosc")
+    End If
+
+End Sub 
+W makrze zadeklarowane sa zmienne tekstowe s oraz opis.
+
+Do zmiennej s, podobnie jak w poprzednim przykladzie, przypisana zostanie wartosc wprowadzona przez uzytkownika. Zastosowanie w tej sytuacji zmiennej tekstowej ma na celu umozliwienie wpisania dowolnej wartosci bez generowania komunikatów o bledzie w sytuacji, gdy wartosc ta nie bedzie liczba.
+
+Zmienna opis bedzie natomiast przechowywac wynik operacji obliczania reszty z dzielenia podanej przez uzytkownika liczby przez 2. Sensownosc zastosowania w tej sytuacji zmiennej tekstowej zostanie wyjasniona w dalszej czesci analizy kodu.
+
+W wierszu 5 wyswietlone zostaje okno InputBox, w którym uzytkownik powinien podac wybrana przez siebie liczbe. Nastepnie, w wierszu 7, makro sprawdza za pomoca funkcji IsNumeric czy podana przez uzytkownika wartosc jest liczba, a wiec czy mozna na niej wykonac operacje obliczania reszty z dzielenia.
+
+Jezeli zmienna s nie przechowuje wartosci liczbowej, wykonywanie makra zostaje przeniesione do wiersza 13 i wyswietlone zostaje ostrzezenie o nieprawidlowym typie danych.
+
+Jezeli natomiast wartosc podana w oknie InputBox jest liczba, makro przechodzi do bloku zadan znajdujacego sie pomiedzy wierszem If ... Then a Else i zabiera sie za sprawdzanie parzystosci podanej liczby.
+
+Najciekawszym wierszem omawianej aplikacji jest wiersz 9, zawierajacy instrukcje: 9
+If s Mod 2 Then opis = "nieparzysta" Else opis = "parzysta"
+
+Pierwszy wniosek, jaki nasuwa sie na podstawie tej linijki kodu, to fakt, ze instrukcje warunkowe If ... Then moga byc zagniezdzane. Jak widzisz, instrukcja If znajdujaca sie w tym wierszu jest zagniezdzona w instrukcji If rozpoczynajacej sie wiersz wyzej. Jak zobaczysz w dalszych lekcjach, zagniezdzanie instrukcji warunkowych jest bardzo powszechna praktyka i nie ma tutaj zadnego ograniczenia jezeli chodzi o liczbe poziomów zagniezdzania i ich skomplikowanie - równie dobrze mozna byloby dodac jeszcze instrukcje If w bloku wykonywanym w przypadku niespelnienia warunku, w niej jeszcze jedna instrukcje warunkowa itd.
+
+Kolejna rzucajaca sie w oczy rzecza jest to, ze cala instrukcja warunkowa If ... Then zostala umieszczona w jednym wierszu.
+
+Umieszczenie calej instrukcji warunkowej w jednym wierszu jest mozliwe tylko w jednej sytuacji: jezeli czynnosci wykonywane zarówno w sytuacji spelnienia, jak i nie spelnienia warunku, moga byc opisane w pojedynczej linii kodu.
+
+W opisywanej sytuacji w przypadku spelnienia warunku funkcji wykonywane jest tylko przypisanie tekstu nieparzysta do zmiennej opis. Podobnie w przypadku, gdy warunek nie jest spelniony, jedyna wykonywana przez makro czynnoscia jest przypisanie do zmiennej opis tekstu parzysta.
+
+Dla odmiany instrukcja warunkowa rozpoczynajaca sie w wierszu 7 nie moze zostac zwinieta do jednego wiersza, poniewaz czynnosci wykonywane dla spelnionego warunku IsNumeric(s) obejmuja dwie linijki kodu: zagniezdzona petle warunkowa (wiersz 9) oraz wywolanie okna z komunikatem (wiersz 10).
+
+Zauwaz, ze jesli cala instrukcja warunkowa umieszczona jest w jednej linijce pomijane jest slowo kluczowe End If.
+
+Zwijanie instrukcji warunkowej do jednej linijki nie powinno byc naduzywane, aby nie wplywac negatywnie na czytelnosc kodu. Jedyna sytuacja, w której powinno sie stosowac ten zabieg, jest wlasnie zaprezentowana tutaj instrukcja warunkowa, w której dla obu wyników warunku jedynymi operacjami jest przypisanie do jakiejs zmiennej wartosci okreslonej wprost (a nie za pomoca funkcji, gdyz wówczas caly wpis jest zazwyczaj zbyt rozwlekly i nie miesci sie na szerokosci ekranu).
+
+Dokladniejszego omówienia wymaga tez warunek podany dla instrukcji If wywolywanej w wierszu (9). Zastosowanie znajduje tutaj zasada opisana na poczatku lekcji, mówiaca o tym, ze warunkiem instrukcji If moze byc tez operacja matematyczna albo funkcja, jezeli jej wynikiem bedzie liczba lub teksty True i False. Dla przypomnienia dla tekstu False oraz liczby 0 warunek przyjmuje wartosc False, natomiast dla tekstu True oraz kazdej innej liczby - warunek jest spelniony.
+
+W tej konkretnej sytuacji warunkiem jest operacja obliczania reszty z dzielenia liczby podanej przez uzytkownika (przechowywanej w zmiennej s - jest to wprawdzie zmienna tekstowa, ale przy zastosowaniu jej w operacji Mod zostaje automatycznie przekonwertowana do liczby calkowitej) przez liczbe 2.
+
+Dla liczb parzystych wynikiem tego dzialania bedzie 0, co jest równoznaczne ze zwróceniem przez warunek wartosci False.
+
+Reszta z dzielenie liczb nieparzystych przez 2 bedzie natomiast 1, a wiec warunek umieszczony w sekcji warunkowej instrukcji If bedzie spelniony i zwróci wartosc True.
+
+W zwiazku z powyzszym - jezeli dla liczb nieparzystych warunek zwróci wartosc True, a dla parzystych False - w bloku opisujacym czynnosci dla spelnionego warunku do zmiennej opis nalezy przypisac tekst nieparzysta, natomiast w bloku dla niespelnionego warunku - tekst parzysta.
+
+W wierszu 10 wywolywana jest funkcja MsgBox, która w zaleznosci od wyniku obliczenia reszty z dzielenia, wyswietla na ekranie okno z komunikatem Podana przez Ciebie liczba jest parzysta lub Podana przez Ciebie liczba jest nieparzysta.
+
+Warto jeszcze krótko uzasadnic sensownosc wykorzystania w tym makrze zmiennej tekstowej opis.
+
+Gdyby w makrze zabraklo tej zmiennej, zamiast tych dwóch wierszy:
+9
+10
+If s Mod 2 Then opis = "nieparzysta" Else opis = "parzysta"
+Call MsgBox("Podana przez Ciebie liczba jest " & opis, vbOkOnly)
+nalezaloby wstawic ponizszy blok instrukcji:  
+ 
+ 
+ 
+ 
+If s Mod 2 Then
+    Call MsgBox("Podana przez Ciebie liczba jest nieparzysta", vbOkOnly)
+Else
+    Call MsgBox("Podana przez Ciebie liczba jest parzysta", vbOkOnly)
+End If
+
+Jedyna zaleta takiego rozwiazania byloby zmniejszenie liczby zmiennych uzywanych w aplikacji z dwóch do jednej. Jednak operacja obliczenia reszty z dzielenia i wyswietlenia komunikatów wydluza sie w takiej sytuacji z dwóch linijek do pieciu. Ponadto wobec braku zmiennej opis, dwukrotnie powtórzona jest niemal identyczna operacja:
+ 
+Call MsgBox("Podana przez Ciebie liczba jest ...", vbOkOnly)
+która w obu przypadkach rózni sie tylko ostatnim slowem komunikatu, uzaleznionym od wyniku operacji s Mod 2 (jak juz zostalo podczas tego kursu wielkorotnie wspomniane - kazda sytuacja, w której powtarzany jest taki sam fragment kodu jest niepozadana).
+
+W omówionej wersji makra, wykorzystujacej dodatkowa zmienna tekstowa opis, ostatnie slowo komunikatu jest przypisywane wlasnie do tej zmiennej, a funkcja MsgBox wywolywana jest z komunikatem bedacym polaczeniem tekstu wspólnego dla obu sytuacji: Podana przez Ciebie liczba jest oraz tekstu przechowywanego w zmiennej opis (a wiec parzysta lub nieparzysta).
+
+Powrót do poczatku lekcji Pomijanie bloku Else
+Czesto zdarza sie, ze instrukcja warunkowa If ... Then ma wykonywac jakies czynnosci tylko w sytuacji, kiedy warunek jest spelniony, natomiast w przypadku niespelnienia warunku powinna po prostu przejsc do kolejnych polecen, znajdujacych sie za instrukcja warunkowa (a wiec za slowem kluczowym End If, które ja zamyka).
+
+W takiej sytuacji mozna oczywiscie pozostawic puste miejsce w bloku, w którym powinny znalezc sie instrukcje do wykonania w razie niespelnienia warunku, tak jak w ponizszym przykladzie:  
+ 
+ 
+ 
+If x > 0 Then
+    Call MsgBox("Liczba x jest wieksza od zera")
+Else
+End if
+
+W powyzszej instrukcji warunkowej w sytuacji, gdy liczba x jest wieksza od zera, zostaje wyswietlona informacja o tresci Liczba x jest wieksza od zera. Natomiast dla liczb niedodatnich, wykonywanie kodu przenoszone jest do bloku pomiedzy slowami kluczowymi Else a End If. Nie napotyka tam jednak zadnych polecen, wiec przechodzi od razu do polecenia End If, zamykajacego cala instrukcje warunkowa.
+
+W takim wypadku jak powyzej slowo kluczowe Else moze, a nawet powinno byc pominiete, a caly zapis powinien wygladac tak jak ponizej:  
+ 
+ 
+If x > 0 Then
+    Call MsgBox("Liczba x jest wieksza od zera")
+End If
+
+W takiej sytuacji mozna tez zastosowac opisane wczesniej zwijanie wierszy, a wiec cala powyzsza konstrukcja równie dobrze moglaby wygladac tak:  
+If x > 0 Then Call MsgBox("Liczba x jest wieksza od zera")
+
+Niedopuszczalna jest natomiast sytuacja, w której to slowo kluczowe Then zostaloby pominiete. Slowo kluczowe Then zawsze musi pojawic sie w tej samej linijce kodu, w której znajduje sie slowo If oraz warunek (oczywiscie mozna rozbic ten wiersz za pomoca operatora _). Zreszta w przypadku pominiecia slowa kluczowego Then lub umieszczenia go w niewlasciwej linii kodu, edytor VBA podswietli cala te linie na czerwono i nie dopusci do uruchomienia makra.
+
+W instrukcji warunkowej, która ma wykonywac jakies polecenia tylko w razie niespelnienia warunku, po prostu nie umieszcza sie zadnego kodu w bloku pomiedzy linijka If ... Then a Else, nie mozna jednak w takiej sytuacji pomijac zadnego elementu calej konstrukcji:  
+ 
+ 
+ 
+If x > 0 Then
+Else
+    Call MsgBox("Liczba x jest mniejsza od zera")
+End If
+
+Zamiast tego mozna jednak odwrócic wynik warunku za pomoca operatora Not() (operatory logiczne wykorzystywane w instrukcjach warunkowych zostaly omówione w kolejnym podrozdziale tej lekcji). Wówczas to, co dotychczas bylo prawda, stanie sie falszem i na odwrót, a operacje wykonywane dotychczas przy niespelnionym warunku beda teraz wykonywane przy jego spelnieniu:
+
+ 
+ 
+ 
+ 
+If Not(x >= 0) Then
+    Call MsgBox("Liczba x jest mniejsza od zera")
+Else
+End If
+W powyzszym kodzie mozna sie juz pozbyc slowa kluczowego Else, a dodatkowo zwinac cala instrukcje warunkowa do jednej linijki:  
+If Not(x >= 0) Then Call MsgBox("Liczba x jest mniejsza od zera")
+
+Powrót do poczatku lekcji Operatory logiczne
+Okreslajac warunek dla instrukcji If ... Then mozna konstruowac rozbudowane warunki, skladajace sie z kilku prostych warunków polaczonych ze soba za pomoca operatorów logicznych.
+
+Kilka z operatorów logicznych dostepnych w VBA ma swoje odpowiedniki wsród funkcji arkuszowych, wiec mozesz je juz znac (np. LUB() czy ORAZ()). Sa one czesto wykorzystywane do budowania warunków dla arkuszowej funkcji warunkowej =JEZELI()).
+
+Ponizsza lista zawiera wykaz wszystkich operatorów logicznych dostepnych w VBA. Klikajac w nazwe poszczególnych operatorów przeniesiesz sie do ich szczególowego opisu z przykladami zastosowania.
+Operator negacji (Not)
+Operator iloczynu logicznego (And)
+Operator sumy logicznej (Or)
+Operator wylaczenia (Xor)
+Operator równosci (Eqv)
+Operator implikacji (Imp)
+Operator negacji (Not)
+Operator Not stosowany jest wraz z pojedynczym wyrazeniem i odwraca jego wartosc.
+
+Operator Not dziala identycznie jak funkcja arkuszowa =NIE. Jezeli wynikiem jakiegos wyrazenia jest True to dodanie przed nim operatora Not zmieni jego wartosc na False i odwrotnie.
+
+Ponizej znajduje sie kilka przykladów zastosowania operatora Not w instrukcjach If ... Then.
+
+ 
+If Not(x = 0) Then
+Sam warunek x = 0 bylby spelniony dla zera, natomiast dla kazdej innej liczby zwrócilby wartosc False. Jednak dodanie przed nim operatora Not sprawia, ze sytuacja odwraca sie o 180 stopni.
+
+Teraz w przypadku, gdy zmienna x ma wartosc 0 cale wyrazenie warunkowe jest falszywe, a wiec wykonywane beda operacje umieszczone w bloku zawartym miedzy slowami Else a End If.
+
+Jezeli zmienna x bedzie natomiast miala wartosc rózna od 0, warunek bedzie spelniony i wykonane zostana polecenia znajdujace sie pomiedzy slowami Then a Else.
+
+ 
+If Not(2 > 1) Then
+W tej sytuacji instrukcja If zawsze bedzie wykonywala operacje przewidziane dla niespelnionego warunku. Wyrazenie 2 > 1 zawsze jest prawdziwe, jednak operator Not zamienia jego wartosc na False.
+
+ 
+If Not(Len(nazwa)) Then
+Zmienna nazwa musi byc zmienna tekstowa, poniewaz tylko taki typ danych jest przyjmowany przez funkcje Len.
+
+Funkcja Len(nazwa) zwraca dlugosc tekstu przechowywanego w zmiennej nazwa.
+
+Pamietajac o zasadzie konwersji liczby 0 na wartosc logiczna False, a kazdej innej liczby na True, mozna stwierdzic, ze jesli zmienna nazwa jest pustym ciagiem znaków (a wiec jej dlugosc zwrócona przez funkcje Len wyniesie 0) wyrazenie Len(nazwa) jest równowazne False, natomiast jezeli tekst przechowywany w zmiennej nazwa zawiera jakies znaki (a wiec funkcja Len zwróci liczbe wieksza od zera) wyrazenie Len(nazwa) jest równowazne wartosci logicznej True.
+
+Jednak wyrazenie Len(nazwa) jest dodatkowo ujete w operator Not(), który odwraca jego wynik. Po uwzglednieniu tego operatora wyrazenie warunkowe jest spelnione dla pustych ciagów znaków, a falszywe, jezeli zmienna nazwa zawiera niepusty tekst.
+
+Powrót do listy operatorów Operator iloczynu logicznego (And)
+Operator And laczy ze soba dwa wyrazenia i tworzy z nich jedno zlozone wyrazenie, które zwraca wartosc True, jezeli oba skladowe wyrazenia sa prawdziwe oraz wartosc False, jezeli co najmniej jedno z nich nie jest spelnione. Operator And dziala identycznie jak arkuszowa funkcja =ORAZ.
+
+Ponizej znajduje sie kilka przykladów zastosowania operatora And w instrukcjach If ... Then:
+
+ 
+If x > 0 And x Mod 2 Then
+Przedstawiony w tym przykladzie zlozony warunek sklada sie z dwóch warunków skladowych: x > 0 oraz x Mod 2, polaczonych operatorem And, oznaczajacym ze oba te warunki musza byc równoczesnie spelnione, aby cale wyrazenie bylo prawdziwe.
+
+Pierwsza skladowa tego zlozonego warunku - x>0 - okresla, ze wartosc zmiennej x musi byc wieksza od zera.
+
+Drugim skladnikiem jest wyrazenie x Mod 2, które zwraca reszte z dzielenia liczby x przez 2. Aby wartosc tego skladowego wyrazenia byla prawdziwa, wynikiem funkcji x Mod 2 musi byc liczba rózna od zera (poniewaz liczba zero równowazna jest wartosci False, a kazda inna liczba wartosci True), a wiec liczba x musi byc nieparzysta (dla liczb parzystych reszta z dzielenia ich przez 2 jest 0).
+
+Patrzac lacznie na podany warunek mozna stwierdzic, ze bedzie on spelniony w sytuacji, gdy zmienna x przechowuje liczbe nieparzysta wieksza od zera.
+
+ 
+If Len(tekst) >= 6 And Mid(tekst, 2, 1) = "a" Then
+W tym przykladzie skladowymi konstrukcji logicznej z operatorem And sa wyrazenia: Len(tekst)>=6 oraz Mid(tekst, 2, 1).
+
+Pierwsze z tych wyrazen - Len(tekst) >= 6 - jest spelnione jezeli dlugosc zmiennej tekstowej tekst wynosi co najmniej 6 znaków.
+
+W drugim wyrazeniu zastosowano funkcje Mid, która zwraca okreslony fragment podanego tekstu. W tym konkretnym przypadku funkcja Mid zwraca fragment tekstu przechowywanego w zmiennej tekst, o dlugosci jednego znaku, rozpoczynajacy sie od drugiego znaku tego tekstu (a wiec zwraca drugi znak tego tekstu). Wyrazenie jest spelnione, jesli wartosc zwrócona przez funkcje Mid wynosi a, a wiec jezeli drugi znak wyrazu przypisanego do zmiennej tekst to litera a.
+
+Podsumowujac, caly powyzszy warunek jest spelniony w sytuacji, gdy zmienna tekst przechowuje tekst o dlugosci co najmniej 6 znaków, w którym drugi znak to a.
+
+ 
+If x >= 10 And x <= 20 Then
+Powyzszy zapis jest bardzo popularnym zastosowaniem operatora And i polega na sprawdzeniu czy wartosc zmiennej zawiera sie w jakims przedziale.
+
+Pierwsza skladowa calego wyrazenia jest prawdziwa dla liczb wiekszych lub równych 10, natomiast druga dla liczb mniejszych lub równych 20. W zwiazku z tym, cale wyrazenie jest prawdziwe, jezeli zmienna x jest równoczesnie >= 10 i <= 20, a wiec jesli zawiera sie w przedziale 10-20.
+
+Powrót do listy operatorów Operator sumy logicznej (Or)
+Operator Or laczy ze soba dwa wyrazenia i tworzy z nich jedno zlozone wyrazenie, które jest prawdziwe, jezeli przynajmniej jedno skladowe wyrazenia jest prawdziwe oraz falszywe, jezeli oba wyrazenia skladowe sa równoczesnie falszywe. Operator Or dziala identycznie jak arkuszowa funkcja =LUB.
+
+Ponizej znajduje sie kilka przykladów zastosowania operatora Or w instrukcjach If ... Then:  
+If x < 10 Or x > 20 Then
+
+Powyzszy przyklad jest odwrotnoscia ostatniego z przykladów przedstawionych przy okazji opisywania operatora And, w którym wartosc True byla zwracana, jezeli liczba zawierala sie w okreslonym przedziale.
+
+Pierwsze skladowe wyrazenie - x < 10 - jest spelnione, jezeli zmienna x jest mniejsza od 10, drugie natomiast - x>20 - jest prawdziwe dla liczb wiekszych od 20.
+
+Oba wyrazenia sa ze soba polaczone operatorem Or, dlatego tez wystarczy aby jedno z tych wyrazen bylo prawdziwe, a cale wyrazenie przyjmie wartosc True. Aby zatem cale wyrazenie bylo prawdziwe, zmienna x moze przyjac wartosc mniejsza od 10 lub wieksza od 20. Dla liczb z zakresu 10-20 cale wyrazenie zwróci wartosc False, poniewaz zadna z tych liczb nie jest ani mniejsza od 10, ani wieksza od 20.
+
+Z uwagi na to, ze to wyrazenie jest dokladna odwrotnoscia wspomnianej funkcji uzywajacej operatora And, mozna je równiez zapisac poprzez wstawienie jego pierwszej wersji (tej z operatorem And) do operatora Not:  
+If Not(x >= 10 And x <= 20) Then
+
+ 
+If Weekday(Date, vbMonday) = 2 Or Weekday(Date, vbMonday) = 4 Then
+Zalózmy, ze napisales makro wykonujace jakis raport, przy czym we wtorki i czwartki ma ono jeszcze wykonywac jakies dodatkowe operacje - np. przesylac ten raport do klientów.
+
+W takiej sytuacji móglbys skorzystac z powyzszej instrukcji warunkowej. Sklada sie ona z dwóch skladowych wyrazen, z których kazde sprawdza czy aktualna data przypada w okreslonym dniu tygodnia.
+
+Kazde z tych czastkowych wyrazen korzysta z funkcji Weekday, która zwraca numer dnia tygodnia dla okreslonej daty i okreslonego dnia uwazanego za poczatek tygodnia oraz z funkcji Date, która zwraca aktualna date.
+
+Cale wyrazenie jest prawdziwe, jezeli przynajmniej jedno ze skladowych wyrazen jest prawdziwe (zreszta w tym przypadku w jednym czasie tylko jedno wyrazenie moze byc prawdziwe, poniewaz okreslony dzien nie moze byc równoczesnie wtorkiem i czwartkiem), a wiec jezeli aktualny dzien zwrócony przez funkcje Date przypada na wtorek lub czwartek.
+
+Powrót do listy operatorów Operator wylaczenia (Xor)
+Operator Xor laczy ze soba dwa wyrazenia i tworzy z nich jedno zlozone wyrazenie, które zwraca wartosc True tylko wtedy, kiedy jedno skladowe wyrazenia jest prawdziwe, a drugie falszywe, oraz wartosc False jezeli oba skladowe wyrazenia sa prawdziwe albo oba sa falszywe. Operator Xor nie ma odpowiednika wsród funkcji arkuszowych.
+
+Ponizej znajduje sie przyklad zastosowania operatora Xor w instrukcji If ... Then:  
+If i >= 0 Xor j >= 0 Then
+
+Przedstawiona powyzej instrukcja warunkowa sklada sie z dwóch wyrazen: i >= 0 oraz j >= 0 polaczonych operatorem Xor. Kazde ze skladowych wyrazen sprawdza czy jedna ze zmiennych jest ujemna.
+
+Jak wczesniej wspomniano, wyrazenie zawierajace operator Xor jest prawdziwe, jezeli oba jego skladniki zwracaja rózne wartosci. Aby wiec caly warunek byl spelniony, zmienna i musi byc dodatnia, a zmienna j ujemna, lub odwrotnie. W sytuacji, gdy obie zmienne beda mialy taki sam znak, warunek nie bedzie spelniony.
+
+Powrót do listy operatorów Operator równosci (Eqv)
+Operator Eqv jest dokladna odwrotnoscia operatora Xor. Warunek zawierajacy operator Eqv jest spelniony w sytuacji, gdy oba wyrazenia skladowe zwracaja te sama wartosc. Jezeli natomiast jeden ze skladowych warunków jest prawdziwy, a drugi falszywy, cale wyrazenie jest falszywe. Operator Eqv nie ma swojego odpowiednika wsród funkcji arkuszowych.
+
+Poniewaz operator Eqv jest dokladna odwrotnoscia operatora Xor, kazdy warunek wykorzystujacy Xor mozna zapisac w inny sposób - zastepujac operator Xor operatorem Eqv i wstawiajac cale wyrazenie do operatora Not (zasada dziala tez oczywiscie w odwrotna strone - kazde wyrazenie z operatorem Eqv mozna zastapic takim samym wyrazeniem z operatorem Xor, wstawionym do operatora Not).
+
+Ponizej znajduje sie przyklad zastosowania operatora Eqv w instrukcji If ... Then:  
+If i >= 0 Eqv j >= 0 Then
+
+Powyzsza instrukcja jest dokladna odwrotnoscia instrukcji zaprezentowanej przy okazji omawiania operatora Xor. Instrukcja ta równiez sklada sie z dwóch wyrazen: i >= 0 oraz j >= 0, w których kazde sprawdza czy jedna ze zmiennych jest ujemna.
+
+Jako, ze operatorem laczacym oba wyrazenia skladowe jest Eqv, caly warunek bedzie spelniony w sytuacji, gdy oba czastkowe wyrazenia zwróca te sama wartosc, a wiec gdy obie zmienne beda liczbami ujemnymi, lub obie beda liczbami dodatnimi. Jezeli jedna z tych dwóch zmiennych bedziesz przechowywala liczbe dodatnia, a druga ujemna, cale wyrazenie zwróci wartosc False.
+
+Powrót do listy operatorów Operator implikacji (Imp)
+Operator Imp, zwany operatorem implikacji, laczy ze soba dwa wyrazenia skladowe i zwraca wartosc False w sytuacji, gdy pierwsze wyrazenie jest prawdziwe, a drugie falszywe, oraz wartosc True w kazdej innej sytuacji.
+
+Ponizej znajduje sie przyklad zastosowania operatora Imp w instrukcji If ... Then:  
+If dataPlatnosci < Date() Imp czyZaplacono Then
+
+Celem powyzszego wyrazenia, zlozonego z dwóch skladowych warunków polaczonych operatorem Imp, jest wychwycenie przeterminowanych platnosci.
+
+Pierwszy skladowy warunek sprawdza czy zmienna dataPlatnosci, przechowujaca, jak nietrudno sie domyslic, wymagana date platnosci, jest mniejsza od aktualnej daty (jesli jest mniejsza, platnosc powinna byc juz uiszczona). Drugi warunek jest natomiast po prostu zmienna logiczna i jest spelniony wówczas, gdy zmienna ta przechowuje wartosc True.
+
+Tak jak wczesniej zaznaczono, wyrazenia powiazane operatorem Imp sa falszywe, jezeli pierwsze z nich zwraca wartosc True, a drugie False. W kazdej innej sytuacji wyrazenia takie sa prawdziwe.
+
+W powyzszym przykladzie wyrazenie bedzie wiec falszywe tylko w sytuacji, gdy minela juz wymagana data platnosci (czyli warunek dataPlatnosci > Date() zwróci True), a jednoczesnie platnosc ta nie zostala jeszcze uregulowana (zmienna czyZaplacono=False). W zwiazku z tym, w instrukcji warunkowej If ... Then w bloku przewidzianym dla niespelnionych warunków mozna np. umiescic komunikat MsgBox z informacja o koniecznosci wykonania platnosci.
+
+Imp jest jedynym operatorem, przy którym kolejnosc przedstawienia obu skladowych wyrazen ma istotne znaczenie i moze wplynac na wynik.
+
+Powrót do listy operatorów
+Jezyk VBA umozliwia równiez tworzenie jeszcze bardziej zlozonych wyrazen, wykorzystujacych równoczesnie kilka operatorów logicznych.
+
+Do przykladu przedstawionego przy okazji omawiania operatora Or, w którym sprawdzano czy aktualna data przypada we wtorek lub czwartek, mozna równie dobrze dopisac dodatkowy dzien:  
+If Weekday(Date, vbMonday) = 2 Or Weekday(Date, vbMonday) = 4 Or Weekday(Date, vbMonday) = 5 Then
+
+Wyrazenie wykorzystuje teraz dwa operatory logiczne Or, które lacza ze soba trzy skladowe warunki, i bedzie spelnione takze dla dat przypadajacych w piatek.
+
+Ponizsze wyrazenie wykorzystuje natomiast dwa operatory And:  
+If x >= 0 And x <= 20 And x Mod 2 Then
+
+Jako ze wszystkie czesci skladowe tego wyrazenia sa ze soba polaczone operatorami And, bedzie ono prawdziwe tylko wtedy, gdy prawdziwe beda wszystkie jego skladniki.
+
+Jak wiec sie juz pewnie domyslasz na podstawie poprzednich przykladów, wyrazenie to bedzie spelnione, jezeli zmienna x bedzie nieparzysta liczba z zakresu 0-20 (aby spelniony byl pierwszy warunek - x >= 0 - zmienna x musi byc wieksza od zera; drugi warunek - x <= 20 - jest spelniony, jezeli zmienna x jest mniejsza od 20; wreszcie aby spelnic trzeci warunek - x Mod 2 - operacja zwracania reszty z dzielenia zmiennej x przez 2 musi zwrócic liczbe rózna od zera, a wiec zmienna x musi byc nieparzysta).
+
+Mozliwe jest tez oczywiscie laczenie w jednym wyrazeniu róznych operatorów. Przyklad takiego wyrazenia zaprezentowano ponizej:  
+If x < 0 Or x > 20 And x Mod 2 Then
+
+W przedstawionym powyzej wyrazeniu wykorzystane zostaly operatory Or i And. Na pierwszy rzut oka mogloby sie wydawac, ze wyrazenie to jest odwrotnoscia poprzedniego, które bylo spelnione dla liczb nieparzystych z zakresu 1-20. W rzeczywistosci jest jednak inaczej.
+
+Podobnie, jak to ma miejsce w przypadku operatorów arytmetycznych, niektóre operatory logiczne maja wyzszy priorytet od innych i sa wykonywane przed nimi. Kolejnosc wykonywania operatorów logicznych jest dokladnie taka, w jakiej zostaly one omówione w nieniejszym podrozdziale: Not / And / Or / Xor / Eqv / Imp.
+
+W zwiazku z tym, w omawianym przykladzie, zlozonym z trzech skladowych wyrazen, jako pierwsze rozpatrywane sa wyrazenia drugie i trzecie - x > 20 And x Mod 2, które lacznie beda spelnione dla nieparzystych liczb wiekszych od 20.
+
+Dopiero teraz wynik tego wyrazenia jest laczony z pierwszym skladowym wyrazeniem (x < 0) za pomoca operatora Or. Uzycie tego operatora oznacza, ze wystarczy spelnienie jednego z warunków, aby spelnione bylo cale wyrazenie - wystarczy wiec, ze zmienna x bedzie mniejsza od zera (nawet jesli bedzie parzysta), a cale wyrazenie zwróci wartosc True.
+
+Przedstawiony przyklad pokazuje, ze ignorowanie kolejnosci wykonywania dzialan na operatorach logicznych moze prowadzic do wyników niezgodnych z zamierzeniami. Aby uniknac tego typu klopotów, podobnie jak w przypadku operatorów arytmetycznych, nalezy posluzyc sie nawiasami.
+
+Zeby omawiane wczesniej wyrazenie rzeczywiscie bylo spelnione dla nieparzystych liczb spoza zakresu 1-20, musialoby byc zapisane w nastepujacy sposób:  
+If (x < 0 Or x > 20) And x Mod 2 Then
+
+W takiej postaci tego wyrazenia najpierw rozpatrywane sa warunki znajdujace sie w nawiasie, a wiec x < 0 Or x > 20, i dopiero wynik tego podwyrazenia jest zestawiany za pomoca operatora And z warunkiem x Mod 20.
+
+Ponizej przedstawiono jeszcze jeden przyklad obrazujacy róznice wynikajaca ze zmiany kolejnosci dzialan poprzez zastosowanie nawiasów.
+
+ 
+ 
+If Not x >= 0 And x < 20 Then
+If Not (x >= 0 And x < 20) Then
+W pierwszym zapisie najpierw wykonywana jest operacja negacji, a wiec warunek Not x >= 0 jest przez kompilator przekladany na wyrazenie x < 0. Dopiero ten zapis jest laczony za pomoca operatora And z drugim skladowym warunkiem: x < 20. Wyrazenie to bedzie wiec prawdziwe, jezeli zmienna x bedzie przechowywala liczbe ujemna.
+
+Natomiast w drugim zapisie jako pierwsza wykonywana jest operacja w nawiasie, która zwraca wartosc True dla liczb z zakresu 0-20. Dopiero po uzyskaniu wyniku wyrazenia w nawiasie, jest on odwracany przez operator Not, w zwiazku z czym cale wyrazenie bedzie spelnione dla liczb niezawierajacych sie w zakresie 0-20.
+
+Powrót do poczatku lekcji Odczytywanie przycisku wcisnietego przez uzytkownika
+Ostatnim zagadnieniem, poruszonym przy okazji omawiania instrukcji warunkowych, bedzie odczytywanie wyniku funkcji MsgBox (czyli przycisku wcisnietego przez uzytkownika w oknie z komunikatem), które równiez wykorzystuje konstrukcje If ... Then.
+
+Ponizej znajduje sie przykladowe makro, które wyswietla najpierw pytanie Czy chcesz wyswietlic w arkuszu aktualna godzine?, a nastepnie, w zaleznosci od wcisnietego przycisku(Yes lub No) wyswietla w arkuszu godzine lub konczy swoje dzialanie. 1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+Sub wyswietlanieDaty()
+    Dim przycisk As Integer
+
+    przycisk = MsgBox("Czy chcesz wyswietlic w arkuszu aktualna godzine?", _
+        vbYesNo + vbQuestion, "Potwierdzenie")
+
+    If przycisk = 6 Then
+        Cells(1, 1) = Time
+    End If
+End Sub
+
+W omawianym makrze zadeklarowana zostala jedna zmienna typu liczbowego - przycisk, która bedzie przechowywala wartosc liczbowa wcisnietego przez uzytkownika przycisku.
+
+Do kazdego typu przycisku, jaki moze pojawic sie w oknie MsgBox przypisane sa odpowiednie liczby, które zostaly przedstawione w ponizszej tabelce:
+PRZYCISK	WARTOSC
+OK	1
+Cancel	2
+Abort	3
+Retry	4
+Ignore	5
+Yes	6
+No	7
+Po kliknieciu w oknie MsgBox jakiegokolwiek przycisku, okno to znika z ekranu, a cala funkcja MsgBox zwraca taka wartosc, jaka jest przypisana do tego przycisku.
+
+Okno MsgBox wyswietlane w opisywanym przykladzie posiada dwa przyciski: Yes oraz No, a wiec funkcja MsgBox moze przyjac wartosc 6 (jezeli zostanie wcisniety przycisk Yes) lub 7 (jezeli uzytkownik wcisnie No).
+
+W wierszu 5 znajduje sie instrukcja warunkowa, sprawdzajaca czy do zmiennej przycisk przypisana jest wartosc 6, co byloby równoznaczne z kliknieciem przycisku Yes. Jezeli warunek ten jest spelniony, makro wyswietla w komórce arkusza informacje o aktualnej godzinie. W sytuacji, gdy warunek z wiersza 5 nie jest spelniony, czyli wcisniety zostal przycisk No, makro nie ma wykonywac zadnych operacji, pominiety wiec zostal blok Else instrukcji warunkowej.
+
+W jednej z kolejnych lekcji poznasz wreszcie przywolywane od jakiegos czasu wartosci wyliczeniowe, dzieki którym zamiast korzystac przy odczytywaniu wyniku funkcji MsgBox z niewygodnych i trudnych do zapamietania liczb, bedziesz mógl uzyc dobrze opisanych nazw wyliczeniowych, takich jak np. vbYes lub vbNo.

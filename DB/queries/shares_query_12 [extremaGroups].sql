@@ -314,7 +314,6 @@ FROM
 		FROM (SELECT * FROM #ExtremumGroups WHERE [IsPeak] = 0) eg) a) b
 
 
---SELECT * FROM #ExtremaCrossPoints;
 --SELECT * FROM #ExtremumGroups;
 
 
@@ -356,10 +355,11 @@ FROM
 		
 
 
-	--SELECT * FROM #PotentialPairs;
+	--SELECT 'PotentialPairs', * FROM #PotentialPairs;
+	--SELECT 'ExtremaCrossPoints', * FROM #ExtremaCrossPoints;
 
 
-	--Creating all possible trendlines.
+	----Creating all possible trendlines.
 	DELETE FROM [dbo].[trendlines] WHERE [ShareId] = @shareId;
 	INSERT INTO [dbo].[trendlines](
 		[ShareId],
@@ -398,16 +398,6 @@ FROM
 		ON pp.[counterId] = ecp2.[Id]
 
 
-----SELECT
-----		COUNT(*)
-----	FROM
-----		#PotentialPairs pp
-----		LEFT JOIN #ExtremaCrossPoints ecp1
-----		ON pp.[baseId] = ecp1.[Id]
-----		LEFT JOIN #ExtremaCrossPoints ecp2
-----		ON pp.[counterId] = ecp2.[Id]
-
-
 
 DROP TABLE #Quotes;
 DROP TABLE #Extrema;
@@ -422,4 +412,4 @@ DROP TABLE #ExtremumGroupsInitialPairing;
 DROP TABLE #PotentialPairs;
 
 
-ROLLBACK TRANSACTION
+COMMIT TRANSACTION

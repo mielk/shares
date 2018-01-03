@@ -99,9 +99,4 @@ DROP TABLE #TempFirstQuotes;
 DROP TABLE #TempRequiredQuotes;
 DROP TABLE #TempMissingQuotes;
 
-COMMIT TRANSACTION
---ROLLBACK TRANSACTION
-
-
-
---select * from quotes where shareid = 1739;
+ROLLBACK TRANSACTION
