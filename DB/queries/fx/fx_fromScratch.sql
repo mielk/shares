@@ -376,11 +376,11 @@ BEGIN
 		[AssetId] [int] NOT NULL,
 		[Timeframe] [int] NOT NULL,
 		[DateIndex] [int] NOT NULL,
-		[Open] [float] NULL,
-		[Low] [float] NULL,
-		[High] [float] NULL,
-		[Close] [float] NULL,
-		[Volume] [bigint] NULL,
+		[Open] [float] NOT NULL,
+		[Low] [float] NOT NULL,
+		[High] [float] NOT NULL,
+		[Close] [float] NOT NULL,
+		[Volume] [bigint] NOT NULL,
 		[IsComplete] [bit] NOT NULL DEFAULT(0),
 		[CreatedDate] [datetime] NOT NULL CONSTRAINT [Default_Quotes_CreatedDate]  DEFAULT (GETDATE())
 	) ON [PRIMARY]

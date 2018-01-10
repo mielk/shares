@@ -1,13 +1,27 @@
 use [fx];
 BEGIN TRANSACTION;
-INSERT INTO [tempData]
-COMMIT TRANSACTION;
+
+CREATE TABLE [dbo].[RawH1Data](
+	[Date] [datetime] NOT NULL,
+	[Open] [float] NOT NULL,
+	[Low] [float] NOT NULL,
+	[High] [float] NOT NULL,
+	[Close] [float] NOT NULL
+);
+
+
+CREATE NONCLUSTERED INDEX [ixDate_Raw1HData] ON [dbo].[RawH1Data] 
+([Date] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	
+
+INSERT INTO [RawH1Data]
+SELECT '2005-01-03 01:00:00.000',102.58,102.91,102.58,102.8 UNION ALL
 
 SELECT 
 	COUNT(*) AS [Counter],
 	MIN([Date]) AS [FirstQuote],
 	MAX([Date]) AS [LastQuote]
 FROM
-	[dbo].[tempData]
-WHERE
-	YEAR([Date]) = 2017
+	[dbo].[RawH1Data]
+
+COMMIT TRANSACTION;
