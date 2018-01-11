@@ -8,6 +8,7 @@ IF OBJECT_ID('addNewQuote','P') IS NOT NULL DROP PROC [dbo].[addNewQuote];
 IF OBJECT_ID('test_addQuoteFromRawH1','P') IS NOT NULL DROP PROC [dbo].[test_addQuoteFromRawH1];
 IF OBJECT_ID(N'GetTimeframesIndices', N'FN') IS NOT NULL DROP FUNCTION [dbo].[GetTimeframesIndices]
 IF OBJECT_ID(N'GetLowerLevelIndices', N'FN') IS NOT NULL DROP FUNCTION [dbo].[GetLowerLevelIndices]
+IF OBJECT_ID(N'GetDateForDateIndex', N'FN') IS NOT NULL DROP FUNCTION [dbo].[GetDateForDateIndex]
 GO
 
 --CREATE TYPE [dbo].[QuotesTransferTable] AS TABLE([Date] DATETIME, [Open] FLOAT, [High] FLOAT, [Low] FLOAT, [Close] FLOAT, [Volume] INT);
@@ -16,6 +17,65 @@ GO
 --CREATE TYPE [dbo].[ParentChildTimeframesTransferTable] AS TABLE([ParentTimeframe] INT, [DateIndex] INT, [ChildDateIndex] INT);
 
 --GO
+
+GO
+
+CREATE FUNCTION [dbo].[GetDateForDateIndex](@timeframe AS INT, @dateIndex AS INT)
+RETURNS DATETIME
+AS
+BEGIN
+	DECLARE @dt AS DATETIME;
+	SELECT @dt = [Date] FROM [dbo].[dates] WHERE [Timeframe] = @timeframe AND [DateIndex] = @dateIndex;
+	RETURN @dt;
+END
+GO
+
+CREATE FUNCTION [dbo].[GetTimeframesIndices](@dates AS [dbo].[DatetimesTransferTable] READONLY)
+RETURNS TABLE
+AS
+RETURN 
+(SELECT DISTINCT
+	b.[Timeframe], b.[DateIndex]
+FROM
+	@dates a
+	LEFT JOIN
+		(SELECT
+			d1.[Timeframe], d1.[DateIndex], d1.[Date] AS [StartDate], d2.[Date] AS [EndDate]
+		FROM
+			[dbo].[dates] d1
+			LEFT JOIN [dbo].[dates] d2
+			ON d1.[Timeframe] = d2.[Timeframe] AND d1.[DateIndex] = d2.[DateIndex] - 1) b
+	ON a.[dt] >= [StartDate] AND a.[dt] < [EndDate]);
+
+GO
+
+CREATE FUNCTION [dbo].[GetLowerLevelIndices](@baseTimeframe AS INT, @timeframeIndices AS [dbo].[TimeframeDateIndexTransferTable] READONLY)
+RETURNS TABLE
+AS
+RETURN 
+(SELECT
+	c.[Timeframe],
+	c.[DateIndex],
+	d3.[DateIndex] AS [BaseTimeframeIndex]
+FROM
+	(SELECT DISTINCT
+		b.*
+	FROM
+		@timeframeIndices a
+		LEFT JOIN
+			(SELECT
+				d1.[Timeframe], d1.[DateIndex], d1.[Date] AS [StartDate], d2.[Date] AS [EndDate]
+			FROM
+				[dbo].[dates] d1
+				LEFT JOIN [dbo].[dates] d2
+				ON d1.[Timeframe] = d2.[Timeframe] AND d1.[DateIndex] = d2.[DateIndex] - 1) b
+		ON a.[Timeframe] = b.[Timeframe] AND a.[DateIndex] = b.[DateIndex]) c
+	LEFT JOIN (SELECT * FROM [dbo].[dates] WHERE [Timeframe] = @baseTimeframe) d3
+	ON d3.[Date] >= c.[StartDate] AND d3.[Date] < c.[EndDate]);
+
+GO
+
+
 
 CREATE PROC [dbo].[addNewQuote] @assetId AS INT, @timeframe AS INT, @quotes AS [dbo].[QuotesTransferTable] READONLY
 AS
@@ -48,7 +108,7 @@ BEGIN
 
 	END
 
-	--Get date indices.
+	--Insert quotations for higher timeframe levels.
 	BEGIN
 		
 		DECLARE @dates AS [dbo].[DatetimesTransferTable];
@@ -59,11 +119,11 @@ BEGIN
 		INSERT INTO @timeframeIndices SELECT * FROM [dbo].[GetTimeframesIndices](@dates) WHERE [Timeframe] > @timeframe;	
 		INSERT INTO @timeframesMapping SELECT * FROM [dbo].[GetLowerLevelIndices](@timeframe, @timeframeIndices);
 
-		--Get cummulative quotations of higher level.
+		--Join timeframe mapping fetched in previous step with quotes for base timeframe.
 		SELECT
 			tm.*, q.[Open], q.[High], q.[Low], q.[Close], q.[Volume]
 		INTO 
-			#QuotesForHigherLevel
+			#JoinTimeframeMappingWithBaseTimeframeQuotes
 		FROM
 			@timeframesMapping tm
 			LEFT JOIN (SELECT * FROM [dbo].[quotes] WHERE [AssetId] = @assetId AND [Timeframe] = @timeframe) q
@@ -71,22 +131,87 @@ BEGIN
 		WHERE
 			q.[Close] IS NOT NULL;
 
-		SELECT 
-			a.[ParentTimeframe], a.[DateIndex], b.[Open], a.[High], a.[Low], c.[Close], a.[Volume]
-		FROM
-			(	SELECT q.[ParentTimeframe], q.[DateIndex], MIN(q.[ChildDateIndex]) AS [MinIndex], MAX(q.[ChildDateIndex]) AS [MaxIndex], MIN(q.[Low]) AS [Low], MAX(q.[High]) AS [High], SUM(q.[Volume]) AS [Volume]
-				FROM #QuotesForHigherLevel q
-				GROUP BY q.[ParentTimeframe], q.[DateIndex]) a
-			LEFT JOIN #QuotesForHigherLevel b ON a.[ParentTimeframe] = b.[ParentTimeframe] AND a.[DateIndex] = b.[DateIndex] AND a.[MinIndex] = b.[ChildDateIndex]
-			LEFT JOIN #QuotesForHigherLevel c ON a.[ParentTimeframe] = c.[ParentTimeframe] AND a.[DateIndex] = c.[DateIndex] AND a.[MaxIndex] = c.[ChildDateIndex];
+		--Calculate candles for higher level timeframes.
+		BEGIN
+			SELECT 
+				a.[ParentTimeframe], a.[DateIndex], b.[Open], a.[High], a.[Low], c.[Close], a.[Volume]
+			INTO
+				#HigherLevelQuotes
+			FROM
+				(	SELECT q.[ParentTimeframe], q.[DateIndex], MIN(q.[ChildDateIndex]) AS [MinIndex], MAX(q.[ChildDateIndex]) AS [MaxIndex], MIN(q.[Low]) AS [Low], MAX(q.[High]) AS [High], SUM(q.[Volume]) AS [Volume]
+					FROM #JoinTimeframeMappingWithBaseTimeframeQuotes q
+					GROUP BY q.[ParentTimeframe], q.[DateIndex]) a
+				LEFT JOIN #JoinTimeframeMappingWithBaseTimeframeQuotes b ON a.[ParentTimeframe] = b.[ParentTimeframe] AND a.[DateIndex] = b.[DateIndex] AND a.[MinIndex] = b.[ChildDateIndex]
+				LEFT JOIN #JoinTimeframeMappingWithBaseTimeframeQuotes c ON a.[ParentTimeframe] = c.[ParentTimeframe] AND a.[DateIndex] = c.[DateIndex] AND a.[MaxIndex] = c.[ChildDateIndex];
 
+			DROP TABLE #JoinTimeframeMappingWithBaseTimeframeQuotes;
+
+		END
+
+		--Insert high-level candles fetched in the previous step to the [quotes] table (if they already exists, override them).
+		BEGIN
+
+			DELETE q 
+			FROM [dbo].[quotes] q 
+			WHERE EXISTS
+			(
+			   SELECT 1 FROM #HigherLevelQuotes hlq 
+			   WHERE q.[AssetId] = @assetId AND q.[Timeframe] = hlq.[ParentTimeframe] AND q.[DateIndex] = hlq.[DateIndex]
+			);
+
+			INSERT INTO [dbo].[quotes]([AssetId], [Timeframe], [DateIndex], [Open], [High], [Low], [Close], [Volume])
+			SELECT @assetId AS [AssetId], hlv.* FROM  #HigherLevelQuotes hlv;
+
+		END
+
+		--Updating [IsComplete] field.
+		BEGIN
+
+			-- Temporary table for better performance.
+			SELECT * INTO #TempQuotes FROM [dbo].[quotes] WHERE [AssetId] = @assetId AND [Timeframe] = @timeframe;
+
+			-- Select the last base timeframe quotation.
+			DECLARE @lastIndex AS INT = (SELECT MAX([DateIndex]) FROM #TempQuotes);
+			DECLARE @dt AS DATETIME = [dbo].[GetDateForDateIndex](@timeframe, @lastIndex);
+			
+			--Fetch the higher level date index for the highest quote from the base timeframe.
+			DELETE FROM @dates;
+			DELETE FROM @timeframeIndices;
+
+			INSERT INTO @dates SELECT @dt;
+			INSERT INTO @timeframeIndices SELECT * FROM [dbo].[GetTimeframesIndices](@dates) WHERE [Timeframe] > @timeframe;
+
+			--Create temporary table with all higher level quotes match with the proper record from @timeframeIndices fetched above.
+			SELECT
+				q.*,
+				IIF(ti.[Timeframe] IS NULL, 0, 1) AS [IsCovered]
+			INTO
+				#HigherLevelTimeframesWithCoverageJoined
+			FROM
+				(SELECT * FROM [dbo].[quotes] WHERE [AssetId] = @assetId AND [Timeframe] > @timeframe) q
+				LEFT JOIN @timeframeIndices ti
+				ON q.[AssetId] = @assetId AND q.[Timeframe] = ti.[Timeframe] AND q.[DateIndex] < ti.[DateIndex];
+
+			--Update [IsComplete] field in [quotes] table.
+			UPDATE q
+			SET [IsComplete] = hlt.[IsCovered]
+			FROM
+				[dbo].[quotes] q
+				LEFT JOIN #HigherLevelTimeframesWithCoverageJoined hlt
+				ON q.[AssetId] = hlt.[AssetId] AND q.[Timeframe] = hlt.[Timeframe] AND q.[DateIndex] = hlt.[DateIndex]
+			WHERE
+				q.[AssetId] = @assetId AND q.[Timeframe] > @timeframe;
+
+			DROP TABLE #HigherLevelTimeframesWithCoverageJoined;
+
+		END
 
 	END
 
 	--Clean up temporary tables
 	BEGIN
 		DROP TABLE #Quotes;
-		DROP TABLE #QuotesForHigherLevel;
+		DROP TABLE #HigherLevelQuotes;
 	END
 
 END
@@ -129,54 +254,7 @@ END
 GO
 
 
-CREATE FUNCTION [dbo].[GetTimeframesIndices](@dates AS [dbo].[DatetimesTransferTable] READONLY)
-RETURNS TABLE
-AS
-RETURN 
-(SELECT DISTINCT
-	b.[Timeframe], b.[DateIndex]
-FROM
-	@dates a
-	LEFT JOIN
-		(SELECT
-			d1.[Timeframe], d1.[DateIndex], d1.[Date] AS [StartDate], d2.[Date] AS [EndDate]
-		FROM
-			[dbo].[dates] d1
-			LEFT JOIN [dbo].[dates] d2
-			ON d1.[Timeframe] = d2.[Timeframe] AND d1.[DateIndex] = d2.[DateIndex] - 1) b
-	ON a.[dt] >= [StartDate] AND a.[dt] < [EndDate]);
-
-GO
-
-
-CREATE FUNCTION [dbo].[GetLowerLevelIndices](@baseTimeframe AS INT, @timeframeIndices AS [dbo].[TimeframeDateIndexTransferTable] READONLY)
-RETURNS TABLE
-AS
-RETURN 
-(SELECT
-	c.[Timeframe],
-	c.[DateIndex],
-	d3.[DateIndex] AS [BaseTimeframeIndex]
-FROM
-	(SELECT DISTINCT
-		b.*
-	FROM
-		@timeframeIndices a
-		LEFT JOIN
-			(SELECT
-				d1.[Timeframe], d1.[DateIndex], d1.[Date] AS [StartDate], d2.[Date] AS [EndDate]
-			FROM
-				[dbo].[dates] d1
-				LEFT JOIN [dbo].[dates] d2
-				ON d1.[Timeframe] = d2.[Timeframe] AND d1.[DateIndex] = d2.[DateIndex] - 1) b
-		ON a.[Timeframe] = b.[Timeframe] AND a.[DateIndex] = b.[DateIndex]) c
-	LEFT JOIN (SELECT * FROM [dbo].[dates] WHERE [Timeframe] = @baseTimeframe) d3
-	ON d3.[Date] >= c.[StartDate] AND d3.[Date] < c.[EndDate]);
-
-GO
-
-
-EXEC [dbo].[test_addQuoteFromRawH1] @counter = 5
+EXEC [dbo].[test_addQuoteFromRawH1] @counter = 6
 
 
 ROLLBACK TRANSACTION;
