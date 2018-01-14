@@ -331,7 +331,7 @@ GO
 
 
 
-EXEC [dbo].[test_addQuoteFromRawH1] @counter = 6
+EXEC [dbo].[test_addQuoteFromRawH1] @counter = 10
 
 
 --ROLLBACK TRANSACTION

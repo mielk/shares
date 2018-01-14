@@ -526,20 +526,21 @@ END
 
 --EXTREMA TABLES
 BEGIN
-	
+
 	--EXTREMUM TYPES
 	BEGIN
 
 		CREATE TABLE [dbo].[extremumTypes](
 			[ExtremumTypeId] [int] NOT NULL,
 			[ExtremumTypeName] [nvarchar](255) NOT NULL,
+			[IsPeak] [bit] NOT NULL,
 			CONSTRAINT [PK_extremumTypes] PRIMARY KEY CLUSTERED ([ExtremumTypeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 		);
 		INSERT INTO [dbo].[extremumTypes]
-		SELECT 1, 'Peak by close' UNION ALL
-		SELECT 2, 'Peak by high' UNION ALL
-		SELECT 3, 'Trough by close' UNION ALL
-		SELECT 4, 'Trough by low'
+		SELECT 1, 'Peak by close', 1 UNION ALL
+		SELECT 2, 'Peak by high', 1 UNION ALL
+		SELECT 3, 'Trough by close', 0 UNION ALL
+		SELECT 4, 'Trough by low', 0
 
 	END
 
@@ -554,27 +555,27 @@ BEGIN
 			[DateIndex] [int] NOT NULL,
 			[ExtremumTypeId] [int] NOT NULL,
 			--Status
-			[IsRightSideOpen] [bit] NOT NULL DEFAULT(1),
+			[IsEvaluationOpen] [bit] NOT NULL DEFAULT(1),
 			--Evaluation properties.
-			[EarlierCounter] [int] NOT NULL,
-			[LaterCounter] [int] NOT NULL,
-			[EarlierAmplitude] [float] NOT NULL,
-			[EarlierTotalArea] [float] NOT NULL,
-			[EarlierAverageArea] [float] NOT NULL,
-			[LaterAmplitude] [float] NOT NULL,
-			[LaterTotalArea] [float] NOT NULL,
-			[LaterAverageArea] [float] NOT NULL,
-			[EarlierChange1] [float] NOT NULL,
-			[EarlierChange2] [float] NOT NULL,
-			[EarlierChange3] [float] NOT NULL,
-			[EarlierChange5] [float] NOT NULL,
-			[EarlierChange10] [float] NOT NULL,
-			[LaterChange1] [float] NOT NULL,
-			[LaterChange2] [float] NOT NULL,
-			[LaterChange3] [float] NOT NULL,
-			[LaterChange5] [float] NOT NULL,
-			[LaterChange10] [float] NOT NULL,
-			[Value] [float] NOT NULL,
+			[EarlierCounter] [int] NULL,
+			[LaterCounter] [int] NULL,
+			[EarlierAmplitude] [float] NULL,
+			[EarlierTotalArea] [float] NULL,
+			[EarlierAverageArea] [float] NULL,
+			[LaterAmplitude] [float] NULL,
+			[LaterTotalArea] [float] NULL,
+			[LaterAverageArea] [float] NULL,
+			[EarlierChange1] [float] NULL,
+			[EarlierChange2] [float] NULL,
+			[EarlierChange3] [float] NULL,
+			[EarlierChange5] [float] NULL,
+			[EarlierChange10] [float] NULL,
+			[LaterChange1] [float] NULL,
+			[LaterChange2] [float] NULL,
+			[LaterChange3] [float] NULL,
+			[LaterChange5] [float] NULL,
+			[LaterChange10] [float] NULL,
+			[Value] [float] NULL,
 			CONSTRAINT [PK_extrema] PRIMARY KEY CLUSTERED ([ExtremumId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 		) ON [PRIMARY]
 	
@@ -604,7 +605,6 @@ BEGIN
 
 	END
 
-
 	--EXTREMUM GROUPS
 	BEGIN
 
@@ -625,7 +625,7 @@ BEGIN
 			[Low] [float] NULL,
 			[MasterHigh] [float] NULL,
 			[MasterLow] [float] NULL,
-			[Value] [float]  NOT NULL,
+			[Value] [float]  NULL,
 			CONSTRAINT [PK_extremumGroups] PRIMARY KEY CLUSTERED ([ExtremumGroupId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 		) ON [PRIMARY]
 
@@ -655,7 +655,6 @@ BEGIN
 
 	END
 
-
 	--ARCHIVE EXTREMA
 	BEGIN
 
@@ -667,27 +666,27 @@ BEGIN
 			[DateIndex] [int] NOT NULL,
 			[ExtremumTypeId] [int] NOT NULL,
 			--Status
-			[IsRightSideOpen] [bit] NOT NULL DEFAULT(0),
+			[IsEvaluationOpen] [bit] NOT NULL DEFAULT(0),
 			--Evaluation properties.
-			[EarlierCounter] [int] NOT NULL,
-			[LaterCounter] [int] NOT NULL,
-			[EarlierAmplitude] [float] NOT NULL,
-			[EarlierTotalArea] [float] NOT NULL,
-			[EarlierAverageArea] [float] NOT NULL,
-			[LaterAmplitude] [float] NOT NULL,
-			[LaterTotalArea] [float] NOT NULL,
-			[LaterAverageArea] [float] NOT NULL,
-			[EarlierChange1] [float] NOT NULL,
-			[EarlierChange2] [float] NOT NULL,
-			[EarlierChange3] [float] NOT NULL,
-			[EarlierChange5] [float] NOT NULL,
-			[EarlierChange10] [float] NOT NULL,
-			[LaterChange1] [float] NOT NULL,
-			[LaterChange2] [float] NOT NULL,
-			[LaterChange3] [float] NOT NULL,
-			[LaterChange5] [float] NOT NULL,
-			[LaterChange10] [float] NOT NULL,
-			[Value] [float] NOT NULL,
+			[EarlierCounter] [int] NULL,
+			[LaterCounter] [int] NULL,
+			[EarlierAmplitude] [float] NULL,
+			[EarlierTotalArea] [float] NULL,
+			[EarlierAverageArea] [float] NULL,
+			[LaterAmplitude] [float] NULL,
+			[LaterTotalArea] [float] NULL,
+			[LaterAverageArea] [float] NULL,
+			[EarlierChange1] [float] NULL,
+			[EarlierChange2] [float] NULL,
+			[EarlierChange3] [float] NULL,
+			[EarlierChange5] [float] NULL,
+			[EarlierChange10] [float] NULL,
+			[LaterChange1] [float] NULL,
+			[LaterChange2] [float] NULL,
+			[LaterChange3] [float] NULL,
+			[LaterChange5] [float] NULL,
+			[LaterChange10] [float] NULL,
+			[Value] [float] NULL,
 			CONSTRAINT [PK_archiveExtrema] PRIMARY KEY CLUSTERED ([ExtremumId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 		) ON [PRIMARY]
 	
@@ -737,7 +736,7 @@ BEGIN
 			[Low] [float] NULL,
 			[MasterHigh] [float] NULL,
 			[MasterLow] [float] NULL,
-			[Value] [float]  NOT NULL,
+			[Value] [float]  NULL,
 			CONSTRAINT [PK_archiveExtremumGroups] PRIMARY KEY CLUSTERED ([ExtremumGroupId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 		) ON [PRIMARY]
 
