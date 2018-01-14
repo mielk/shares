@@ -3,6 +3,30 @@ USE [fx];
 BEGIN TRANSACTION;
 
 
+--SETTINGS
+BEGIN
+
+	CREATE TABLE [dbo].[settingsNumeric](
+		[SettingName] [nvarchar] (255) NOT NULL,
+		[SettingValue] [int] NOT NULL
+	);
+	CREATE UNIQUE NONCLUSTERED INDEX [ixName_SettingsNumeric] ON [dbo].[settingsNumeric]
+	([SettingName] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	
+	INSERT INTO [dbo].[settingsNumeric]
+	SELECT 'ExtremumAnalysisCheckDistance', 260 UNION ALL
+	SELECT 'ExtremumAnalysisMinDistance', 5;
+
+	CREATE TABLE [dbo].[settingsText](
+		[SettingName] [nvarchar] (255) NOT NULL,
+		[SettingValue] [nvarchar] (255) NOT NULL
+	);
+	CREATE UNIQUE NONCLUSTERED INDEX [ixName_SettingText] ON [dbo].[settingsText]
+	([SettingName] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+END
+
+
 --ERROR LOGS
 BEGIN
 
@@ -56,14 +80,14 @@ END
 BEGIN
 
 	CREATE TABLE [dbo].[currencies](
-		[Id] [int] NOT NULL,
+		[CurrencyId] [int] NOT NULL,
 		[Uuid] [nvarchar](36) NOT NULL DEFAULT (NEWID()),
 		[Name] [nvarchar](255) NOT NULL,
 		[Symbol] [nvarchar] (3) NOT NULL,
 		[IsActive] [bit] NOT NULL CONSTRAINT [Default_Markets_IsActive]  DEFAULT ((1)),
 		[CreatedDate] [datetime] NOT NULL CONSTRAINT [Default_Markets_CreatedDate]  DEFAULT (GETDATE()),
 		[ModifiedDate] [datetime] NOT NULL CONSTRAINT [Default_Markets_ModifiedDate]  DEFAULT (GETDATE()),
-		CONSTRAINT [PK_currencies] PRIMARY KEY CLUSTERED ([Id] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+		CONSTRAINT [PK_currencies] PRIMARY KEY CLUSTERED ([CurrencyId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 	) ON [PRIMARY]
 
 	ALTER TABLE [dbo].[currencies]  WITH CHECK ADD  CONSTRAINT [CH_currencyUuid_length] CHECK  ((LEN([Uuid])=(36)))
@@ -71,7 +95,7 @@ BEGIN
 	CREATE UNIQUE NONCLUSTERED INDEX [ixName_markets] ON [dbo].[currencies]
 	([Name] ASC) WHERE ([IsActive]=(1)) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
-	INSERT INTO [dbo].[currencies] ([Id], [Name], [Symbol])
+	INSERT INTO [dbo].[currencies] ([CurrencyId], [Name], [Symbol])
 	SELECT 1, 'US Dollar', 'USD' UNION ALL
 	SELECT 2, 'Janapese Yen', 'JPY'
 
@@ -82,23 +106,23 @@ END
 BEGIN
 
 	CREATE TABLE [dbo].[assets](
-		[Id] [int] NOT NULL,
+		[AssetId] [int] NOT NULL,
 		[Uuid] [nvarchar](36) NOT NULL DEFAULT (NEWID()),
 		[BaseCurrencyId] [int] NOT NULL,
 		[CounterCurrencyId] [int] NOT NULL,
 		[IsActive] [bit] NOT NULL CONSTRAINT [Default_Campaigns_IsActive]  DEFAULT ((1)),
 		[CreatedDate] [datetime] NOT NULL CONSTRAINT [Default_Campaigns_CreatedDate]  DEFAULT (GETDATE()),
 		[ModifiedDate] [datetime] NOT NULL CONSTRAINT [Default_Campaigns_ModifiedDate]  DEFAULT (GETDATE()),
-		CONSTRAINT [PK_assets] PRIMARY KEY CLUSTERED ([Id] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+		CONSTRAINT [PK_assets] PRIMARY KEY CLUSTERED ([AssetId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 		) ON [PRIMARY]
 
 	ALTER TABLE [dbo].[assets]  WITH CHECK ADD  CONSTRAINT [CH_assetUuid_length] CHECK  ((LEN([Uuid])=(36)))
 	
 	ALTER TABLE [dbo].[assets]  WITH CHECK ADD  CONSTRAINT [FK_Assets_BaseCurrency] FOREIGN KEY([BaseCurrencyId])
-	REFERENCES [dbo].[currencies] ([Id])
+	REFERENCES [dbo].[currencies] ([CurrencyId])
 
 	ALTER TABLE [dbo].[assets]  WITH CHECK ADD  CONSTRAINT [FK_Assets_CounterCurrency] FOREIGN KEY([CounterCurrencyId])
-	REFERENCES [dbo].[currencies] ([Id])
+	REFERENCES [dbo].[currencies] ([CurrencyId])
 
 	CREATE UNIQUE NONCLUSTERED INDEX [ixCurrencies_assets] ON [dbo].[assets]
 	([BaseCurrencyId] ASC, [CounterCurrencyId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
@@ -110,7 +134,7 @@ BEGIN
 	WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 	
 	--INSERT INTO [assets2].[dbo].[assets] SELECT * FROM [assets].[dbo].[assets]
-	INSERT INTO [dbo].[assets] ([Id], [BaseCurrencyId], [CounterCurrencyId])
+	INSERT INTO [dbo].[assets] ([AssetId], [BaseCurrencyId], [CounterCurrencyId])
 	SELECT 1, 1, 2
 
 END
@@ -120,9 +144,9 @@ END
 BEGIN
 
 	CREATE TABLE [dbo].[timeframes](
-		[Id] [int] NOT NULL,
+		[TimeframeId] [int] NOT NULL,
 		[Name] [nvarchar](4) NOT NULL,
-		CONSTRAINT [PK_timeframes] PRIMARY KEY CLUSTERED ([Id] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+		CONSTRAINT [PK_timeframes] PRIMARY KEY CLUSTERED ([TimeframeId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 	);
 
 	INSERT INTO [dbo].[timeframes]
@@ -142,27 +166,27 @@ BEGIN
 
 	CREATE TABLE [dbo].[dates](
 		[DateIndex] [int] NOT NULL DEFAULT ((1)),
-		[Timeframe] [int] NOT NULL DEFAULT ((6)),
+		[TimeframeId] [int] NOT NULL DEFAULT ((6)),
 		[Date] [datetime] NOT NULL,		
 		[ParentLevelDateIndex] [int] NULL,
-		CONSTRAINT [PK_dates] PRIMARY KEY CLUSTERED ([DateIndex], [Timeframe] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+		CONSTRAINT [PK_dates] PRIMARY KEY CLUSTERED ([DateIndex], [TimeframeId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 	) ON [PRIMARY]
 
 	ALTER TABLE [dbo].[dates]  WITH CHECK ADD CONSTRAINT [CH_date_notWeekend] CHECK  ((datepart(weekday,[Date])>=(2) AND datepart(weekday,[Date])<=(6)))
 
-	ALTER TABLE [dbo].[dates]  WITH CHECK ADD  CONSTRAINT [FK_dates_timeframe] FOREIGN KEY([Timeframe])
-	REFERENCES [dbo].[timeframes] ([Id]) ON DELETE CASCADE
+	ALTER TABLE [dbo].[dates]  WITH CHECK ADD  CONSTRAINT [FK_dates_timeframe] FOREIGN KEY([TimeframeId])
+	REFERENCES [dbo].[timeframes] ([TimeframeId]) ON DELETE CASCADE
 
-	CREATE UNIQUE NONCLUSTERED INDEX [ixDate_dates] ON [dbo].[dates]  ([Date] ASC, [Timeframe] ASC)
+	CREATE UNIQUE NONCLUSTERED INDEX [ixDate_dates] ON [dbo].[dates]  ([Date] ASC, [TimeframeId] ASC)
 	WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
-	CREATE UNIQUE NONCLUSTERED INDEX [ixDateIndexTimeframe_dates] ON [dbo].[dates] ([DateIndex] ASC, [Timeframe] ASC)
+	CREATE UNIQUE NONCLUSTERED INDEX [ixDateIndexTimeframe_dates] ON [dbo].[dates] ([DateIndex] ASC, [TimeframeId] ASC)
 	WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 	
 	CREATE NONCLUSTERED INDEX [ixDateIndex_dates] ON [dbo].[dates] ([DateIndex] ASC)
 	WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 		
-	CREATE NONCLUSTERED INDEX [ixTimeframe_dates] ON [dbo].[dates] ([Timeframe] ASC)
+	CREATE NONCLUSTERED INDEX [ixTimeframe_dates] ON [dbo].[dates] ([TimeframeId] ASC)
 	WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
 	CREATE NONCLUSTERED INDEX [ixParentDateIndex_dates] ON [dbo].[dates] ([ParentLevelDateIndex] ASC)
@@ -258,7 +282,7 @@ BEGIN
 		INSERT INTO [dbo].[dates]
 		SELECT
 			[DateIndex] = ROW_NUMBER() OVER (ORDER BY a.[W1]),
-			7 AS [Timeframe],
+			7 AS [TimeframeId],
 			a.[W1] AS [Date],
 			NULL AS [ParentLevelDateIndex]
 		FROM
@@ -268,7 +292,7 @@ BEGIN
 		INSERT INTO [dbo].[dates]
 		SELECT
 			[DateIndex] = ROW_NUMBER() OVER (ORDER BY x.[D1]),
-			6 AS [Timeframe],
+			6 AS [TimeframeId],
 			x.[D1] AS [Date],
 			x.[DateIndex] AS [ParentLevelDateIndex]
 		FROM
@@ -276,14 +300,14 @@ BEGIN
 				*
 			FROM
 				(SELECT DISTINCT [D1], [W1] FROM #AllDates) a
-				LEFT JOIN (SELECT * FROM [dbo].[dates] WHERE [Timeframe] = 7) w
+				LEFT JOIN (SELECT * FROM [dbo].[dates] WHERE [TimeframeId] = 7) w
 			ON a.[W1] = w.[Date]) x
 
 		--Insert H4
 		INSERT INTO [dbo].[dates]
 		SELECT
 			[DateIndex] = ROW_NUMBER() OVER (ORDER BY x.[H4]),
-			5 AS [Timeframe],
+			5 AS [TimeframeId],
 			x.[H4] AS [Date],
 			x.[DateIndex] AS [ParentLevelDateIndex]
 		FROM
@@ -291,14 +315,14 @@ BEGIN
 				*
 			FROM
 				(SELECT DISTINCT [H4], [D1] FROM #AllDates) a
-				LEFT JOIN (SELECT * FROM [dbo].[dates] WHERE [Timeframe] = 6) w
+				LEFT JOIN (SELECT * FROM [dbo].[dates] WHERE [TimeframeId] = 6) w
 			ON a.[D1] = w.[Date]) x
 
 		--Insert H1
 		INSERT INTO [dbo].[dates]
 		SELECT
 			[DateIndex] = ROW_NUMBER() OVER (ORDER BY x.[H1]),
-			4 AS [Timeframe],
+			4 AS [TimeframeId],
 			x.[H1] AS [Date],
 			x.[DateIndex] AS [ParentLevelDateIndex]
 		FROM
@@ -306,7 +330,7 @@ BEGIN
 				*
 			FROM
 				(SELECT DISTINCT [H1], [H4] FROM #AllDates) a
-				LEFT JOIN (SELECT * FROM [dbo].[dates] WHERE [Timeframe] = 5) w
+				LEFT JOIN (SELECT * FROM [dbo].[dates] WHERE [TimeframeId] = 5) w
 			ON a.[H4] = w.[Date]) x
 
 		--BEGIN
@@ -315,7 +339,7 @@ BEGIN
 			--INSERT INTO [dbo].[dates]
 			--SELECT
 			--	[DateIndex] = ROW_NUMBER() OVER (ORDER BY x.[M30]),
-			--	3 AS [Timeframe],
+			--	3 AS [TimeframeId],
 			--	x.[M30] AS [Date],
 			--	x.[DateIndex] AS [ParentLevelDateIndex]
 			--FROM
@@ -323,14 +347,14 @@ BEGIN
 			--		*
 			--	FROM
 			--		(SELECT DISTINCT [M30], [H1] FROM #AllDates) a
-			--		LEFT JOIN (SELECT * FROM [dbo].[dates] WHERE [Timeframe] = 4) w
+			--		LEFT JOIN (SELECT * FROM [dbo].[dates] WHERE [TimeframeId] = 4) w
 			--	ON a.[H1] = w.[Date]) x
 		
 			----Insert M15
 			--INSERT INTO [dbo].[dates]
 			--SELECT
 			--	[DateIndex] = ROW_NUMBER() OVER (ORDER BY x.[M15]),
-			--	2 AS [Timeframe],
+			--	2 AS [TimeframeId],
 			--	x.[M15] AS [Date],
 			--	x.[DateIndex] AS [ParentLevelDateIndex]
 			--FROM
@@ -338,14 +362,14 @@ BEGIN
 			--		*
 			--	FROM
 			--		(SELECT DISTINCT [M15], [M30] FROM #AllDates) a
-			--		LEFT JOIN (SELECT * FROM [dbo].[dates] WHERE [Timeframe] = 3) w
+			--		LEFT JOIN (SELECT * FROM [dbo].[dates] WHERE [TimeframeId] = 3) w
 			--	ON a.[M30] = w.[Date]) x
 
 			----Insert M5
 			--INSERT INTO [dbo].[dates]
 			--SELECT
 			--	[DateIndex] = ROW_NUMBER() OVER (ORDER BY x.[M5]),
-			--	1 AS [Timeframe],
+			--	1 AS [TimeframeId],
 			--	x.[M5] AS [Date],
 			--	x.[DateIndex] AS [ParentLevelDateIndex]
 			--FROM
@@ -353,7 +377,7 @@ BEGIN
 			--		*
 			--	FROM
 			--		(SELECT DISTINCT [M5], [M15] FROM #AllDates) a
-			--		LEFT JOIN (SELECT * FROM [dbo].[dates] WHERE [Timeframe] = 2) w
+			--		LEFT JOIN (SELECT * FROM [dbo].[dates] WHERE [TimeframeId] = 2) w
 			--	ON a.[M15] = w.[Date]) x
 
 		--END
@@ -369,12 +393,40 @@ BEGIN
 END
 
 
+--TIMESTAMPS
+BEGIN
+
+	CREATE TABLE [dbo].[timestamps](
+		[AssetId] [int] NOT NULL,
+		[TimeframeId] [int] NOT NULL,
+		[ExtremaLastAnalyzedIndex] [int] NULL,
+		[TrendlinesLastAnalyzedIndex] [int] NULL
+	) ON [PRIMARY];
+
+	ALTER TABLE [dbo].[timestamps]  WITH CHECK ADD CONSTRAINT [FK_Timestamps_AssetId] FOREIGN KEY([AssetId])
+	REFERENCES [dbo].[assets] ([AssetId]) ON DELETE CASCADE
+
+	ALTER TABLE [dbo].[timestamps]  WITH CHECK ADD CONSTRAINT [FK_Timestamps_Timeframe] FOREIGN KEY([TimeframeId])
+	REFERENCES [dbo].[timeframes] ([TimeframeId]) ON DELETE CASCADE
+
+	CREATE UNIQUE NONCLUSTERED INDEX [ixAssetTimeframe_Timestamps] ON [dbo].[timestamps] 
+	([AssetId], [TimeframeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+	CREATE NONCLUSTERED INDEX [ixAssetId_Timestamps] ON [dbo].[timestamps] 
+	([AssetId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	
+	CREATE NONCLUSTERED INDEX [ixTimeframe_Timestamps] ON [dbo].[timestamps] 
+	([TimeframeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	
+END
+
+
 --QUOTES
 BEGIN
 	
 	CREATE TABLE [dbo].[quotes](
 		[AssetId] [int] NOT NULL,
-		[Timeframe] [int] NOT NULL,
+		[TimeframeId] [int] NOT NULL,
 		[DateIndex] [int] NOT NULL,
 		[Open] [float] NOT NULL,
 		[Low] [float] NOT NULL,
@@ -386,19 +438,19 @@ BEGIN
 	) ON [PRIMARY]
 	
 	ALTER TABLE [dbo].[quotes]  WITH CHECK ADD CONSTRAINT [FK_Quotes_AssetId] FOREIGN KEY([AssetId])
-	REFERENCES [dbo].[currencies] ([Id]) ON DELETE CASCADE
+	REFERENCES [dbo].[assets] ([AssetId]) ON DELETE CASCADE
 
-	ALTER TABLE [dbo].[quotes]  WITH CHECK ADD CONSTRAINT [FK_Quotes_DateIndex] FOREIGN KEY([DateIndex], [Timeframe])
-	REFERENCES [dbo].[dates] ([DateIndex], [Timeframe]) ON DELETE CASCADE
+	ALTER TABLE [dbo].[quotes]  WITH CHECK ADD CONSTRAINT [FK_Quotes_DateIndex] FOREIGN KEY([DateIndex], [TimeframeId])
+	REFERENCES [dbo].[dates] ([DateIndex], [TimeframeId]) ON DELETE CASCADE
 	
 	CREATE UNIQUE NONCLUSTERED INDEX [ixAssetTimeframeDateIndex_Quotes] ON [dbo].[quotes] 
-	([AssetId] ASC, [Timeframe] ASC, [DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	([AssetId] ASC, [TimeframeId] ASC, [DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 	
 	CREATE NONCLUSTERED INDEX [ixAssetId_Quotes] ON [dbo].[quotes] 
 	([AssetId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 	
 	CREATE NONCLUSTERED INDEX [ixTimeframe_Quotes] ON [dbo].[quotes] 
-	([Timeframe] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	([TimeframeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 	
 	CREATE NONCLUSTERED INDEX [ixDateIndex_Quotes] ON [dbo].[quotes] 
 	([DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
@@ -407,162 +459,322 @@ BEGIN
 END
 
 
-
-----PRICES
---BEGIN
-
---	CREATE TABLE [dbo].[prices](
---		[AssetId] [int] NOT NULL,
---		[Timeframe] [int] NOT NULL,
---		[DateIndex] [int] NOT NULL,
---		[DeltaClosePrice] [float] NOT NULL,
---		[PriceDirection2D] [int] NULL,
---		[PriceDirection3D] [int] NULL,
---		[PriceGap] [float] NULL,
---		[CloseRatio] [float] NULL,
---		[ExtremumRatio] [float] NULL,
---		[CreatedDate] [datetime] NOT NULL CONSTRAINT [DF_prices_CreatedDate]  DEFAULT (getdate())
---	) ON [PRIMARY]
-
---	ALTER TABLE [dbo].[prices]  WITH CHECK ADD  CONSTRAINT [FK_Prices_AssetId] FOREIGN KEY([AssetId])
---	REFERENCES [dbo].[assets] ([Id]) ON DELETE CASCADE
-
---	ALTER TABLE [dbo].[prices]  WITH CHECK ADD  CONSTRAINT [FK_Prices_DateIndex] FOREIGN KEY([DateIndex], [Timeframe])
---	REFERENCES [dbo].[dates] ([DateIndex], [Timeframe]) ON DELETE CASCADE
+--QUOTES OUT-OF-DATE
+BEGIN
 	
---	CREATE UNIQUE NONCLUSTERED INDEX [ixAssetTimeframeDateIndex_prices] ON [dbo].[prices] 
---	([AssetId] ASC, [Timeframe] ASC, [DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	CREATE TABLE [dbo].[quotesOutOfDate](
+		[AssetId] [int] NOT NULL,
+		[TimeframeId] [int] NOT NULL,
+		[Date] [datetime] NOT NULL,
+		[Open] [float] NOT NULL,
+		[Low] [float] NOT NULL,
+		[High] [float] NOT NULL,
+		[Close] [float] NOT NULL,
+		[Volume] [bigint] NOT NULL,
+		[CreatedDate] [datetime] NOT NULL CONSTRAINT [Default_QuotesOutOfDate_CreatedDate]  DEFAULT (GETDATE())
+	) ON [PRIMARY]
 	
---	CREATE NONCLUSTERED INDEX [ixAssetId_prices] ON [dbo].[prices] 
---	([AssetId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	CREATE NONCLUSTERED INDEX [ixAssetId_QuotesOutOfDate] ON [dbo].[quotesOutOfDate] 
+	([AssetId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 	
---	CREATE NONCLUSTERED INDEX [ixTimeframe_prices] ON [dbo].[prices] 
---	([Timeframe] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	CREATE NONCLUSTERED INDEX [ixTimeframe_QuotesOutOfDate] ON [dbo].[quotesOutOfDate] 
+	([TimeframeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 	
---	CREATE NONCLUSTERED INDEX [ixDateIndex_prices] ON [dbo].[prices] 
---	([DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	CREATE NONCLUSTERED INDEX [ixDateIndex_QuotesOutOfDate] ON [dbo].[quotesOutOfDate] 
+	([Date] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	
+END
+
+
+--PRICES
+BEGIN
+
+	PRINT 'TODO later'
+	--CREATE TABLE [dbo].[prices](
+	--	[AssetId] [int] NOT NULL,
+	--	[TimeframeId] [int] NOT NULL,
+	--	[DateIndex] [int] NOT NULL,
+	--	[DeltaClosePrice] [float] NOT NULL,
+	--	[PriceDirection2D] [int] NULL,
+	--	[PriceDirection3D] [int] NULL,
+	--	[PriceGap] [float] NULL,
+	--	[CloseRatio] [float] NULL,
+	--	[ExtremumRatio] [float] NULL,
+	--	[CreatedDate] [datetime] NOT NULL CONSTRAINT [DF_prices_CreatedDate]  DEFAULT (getdate())
+	--) ON [PRIMARY]
+
+	--ALTER TABLE [dbo].[prices]  WITH CHECK ADD  CONSTRAINT [FK_Prices_AssetId] FOREIGN KEY([AssetId])
+	--REFERENCES [dbo].[assets] ([Id]) ON DELETE CASCADE
+
+	--ALTER TABLE [dbo].[prices]  WITH CHECK ADD  CONSTRAINT [FK_Prices_DateIndex] FOREIGN KEY([DateIndex], [TimeframeId])
+	--REFERENCES [dbo].[dates] ([DateIndex], [TimeframeId]) ON DELETE CASCADE
+	
+	--CREATE UNIQUE NONCLUSTERED INDEX [ixAssetTimeframeDateIndex_prices] ON [dbo].[prices] 
+	--([AssetId] ASC, [TimeframeId] ASC, [DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	
+	--CREATE NONCLUSTERED INDEX [ixAssetId_prices] ON [dbo].[prices] 
+	--([AssetId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	
+	--CREATE NONCLUSTERED INDEX [ixTimeframe_prices] ON [dbo].[prices] 
+	--([TimeframeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	
+	--CREATE NONCLUSTERED INDEX [ixDateIndex_prices] ON [dbo].[prices] 
+	--([DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 		
---END
+END
 
 
-
-----ANALYSIS - TIMESTAMPS
---BEGIN
-
---	CREATE TABLE [dbo].[timestamps_lastAnalysis](
---		[AssetId] [int] NOT NULL,
---		[Timeframe] [int] NOT NULL,
---		[DateIndex] [int] NULL
---	) ON [PRIMARY]
-
---	CREATE UNIQUE NONCLUSTERED INDEX [ixAssetTimeframe_AnalysisTimestamps] ON [dbo].[timestamps_lastAnalysis] 
---	([AssetId] ASC, [Timeframe] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---END
-
-
-
-----EXTREMA
---BEGIN
-
---	CREATE TABLE [dbo].[extrema](
---		[Id] [int] IDENTITY(1,1) NOT NULL,
---		[AssetId] [int] NOT NULL,
---		[Timeframe] [int] NOT NULL,
---		[DateIndex] [int] NOT NULL,
---		[ExtremumType] [int] NOT NULL,
---		[IsConfirmed] [bit] NOT NULL DEFAULT(0),
---		[EarlierCounter] [int] NULL,
---		[LaterCounter] [int] NULL,
---		[EarlierAmplitude] [float] NULL,
---		[EarlierTotalArea] [float] NULL,
---		[EarlierAverageArea] [float] NULL,
---		[LaterAmplitude] [float] NULL,
---		[LaterTotalArea] [float] NULL,
---		[LaterAverageArea] [float] NULL,
---		[EarlierChange1] [float] NULL,
---		[EarlierChange2] [float] NULL,
---		[EarlierChange3] [float] NULL,
---		[EarlierChange5] [float] NULL,
---		[EarlierChange10] [float] NULL,
---		[LaterChange1] [float] NULL,
---		[LaterChange2] [float] NULL,
---		[LaterChange3] [float] NULL,
---		[LaterChange5] [float] NULL,
---		[LaterChange10] [float] NULL,
---		[Value] [float] NULL,
---		CONSTRAINT [PK_extrema] PRIMARY KEY CLUSTERED ([Id] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
---	) ON [PRIMARY]
+--EXTREMA TABLES
+BEGIN
 	
---	ALTER TABLE [dbo].[extrema]  WITH CHECK ADD CONSTRAINT [CH_extrema_ExtremumType] CHECK  ([ExtremumType] BETWEEN 1 AND 4)
+	--EXTREMUM TYPES
+	BEGIN
+
+		CREATE TABLE [dbo].[extremumTypes](
+			[ExtremumTypeId] [int] NOT NULL,
+			[ExtremumTypeName] [nvarchar](255) NOT NULL,
+			CONSTRAINT [PK_extremumTypes] PRIMARY KEY CLUSTERED ([ExtremumTypeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+		);
+		INSERT INTO [dbo].[extremumTypes]
+		SELECT 1, 'Peak by close' UNION ALL
+		SELECT 2, 'Peak by high' UNION ALL
+		SELECT 3, 'Trough by close' UNION ALL
+		SELECT 4, 'Trough by low'
+
+	END
+
+	--EXTREMA
+	BEGIN
+
+		CREATE TABLE [dbo].[extrema](
+			--Metadata.
+			[ExtremumId] [int] IDENTITY(1,1) NOT NULL,
+			[AssetId] [int] NOT NULL,
+			[TimeframeId] [int] NOT NULL,
+			[DateIndex] [int] NOT NULL,
+			[ExtremumTypeId] [int] NOT NULL,
+			--Status
+			[IsRightSideOpen] [bit] NOT NULL DEFAULT(1),
+			--Evaluation properties.
+			[EarlierCounter] [int] NOT NULL,
+			[LaterCounter] [int] NOT NULL,
+			[EarlierAmplitude] [float] NOT NULL,
+			[EarlierTotalArea] [float] NOT NULL,
+			[EarlierAverageArea] [float] NOT NULL,
+			[LaterAmplitude] [float] NOT NULL,
+			[LaterTotalArea] [float] NOT NULL,
+			[LaterAverageArea] [float] NOT NULL,
+			[EarlierChange1] [float] NOT NULL,
+			[EarlierChange2] [float] NOT NULL,
+			[EarlierChange3] [float] NOT NULL,
+			[EarlierChange5] [float] NOT NULL,
+			[EarlierChange10] [float] NOT NULL,
+			[LaterChange1] [float] NOT NULL,
+			[LaterChange2] [float] NOT NULL,
+			[LaterChange3] [float] NOT NULL,
+			[LaterChange5] [float] NOT NULL,
+			[LaterChange10] [float] NOT NULL,
+			[Value] [float] NOT NULL,
+			CONSTRAINT [PK_extrema] PRIMARY KEY CLUSTERED ([ExtremumId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+		) ON [PRIMARY]
 	
---	ALTER TABLE [dbo].[extrema]  WITH CHECK ADD CONSTRAINT [FK_Extrema_AssetId] FOREIGN KEY([AssetId])
---	REFERENCES [dbo].[assets] ([Id]) ON DELETE CASCADE;
+		ALTER TABLE [dbo].[extrema]  WITH CHECK ADD CONSTRAINT [FK_Extrema_ExtremumTypeId] FOREIGN KEY([ExtremumTypeId])
+		REFERENCES [dbo].[extremumTypes] ([ExtremumTypeId]) ON DELETE CASCADE;
 
---	ALTER TABLE [dbo].[extrema]  WITH CHECK ADD CONSTRAINT [FK_Extrema_Date] FOREIGN KEY([DateIndex], [Timeframe])
---	REFERENCES [dbo].[dates] ([DateIndex], [Timeframe]) ON DELETE CASCADE;
+		ALTER TABLE [dbo].[extrema]  WITH CHECK ADD CONSTRAINT [FK_Extrema_AssetId] FOREIGN KEY([AssetId])
+		REFERENCES [dbo].[assets] ([AssetId]) ON DELETE CASCADE;
+
+		ALTER TABLE [dbo].[extrema]  WITH CHECK ADD CONSTRAINT [FK_Extrema_Date] FOREIGN KEY([DateIndex], [TimeframeId])
+		REFERENCES [dbo].[dates] ([DateIndex], [TimeframeId]) ON DELETE CASCADE;
 	
---	CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_extrema] ON [dbo].[extrema]
---	([AssetId], [Timeframe], [DateIndex], [ExtremumType] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+		CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_extrema] ON [dbo].[extrema]
+		([AssetId], [TimeframeId], [DateIndex], [ExtremumTypeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
---	CREATE NONCLUSTERED INDEX [ixDateIndex_extrema] ON [dbo].[extrema]
---	([DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+		CREATE NONCLUSTERED INDEX [ixDateIndex_extrema] ON [dbo].[extrema]
+		([DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 	
---	CREATE NONCLUSTERED INDEX [ixAsset_extrema] ON [dbo].[extrema]
---	([AssetId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+		CREATE NONCLUSTERED INDEX [ixAsset_extrema] ON [dbo].[extrema]
+		([AssetId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 	
---	CREATE NONCLUSTERED INDEX [ixTimeframe_extrema] ON [dbo].[extrema]
---	([Timeframe] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+		CREATE NONCLUSTERED INDEX [ixTimeframe_extrema] ON [dbo].[extrema]
+		([TimeframeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
---END
+		CREATE NONCLUSTERED INDEX [ixExtremumType_extrema] ON [dbo].[extrema]
+		([ExtremumTypeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+	END
 
 
-----EXTREMUM GROUPS
---BEGIN
+	--EXTREMUM GROUPS
+	BEGIN
 
---	CREATE TABLE [dbo].[extremumGroups](
---		[Id] [int] IDENTITY(1,1) NOT NULL,
---		[AssetId] [int] NOT NULL,
---		[Timeframe] [int] NOT NULL,
---		[IsPeak] [bit] NOT NULL,
---		[MasterIndex] [int] NULL,
---		[SlaveIndex] [int] NULL,
---		[StartIndex] [int] NOT NULL,
---		[EndIndex] [int] NOT NULL,
---		[Close] [float] NOT NULL,
---		[High] [float] NULL,
---		[MasterHigh] [float] NULL,
---		[Low] [float] NULL,
---		[MasterLow] [float] NULL,
---		[Value] [float]  NOT NULL,
---		CONSTRAINT [PK_extremumGroups] PRIMARY KEY CLUSTERED ([Id] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
---	) ON [PRIMARY]
+		CREATE TABLE [dbo].[extremumGroups](
+			--Metadata.
+			[ExtremumGroupId] [int] IDENTITY(1,1) NOT NULL,
+			[AssetId] [int] NOT NULL,
+			[TimeframeId] [int] NOT NULL,
+			[IsPeak] [bit] NOT NULL,
+			--Part-extrema.
+			[MasterIndex] [int] NULL,
+			[SlaveIndex] [int] NULL,
+			[StartIndex] [int] NOT NULL,
+			[EndIndex] [int] NOT NULL,
+			--Price data (for better performance).
+			[Close] [float] NOT NULL,
+			[High] [float] NULL,
+			[Low] [float] NULL,
+			[MasterHigh] [float] NULL,
+			[MasterLow] [float] NULL,
+			[Value] [float]  NOT NULL,
+			CONSTRAINT [PK_extremumGroups] PRIMARY KEY CLUSTERED ([ExtremumGroupId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+		) ON [PRIMARY]
 
---	ALTER TABLE [dbo].[extremumGroups]  WITH CHECK ADD  CONSTRAINT [FK_ExtremumGroups_AssetId] FOREIGN KEY([AssetId])
---	REFERENCES [dbo].[assets] ([Id]) ON DELETE CASCADE
+		ALTER TABLE [dbo].[extremumGroups]  WITH CHECK ADD  CONSTRAINT [FK_ExtremumGroups_AssetId] FOREIGN KEY([AssetId])
+		REFERENCES [dbo].[assets] ([AssetId]) ON DELETE CASCADE
 	
---	ALTER TABLE [dbo].[extremumGroups]  WITH CHECK ADD  CONSTRAINT [FK_ExtremumGroups_Timeframe] FOREIGN KEY([Timeframe])
---	REFERENCES [dbo].[timeframes] ([Id]) ON DELETE CASCADE
+		ALTER TABLE [dbo].[extremumGroups]  WITH CHECK ADD  CONSTRAINT [FK_ExtremumGroups_Timeframe] FOREIGN KEY([TimeframeId])
+		REFERENCES [dbo].[timeframes] ([TimeframeId]) ON DELETE CASCADE
 	
---	CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_extremumGroups] ON [dbo].[extremumGroups]
---	([AssetId], [Timeframe], [StartIndex], [IsPeak] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+		CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_extremumGroups] ON [dbo].[extremumGroups]
+		([AssetId], [TimeframeId], [StartIndex], [IsPeak] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
---	CREATE NONCLUSTERED INDEX [ixStartIndex_extremumGroups] ON [dbo].[extremumGroups]
---	([StartIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+		CREATE NONCLUSTERED INDEX [ixStartIndex_extremumGroups] ON [dbo].[extremumGroups]
+		([StartIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
---	CREATE NONCLUSTERED INDEX [ixEndIndex_extremumGroups] ON [dbo].[extremumGroups]
---	([EndIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+		CREATE NONCLUSTERED INDEX [ixEndIndex_extremumGroups] ON [dbo].[extremumGroups]
+		([EndIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
---	CREATE NONCLUSTERED INDEX [ixMasterIndex_extremumGroups] ON [dbo].[extremumGroups]
---	([MasterIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+		CREATE NONCLUSTERED INDEX [ixMasterIndex_extremumGroups] ON [dbo].[extremumGroups]
+		([MasterIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
---	CREATE NONCLUSTERED INDEX [ixSlaveIndex_extremumGroups] ON [dbo].[extremumGroups]
---	([SlaveIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+		CREATE NONCLUSTERED INDEX [ixSlaveIndex_extremumGroups] ON [dbo].[extremumGroups]
+		([SlaveIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
---	CREATE NONCLUSTERED INDEX [ixTimeframe_extremumGroups] ON [dbo].[extremumGroups]
---	([Timeframe] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+		CREATE NONCLUSTERED INDEX [ixTimeframe_extremumGroups] ON [dbo].[extremumGroups]
+		([TimeframeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
---END
+	END
+
+
+	--ARCHIVE EXTREMA
+	BEGIN
+
+		CREATE TABLE [dbo].[archive_extrema](
+			--Metadata.
+			[ExtremumId] [int] IDENTITY(1,1) NOT NULL,
+			[AssetId] [int] NOT NULL,
+			[TimeframeId] [int] NOT NULL,
+			[DateIndex] [int] NOT NULL,
+			[ExtremumTypeId] [int] NOT NULL,
+			--Status
+			[IsRightSideOpen] [bit] NOT NULL DEFAULT(0),
+			--Evaluation properties.
+			[EarlierCounter] [int] NOT NULL,
+			[LaterCounter] [int] NOT NULL,
+			[EarlierAmplitude] [float] NOT NULL,
+			[EarlierTotalArea] [float] NOT NULL,
+			[EarlierAverageArea] [float] NOT NULL,
+			[LaterAmplitude] [float] NOT NULL,
+			[LaterTotalArea] [float] NOT NULL,
+			[LaterAverageArea] [float] NOT NULL,
+			[EarlierChange1] [float] NOT NULL,
+			[EarlierChange2] [float] NOT NULL,
+			[EarlierChange3] [float] NOT NULL,
+			[EarlierChange5] [float] NOT NULL,
+			[EarlierChange10] [float] NOT NULL,
+			[LaterChange1] [float] NOT NULL,
+			[LaterChange2] [float] NOT NULL,
+			[LaterChange3] [float] NOT NULL,
+			[LaterChange5] [float] NOT NULL,
+			[LaterChange10] [float] NOT NULL,
+			[Value] [float] NOT NULL,
+			CONSTRAINT [PK_archiveExtrema] PRIMARY KEY CLUSTERED ([ExtremumId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+		) ON [PRIMARY]
+	
+		ALTER TABLE [dbo].[archive_extrema]  WITH CHECK ADD CONSTRAINT [FK_ArchiveExtrema_ExtremumTypeId] FOREIGN KEY([ExtremumTypeId])
+		REFERENCES [dbo].[extremumTypes] ([ExtremumTypeId]) ON DELETE CASCADE;
+
+		ALTER TABLE [dbo].[archive_extrema]  WITH CHECK ADD CONSTRAINT [FK_ArchiveExtrema_AssetId] FOREIGN KEY([AssetId])
+		REFERENCES [dbo].[assets] ([AssetId]) ON DELETE CASCADE;
+
+		ALTER TABLE [dbo].[archive_extrema]  WITH CHECK ADD CONSTRAINT [FK_ArchiveExtrema_Date] FOREIGN KEY([DateIndex], [TimeframeId])
+		REFERENCES [dbo].[dates] ([DateIndex], [TimeframeId]) ON DELETE CASCADE;
+
+		CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_archiveExtrema] ON [dbo].[archive_extrema]
+		([AssetId], [TimeframeId], [DateIndex], [ExtremumTypeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixDateIndex_archiveExtrema] ON [dbo].[archive_extrema]
+		([DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	
+		CREATE NONCLUSTERED INDEX [ixAsset_archiveExtrema] ON [dbo].[archive_extrema]
+		([AssetId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	
+		CREATE NONCLUSTERED INDEX [ixTimeframe_archiveExtrema] ON [dbo].[archive_extrema]
+		([TimeframeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixExtremumType_archiveExtrema] ON [dbo].[archive_extrema]
+		([ExtremumTypeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+	END
+
+	--ARCHIVE EXTREMUM GROUPS
+	BEGIN
+
+		CREATE TABLE [dbo].[archive_extremumGroups](
+			--Metadata.
+			[ExtremumGroupId] [int] IDENTITY(1,1) NOT NULL,
+			[AssetId] [int] NOT NULL,
+			[TimeframeId] [int] NOT NULL,
+			[IsPeak] [bit] NOT NULL,
+			--Part-extrema.
+			[MasterIndex] [int] NULL,
+			[SlaveIndex] [int] NULL,
+			[StartIndex] [int] NOT NULL,
+			[EndIndex] [int] NOT NULL,
+			--Price data (for better performance).
+			[Close] [float] NOT NULL,
+			[High] [float] NULL,
+			[Low] [float] NULL,
+			[MasterHigh] [float] NULL,
+			[MasterLow] [float] NULL,
+			[Value] [float]  NOT NULL,
+			CONSTRAINT [PK_archiveExtremumGroups] PRIMARY KEY CLUSTERED ([ExtremumGroupId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+		) ON [PRIMARY]
+
+		ALTER TABLE [dbo].[archive_extremumGroups]  WITH CHECK ADD  CONSTRAINT [FK_ArchiveExtremumGroups_AssetId] FOREIGN KEY([AssetId])
+		REFERENCES [dbo].[assets] ([AssetId]) ON DELETE CASCADE
+	
+		ALTER TABLE [dbo].[archive_extremumGroups]  WITH CHECK ADD  CONSTRAINT [FK_ArchiveExtremumGroups_Timeframe] FOREIGN KEY([TimeframeId])
+		REFERENCES [dbo].[timeframes] ([TimeframeId]) ON DELETE CASCADE
+	
+		CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_archiveExtremumGroups] ON [dbo].[archive_extremumGroups]
+		([AssetId], [TimeframeId], [StartIndex], [IsPeak] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixStartIndex_archiveExtremumGroups] ON [dbo].[archive_extremumGroups]
+		([StartIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixEndIndex_archiveExtremumGroups] ON [dbo].[archive_extremumGroups]
+		([EndIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixMasterIndex_archiveExtremumGroups] ON [dbo].[archive_extremumGroups]
+		([MasterIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixSlaveIndex_archiveExtremumGroups] ON [dbo].[archive_extremumGroups]
+		([SlaveIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixTimeframe_archiveExtremumGroups] ON [dbo].[archive_extremumGroups]
+		([TimeframeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+	END
+
+END
+
+
+
+
+
+
+
 
 
 ----TRENDLINES
@@ -571,7 +783,7 @@ END
 --	CREATE TABLE [dbo].[trendlines](
 --		[Id] [int] IDENTITY(1,1) NOT NULL,	
 --		[AssetId] [int] NOT NULL,
---		[Timeframe] [int] NOT NULL,
+--		[TimeframeId] [int] NOT NULL,
 --		[BaseStartIndex] [int] NOT NULL,
 --		[BaseIsPeak] [bit] NOT NULL,
 --		[BaseLevel] [float] NOT NULL,
@@ -592,17 +804,17 @@ END
 --	ALTER TABLE [dbo].[trendlines]  WITH CHECK ADD  CONSTRAINT [FK_Trendlines_AssetId] FOREIGN KEY([AssetId])
 --	REFERENCES [dbo].[assets] ([Id]) ON DELETE CASCADE
 
---	ALTER TABLE [dbo].[trendlines]  WITH CHECK ADD  CONSTRAINT [FK_Trendlines_Timeframe] FOREIGN KEY([Timeframe])
+--	ALTER TABLE [dbo].[trendlines]  WITH CHECK ADD  CONSTRAINT [FK_Trendlines_Timeframe] FOREIGN KEY([TimeframeId])
 --	REFERENCES [dbo].[timeframes] ([Id]) ON DELETE CASCADE
 	
---	ALTER TABLE [dbo].[trendlines]  WITH CHECK ADD  CONSTRAINT [FK_Trendlines_BaseExtremumGroup] FOREIGN KEY([AssetId], [Timeframe], [BaseStartIndex], [BaseIsPeak])
---	REFERENCES [dbo].[extremumGroups] ([AssetId], [Timeframe], [StartIndex], [IsPeak])
+--	ALTER TABLE [dbo].[trendlines]  WITH CHECK ADD  CONSTRAINT [FK_Trendlines_BaseExtremumGroup] FOREIGN KEY([AssetId], [TimeframeId], [BaseStartIndex], [BaseIsPeak])
+--	REFERENCES [dbo].[extremumGroups] ([AssetId], [TimeframeId], [StartIndex], [IsPeak])
 	
---	ALTER TABLE [dbo].[trendlines]  WITH CHECK ADD  CONSTRAINT [FK_Trendlines_CounterExtremumGroup] FOREIGN KEY([AssetId], [Timeframe], [CounterStartIndex], [CounterIsPeak])
---	REFERENCES [dbo].[extremumGroups] ([AssetId], [Timeframe], [StartIndex], [IsPeak])
+--	ALTER TABLE [dbo].[trendlines]  WITH CHECK ADD  CONSTRAINT [FK_Trendlines_CounterExtremumGroup] FOREIGN KEY([AssetId], [TimeframeId], [CounterStartIndex], [CounterIsPeak])
+--	REFERENCES [dbo].[extremumGroups] ([AssetId], [TimeframeId], [StartIndex], [IsPeak])
 
 --	CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_trendlines] ON [dbo].[trendlines]
---	([AssetId], [Timeframe], [BaseStartIndex], [BaseIsPeak], [CounterStartIndex], [CounterIsPeak] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+--	([AssetId], [TimeframeId], [BaseStartIndex], [BaseIsPeak], [CounterStartIndex], [CounterIsPeak] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 	
 --	CREATE NONCLUSTERED INDEX [ixId_trendlines] ON [dbo].[trendlines]
 --	([Id] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
@@ -611,7 +823,7 @@ END
 --	([AssetId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 	
 --	CREATE NONCLUSTERED INDEX [ixTimeframe_trendlines] ON [dbo].[trendlines]
---	([Timeframe] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+--	([TimeframeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 	
 --	CREATE NONCLUSTERED INDEX [ixBaseStartIndex_trendlines] ON [dbo].[trendlines]
 --	([BaseStartIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
@@ -713,116 +925,13 @@ END
 
 
 
-----ARCHIVE EXTREMA
---BEGIN
-
---	CREATE TABLE [dbo].[archive_extrema](
---		[Id] [int] NOT NULL,
---		[AssetId] [int] NOT NULL,
---		[Timeframe] [int] NOT NULL,
---		[DateIndex] [int] NOT NULL,
---		[ExtremumType] [int] NOT NULL,
---		[IsConfirmed] [bit] NOT NULL DEFAULT(0),
---		[EarlierCounter] [int] NULL,
---		[LaterCounter] [int] NULL,
---		[EarlierAmplitude] [float] NULL,
---		[EarlierTotalArea] [float] NULL,
---		[EarlierAverageArea] [float] NULL,
---		[LaterAmplitude] [float] NULL,
---		[LaterTotalArea] [float] NULL,
---		[LaterAverageArea] [float] NULL,
---		[EarlierChange1] [float] NULL,
---		[EarlierChange2] [float] NULL,
---		[EarlierChange3] [float] NULL,
---		[EarlierChange5] [float] NULL,
---		[EarlierChange10] [float] NULL,
---		[LaterChange1] [float] NULL,
---		[LaterChange2] [float] NULL,
---		[LaterChange3] [float] NULL,
---		[LaterChange5] [float] NULL,
---		[LaterChange10] [float] NULL,
---		[Value] [float] NULL,
---		CONSTRAINT [PK_archive_extrema] PRIMARY KEY CLUSTERED ([Id] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
---	) ON [PRIMARY]
-	
---	ALTER TABLE [dbo].[archive_extrema]  WITH CHECK ADD CONSTRAINT [CH_archive_extrema_ExtremumType] CHECK  ([ExtremumType] BETWEEN 1 AND 4)
-	
---	ALTER TABLE [dbo].[archive_extrema]  WITH CHECK ADD CONSTRAINT [FK_archive_Extrema_AssetId] FOREIGN KEY([AssetId])
---	REFERENCES [dbo].[assets] ([Id]) ON DELETE CASCADE;
-
---	ALTER TABLE [dbo].[archive_extrema]  WITH CHECK ADD CONSTRAINT [FK_archive_Extrema_Date] FOREIGN KEY([DateIndex], [Timeframe])
---	REFERENCES [dbo].[dates] ([DateIndex], [Timeframe]) ON DELETE CASCADE;
-	
---	CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_archive_extrema] ON [dbo].[extrema]
---	([AssetId], [Timeframe], [DateIndex], [ExtremumType] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixDateIndex_archive_extrema] ON [dbo].[archive_extrema]
---	([DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-	
---	CREATE NONCLUSTERED INDEX [ixAsset_archive_extrema] ON [dbo].[archive_extrema]
---	([AssetId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-	
---	CREATE NONCLUSTERED INDEX [ixTimeframe_archive_extrema] ON [dbo].[archive_extrema]
---	([Timeframe] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---END
-
-
-----ARCHIVE EXTREMUM GROUPS
---BEGIN
-
---	CREATE TABLE [dbo].[archive_extremumGroups](
---		[Id] [int] NOT NULL,
---		[AssetId] [int] NOT NULL,
---		[Timeframe] [int] NOT NULL,
---		[IsPeak] [bit] NOT NULL,
---		[MasterIndex] [int] NULL,
---		[SlaveIndex] [int] NULL,
---		[StartIndex] [int] NOT NULL,
---		[EndIndex] [int] NOT NULL,
---		[Close] [float] NOT NULL,
---		[High] [float] NULL,
---		[MasterHigh] [float] NULL,
---		[Low] [float] NULL,
---		[MasterLow] [float] NULL,
---		[Value] [float]  NOT NULL,
---		CONSTRAINT [PK_archive_extremumGroups] PRIMARY KEY CLUSTERED ([Id] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
---	) ON [PRIMARY]
-
---	ALTER TABLE [dbo].[archive_extremumGroups]  WITH CHECK ADD  CONSTRAINT [FK_archive_ExtremumGroups_AssetId] FOREIGN KEY([AssetId])
---	REFERENCES [dbo].[assets] ([Id]) ON DELETE CASCADE
-	
---	ALTER TABLE [dbo].[archive_extremumGroups]  WITH CHECK ADD  CONSTRAINT [FK_archive_ExtremumGroups_Timeframe] FOREIGN KEY([Timeframe])
---	REFERENCES [dbo].[timeframes] ([Id]) ON DELETE CASCADE
-	
---	CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_archive_extremumGroups] ON [dbo].[archive_extremumGroups]
---	([AssetId], [Timeframe], [StartIndex], [IsPeak] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixStartIndex_archive_extremumGroups] ON [dbo].[archive_extremumGroups]
---	([StartIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixEndIndex_archive_extremumGroups] ON [dbo].[archive_extremumGroups]
---	([EndIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixMasterIndex_archive_extremumGroups] ON [dbo].[archive_extremumGroups]
---	([MasterIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixSlaveIndex_archive_extremumGroups] ON [dbo].[archive_extremumGroups]
---	([SlaveIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixTimeframe_archive_extremumGroups] ON [dbo].[archive_extremumGroups]
---	([Timeframe] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---END
-
-
 ----ARCHIVE TRENDLINES
 --BEGIN
 
 --	CREATE TABLE [dbo].[archive_trendlines](
 --		[Id] [int] NOT NULL,	
 --		[AssetId] [int] NOT NULL,
---		[Timeframe] [int] NOT NULL,
+--		[TimeframeId] [int] NOT NULL,
 --		[BaseStartIndex] [int] NOT NULL,
 --		[BaseIsPeak] [bit] NOT NULL,
 --		[BaseLevel] [float] NOT NULL,
@@ -843,17 +952,17 @@ END
 --	ALTER TABLE [dbo].[archive_trendlines]  WITH CHECK ADD  CONSTRAINT [FK_archive_Trendlines_AssetId] FOREIGN KEY([AssetId])
 --	REFERENCES [dbo].[assets] ([Id]) ON DELETE CASCADE
 
---	ALTER TABLE [dbo].[archive_trendlines]  WITH CHECK ADD  CONSTRAINT [FK_archive_Trendlines_Timeframe] FOREIGN KEY([Timeframe])
+--	ALTER TABLE [dbo].[archive_trendlines]  WITH CHECK ADD  CONSTRAINT [FK_archive_Trendlines_Timeframe] FOREIGN KEY([TimeframeId])
 --	REFERENCES [dbo].[timeframes] ([Id]) ON DELETE CASCADE
 	
---	ALTER TABLE [dbo].[archive_trendlines]  WITH CHECK ADD  CONSTRAINT [FK_archive_Trendlines_BaseExtremumGroup] FOREIGN KEY([AssetId], [Timeframe], [BaseStartIndex], [BaseIsPeak])
---	REFERENCES [dbo].[archive_extremumGroups] ([AssetId], [Timeframe], [StartIndex], [IsPeak])
+--	ALTER TABLE [dbo].[archive_trendlines]  WITH CHECK ADD  CONSTRAINT [FK_archive_Trendlines_BaseExtremumGroup] FOREIGN KEY([AssetId], [TimeframeId], [BaseStartIndex], [BaseIsPeak])
+--	REFERENCES [dbo].[archive_extremumGroups] ([AssetId], [TimeframeId], [StartIndex], [IsPeak])
 	
---	ALTER TABLE [dbo].[archive_trendlines]  WITH CHECK ADD  CONSTRAINT [FK_archive_Trendlines_CounterExtremumGroup] FOREIGN KEY([AssetId], [Timeframe], [CounterStartIndex], [CounterIsPeak])
---	REFERENCES [dbo].[archive_extremumGroups] ([AssetId], [Timeframe], [StartIndex], [IsPeak])
+--	ALTER TABLE [dbo].[archive_trendlines]  WITH CHECK ADD  CONSTRAINT [FK_archive_Trendlines_CounterExtremumGroup] FOREIGN KEY([AssetId], [TimeframeId], [CounterStartIndex], [CounterIsPeak])
+--	REFERENCES [dbo].[archive_extremumGroups] ([AssetId], [TimeframeId], [StartIndex], [IsPeak])
 
 --	CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_archive_trendlines] ON [dbo].[archive_trendlines]
---	([AssetId], [Timeframe], [BaseStartIndex], [BaseIsPeak], [CounterStartIndex], [CounterIsPeak] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+--	([AssetId], [TimeframeId], [BaseStartIndex], [BaseIsPeak], [CounterStartIndex], [CounterIsPeak] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 	
 --	CREATE NONCLUSTERED INDEX [ixId_archive_trendlines] ON [dbo].[archive_trendlines]
 --	([Id] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
@@ -862,7 +971,7 @@ END
 --	([AssetId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 	
 --	CREATE NONCLUSTERED INDEX [ixTimeframe_archive_trendlines] ON [dbo].[archive_trendlines]
---	([Timeframe] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+--	([TimeframeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 	
 --	CREATE NONCLUSTERED INDEX [ixBaseStartIndex_archive_trendlines] ON [dbo].[archive_trendlines]
 --	([BaseStartIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
@@ -963,6 +1072,9 @@ END
 --	([CounterDateIndex] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
 --END
+
+
+
 
 
 
