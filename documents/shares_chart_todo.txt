@@ -1,0 +1,7 @@
+﻿- wyliczać jaka część danych jest aktualnie widoczna na ekranie
+- wyliczać max i min wartość dla tej porcji danych
+- dopisać kod do skalowania i przesuwania
+
+- wypełniać panel datetimeLine
+- wypełniać panel Values
+- wypełniać panel timescale

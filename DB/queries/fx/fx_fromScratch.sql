@@ -555,7 +555,7 @@ BEGIN
 			[DateIndex] [int] NOT NULL,
 			[ExtremumTypeId] [int] NOT NULL,
 			--Status
-			[IsEvaluationOpen] [bit] NOT NULL DEFAULT(1),
+			[IsEvaluationOpen] [bit] NOT NULL,
 			--Evaluation properties.
 			[EarlierCounter] [int] NULL,
 			[LaterCounter] [int] NULL,
@@ -587,7 +587,9 @@ BEGIN
 
 		ALTER TABLE [dbo].[extrema]  WITH CHECK ADD CONSTRAINT [FK_Extrema_Date] FOREIGN KEY([DateIndex], [TimeframeId])
 		REFERENCES [dbo].[dates] ([DateIndex], [TimeframeId]) ON DELETE CASCADE;
-	
+		
+		ALTER TABLE [dbo].[extrema] ADD  CONSTRAINT [Default_Extrema_IsEvaluationOpen]  DEFAULT ((1)) FOR [IsEvaluationOpen];
+
 		CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_extrema] ON [dbo].[extrema]
 		([AssetId], [TimeframeId], [DateIndex], [ExtremumTypeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
@@ -666,7 +668,7 @@ BEGIN
 			[DateIndex] [int] NOT NULL,
 			[ExtremumTypeId] [int] NOT NULL,
 			--Status
-			[IsEvaluationOpen] [bit] NOT NULL DEFAULT(0),
+			[IsEvaluationOpen] [bit] NOT NULL,
 			--Evaluation properties.
 			[EarlierCounter] [int] NULL,
 			[LaterCounter] [int] NULL,
@@ -698,7 +700,9 @@ BEGIN
 
 		ALTER TABLE [dbo].[archive_extrema]  WITH CHECK ADD CONSTRAINT [FK_ArchiveExtrema_Date] FOREIGN KEY([DateIndex], [TimeframeId])
 		REFERENCES [dbo].[dates] ([DateIndex], [TimeframeId]) ON DELETE CASCADE;
-
+		
+		ALTER TABLE [dbo].[archive_extrema] ADD  CONSTRAINT [Default_ArchiveExtrema_IsEvaluationOpen]  DEFAULT ((0)) FOR [IsEvaluationOpen];
+		
 		CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_archiveExtrema] ON [dbo].[archive_extrema]
 		([AssetId], [TimeframeId], [DateIndex], [ExtremumTypeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
