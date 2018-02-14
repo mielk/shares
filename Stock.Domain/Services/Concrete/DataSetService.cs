@@ -14,16 +14,16 @@ namespace Stock.Domain.Services
 
         private IQuotationRepository _repository;
 
-        public IEnumerable<DataSet> GetDataSets(int shareId)
+        public IEnumerable<DataSet> GetDataSets(int assetId, int timeframeId)
         {
             _repository = new EFQuotationRepository();
-            var quotationDtos = _repository.GetQuotations(shareId).OrderBy(q => q.DateIndex);
-            var extremumDtos = _repository.GetExtrema(shareId);
+            var quotationDtos = _repository.GetQuotations(assetId, timeframeId).OrderBy(q => q.DateIndex);
+            var extremumDtos = _repository.GetExtrema(assetId, timeframeId);
             var result = new List<DataSet>();
 
             foreach (var dto in quotationDtos)
             {
-                var ds = new DataSet(shareId, dto.Date, dto.DateIndex);
+                var ds = new DataSet(assetId, timeframeId, dto.Date, dto.DateIndex);
                 var quotation = Quotation.FromDto(dto);
                 ds.quotation = quotation;
                 ds.price = new Price();
@@ -33,7 +33,7 @@ namespace Stock.Domain.Services
             foreach (var dto in extremumDtos)
             {
                 var extremum = Extremum.FromDto(dto);
-                var ds = result.SingleOrDefault(d => d.DateIndex == extremum.DateIndex);
+                var ds = result.SingleOrDefault(d => d.DateIndex == extremum.DateIndex && d.TimeframeId == extremum.TimeframeId);
                 if (ds != null && ds.price != null)
                 {
                     ds.price.SetExtremum(extremum);
@@ -44,10 +44,10 @@ namespace Stock.Domain.Services
 
         }
 
-        public AnalysisInfo GetAnalysisInfo(int shareId)
+        public AnalysisInfo GetAnalysisInfo(int assetId, int timeframeId)
         {
             _repository = new EFQuotationRepository();
-            AnalysisInfoDto dto = _repository.GetAnalysisInfo(shareId);
+            AnalysisInfoDto dto = _repository.GetAnalysisInfo(assetId, timeframeId);
             return AnalysisInfo.FromDto(dto);
         }
 

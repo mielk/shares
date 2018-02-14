@@ -5,7 +5,8 @@ namespace Stock.Domain.Entities
 {
     public class AnalysisInfo
     {
-        public int ShareId { get; set; }
+        public int AssetId { get; set; }
+        public int TimeframeId { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public int StartIndex { get; set; }
@@ -18,7 +19,8 @@ namespace Stock.Domain.Entities
         {
             var analysisInfo = new AnalysisInfo
             {
-                ShareId = dto.ShareId,
+                AssetId = dto.AssetId,
+                TimeframeId = dto.TimeframeId,
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
                 StartIndex = dto.StartIndex,

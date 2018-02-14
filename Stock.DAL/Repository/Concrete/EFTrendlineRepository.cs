@@ -13,12 +13,12 @@ namespace Stock.DAL.Repositories
     public class EFTrendlineRepository : ITrendlineRepository
     {
 
-        public IEnumerable<TrendlineDto> GetTrendlines(int shareId)
+        public IEnumerable<TrendlineDto> GetTrendlines(int assetId, int timeframeId)
         {
             IEnumerable<TrendlineDto> trendlines;
             using (var context = new EFDbContext())
             {
-                trendlines = context.Trendlines.Where(t => t.ShareId == shareId).ToList();
+                trendlines = context.Trendlines.Where(t => t.AssetId == assetId && t.TimeframeId == timeframeId).ToList();
             }
             return trendlines;
         }

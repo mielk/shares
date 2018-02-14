@@ -1000,6 +1000,41 @@ END
 
 
 
+--FUNCTIONS
+GO
+
+CREATE VIEW [dbo].[ViewDataInfo] AS
+SELECT
+	q.[AssetId],
+	q.[TimeframeId],
+	MIN(d.[Date]) AS [StartDate],
+	MAX(d.[Date]) AS [EndDate],
+	MIN(q.[DateIndex]) AS [StartIndex],
+	MAX(q.[DateIndex]) AS [EndIndex],
+	CAST(MIN(q.[Low]) AS NUMERIC(36,2)) AS [MinLevel],
+	CAST(MAX(q.[High]) AS NUMERIC(36,2)) AS [MaxLevel],
+	COUNT(*) AS [Counter]
+FROM
+	[dbo].[quotes] q
+	LEFT JOIN [dbo].[dates] d
+	ON q.[TimeframeId] = d.[TimeframeId] AND q.[DateIndex] = d.[DateIndex]
+GROUP BY 
+	q.[AssetId], q.[TimeframeId];
+
+GO
+
+CREATE VIEW [dbo].[ViewQuotes] AS
+SELECT
+	q.*,
+	d.[Date] AS [Date]
+FROM
+	[dbo].[quotes] q
+	LEFT JOIN [dbo].[dates] d
+	ON q.[TimeframeId] = d.[TimeframeId] AND q.[DateIndex] = d.[DateIndex]
+
+GO
+
+
 
 
 --ROLLBACK TRANSACTION;

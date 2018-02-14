@@ -10,7 +10,7 @@
 
         public void SetExtremum(Extremum extremum)
         {
-            switch (extremum.ExtremumType)
+            switch (extremum.ExtremumTypeId)
             {
                 case 1: PeakByClose = extremum; break;
                 case 2: PeakByHigh = extremum; break;

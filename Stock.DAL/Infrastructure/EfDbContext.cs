@@ -16,7 +16,7 @@ namespace Stock.DAL.Infrastructure
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<QuotationDto>().ToTable("quotes");
+            modelBuilder.Entity<QuotationDto>().ToTable("ViewQuotes");
             modelBuilder.Entity<TrendlineDto>().ToTable("trendlines");
             modelBuilder.Entity<ExtremumDto>().ToTable("extrema");
             modelBuilder.Entity<AnalysisInfoDto>().ToTable("ViewDataInfo");

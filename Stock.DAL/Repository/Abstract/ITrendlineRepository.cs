@@ -9,7 +9,7 @@ namespace Stock.DAL.Repositories
 {
     public interface ITrendlineRepository
     {
-        IEnumerable<TrendlineDto> GetTrendlines(int shareId);
+        IEnumerable<TrendlineDto> GetTrendlines(int assetId, int timeframeId);
         TrendlineDto GetTrendlineById(int id);
     }
 }

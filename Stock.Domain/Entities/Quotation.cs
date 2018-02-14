@@ -10,8 +10,8 @@ namespace Stock.Domain.Entities
 {
     public class Quotation
     {
-        public int Id { get; set; }
-        public int ShareId { get; set; }
+        public int AssetId { get; set; }
+        public int TimeframeId { get; set; }
         public DateTime Date { get; set; }
         public int DateIndex { get; set; }
         public double Open { get; set; }
@@ -23,8 +23,8 @@ namespace Stock.Domain.Entities
         {
             var quotation = new Quotation
             {
-                Id = dto.Id,
-                ShareId = dto.ShareId,
+                AssetId = dto.AssetId,
+                TimeframeId = dto.TimeframeId,
                 Date = dto.Date,
                 DateIndex = dto.DateIndex,
                 Open = dto.Open,

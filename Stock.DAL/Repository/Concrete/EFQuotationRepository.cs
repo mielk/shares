@@ -12,32 +12,32 @@ namespace Stock.DAL.Repositories
     public class EFQuotationRepository : IQuotationRepository
     {
 
-        public AnalysisInfoDto GetAnalysisInfo(int shareId)
+        public AnalysisInfoDto GetAnalysisInfo(int assetId, int timeframeId)
         {
             using (var context = new EFDbContext())
             {
-                return context.AnalysisInfos.SingleOrDefault(ai => ai.ShareId == shareId);
+                return context.AnalysisInfos.SingleOrDefault(ai => ai.AssetId == assetId && ai.TimeframeId == timeframeId);
             }
         }
 
-        public IEnumerable<QuotationDto> GetQuotations(int shareId)
+        public IEnumerable<QuotationDto> GetQuotations(int assetId, int timeframeId)
         {
             IEnumerable<QuotationDto> results;
             using (var context = new EFDbContext())
             {
 
-                results = context.Quotations.Where(q => q.ShareId == shareId).ToList();
+                results = context.Quotations.Where(q => q.AssetId == assetId && q.TimeframeId == timeframeId).ToList();
             }
             return results;
         }
 
-        public IEnumerable<ExtremumDto> GetExtrema(int shareId)
+        public IEnumerable<ExtremumDto> GetExtrema(int assetId, int timeframeId)
         {
             IEnumerable<ExtremumDto> results;
             using (var context = new EFDbContext())
             {
 
-                results = context.Extrema.Where(e => e.ShareId == shareId).ToList();
+                results = context.Extrema.Where(e => e.AssetId == assetId && e.TimeframeId == timeframeId).ToList();
             }
             return results;
         }

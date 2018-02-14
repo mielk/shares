@@ -16,10 +16,10 @@ namespace Stock.Domain.Services
         
 
 
-        public IEnumerable<Trendline> GetTrendlines(int shareId)
+        public IEnumerable<Trendline> GetTrendlines(int assetId, int timeframeId)
         {
             _repository = new EFTrendlineRepository();
-            var dtos = _repository.GetTrendlines(shareId);
+            var dtos = _repository.GetTrendlines(assetId, timeframeId);
             return GetTrendlines(dtos);
         }
 

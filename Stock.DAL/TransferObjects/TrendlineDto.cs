@@ -7,7 +7,8 @@ namespace Stock.DAL.TransferObjects
     {
         [Key]
         public int Id { get; set; }
-        public int ShareId { get; set; }
+        public int AssetId { get; set; }
+        public int TimeframeId { get; set; }
         public int BaseStartIndex { get; set; }
         public double BaseLevel { get; set; }
         public int CounterStartIndex { get; set; }

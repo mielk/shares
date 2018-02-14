@@ -7,7 +7,7 @@ namespace Stock.Domain.Services
 {
     public interface IDataSetService
     {
-        IEnumerable<DataSet> GetDataSets(int shareId);
-        AnalysisInfo GetAnalysisInfo(int shareId);
+        IEnumerable<DataSet> GetDataSets(int assetId, int timeframeId);
+        AnalysisInfo GetAnalysisInfo(int assetId, int timeframeId);
     }
 }

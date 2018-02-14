@@ -262,7 +262,7 @@ Date.prototype.isHoliday = function () {
             width: 25000
         }
         , peaks: {
-            distance: 24
+            distance: 36
         }
         , trendlines: {
             color: 'black'

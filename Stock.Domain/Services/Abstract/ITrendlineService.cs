@@ -6,7 +6,7 @@ namespace Stock.Domain.Services
 {
     public interface ITrendlineService
     {
-        IEnumerable<Trendline> GetTrendlines(int shareId);
+        IEnumerable<Trendline> GetTrendlines(int assetId, int timeframeId);
         Trendline GetTrendlineById(int id);
     }
 }

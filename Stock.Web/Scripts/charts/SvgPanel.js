@@ -392,8 +392,8 @@ function PriceSvgRenderer(params) {
             updateSizeParams();
 
             prepareQuotationsSvgPaths();
-            prepareTrendlinesSvgPaths();
-            //prepareExtremaPaths();
+            //prepareTrendlinesSvgPaths();
+            prepareExtremaPaths();
 
             return getCombinedPaths();
 
@@ -500,7 +500,7 @@ function PriceSvgRenderer(params) {
                 item: item,
                 x: x,
                 y: y,
-                radius: Math.min(value / 5, 10),
+                radius: Math.min(2 * (value - 50) * (params.bodyWidth / 100) + (params.bodyWidth / 10), params.bodyWidth),
                 stroke: 'rgb(' + greyscale + ',' + greyscale + ',' + greyscale + ')',
                 fill: 'rgba(' + (isMin ? '255, 0' : '0, 255') + ', 0, ' + scale + ')'
             };
@@ -547,7 +547,7 @@ function PriceSvgRenderer(params) {
                 path: ascendingPaths.join(''),
                 attr: {
                     'stroke': 'black',
-                    'stroke-width': 0.3,
+                    'stroke-width': 1,
                     'fill': STOCK.CONFIG.candle.color.ascending
                 }
             });
@@ -555,7 +555,7 @@ function PriceSvgRenderer(params) {
                 path: descendingPaths.join(''),
                 attr: {
                     'stroke': 'black',
-                    'stroke-width': 0.3,
+                    'stroke-width': 1,
                     'fill': STOCK.CONFIG.candle.color.descending
                 }
             });
@@ -563,7 +563,7 @@ function PriceSvgRenderer(params) {
                 path: trendlinePaths.join(''),
                 attr: {
                     'stroke': 'black',
-                    'stroke-width': 0.3,
+                    'stroke-width': 1,
                     'fill': STOCK.CONFIG.trendlines.color
                 }
             });

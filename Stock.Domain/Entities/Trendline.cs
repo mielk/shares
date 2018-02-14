@@ -6,7 +6,8 @@ namespace Stock.Domain.Entities
     public class Trendline
     {
         public int Id { get; set; }
-        public int ShareId { get; set; }
+        public int AssetId { get; set; }
+        public int TimeframeId { get; set; }
         public int BaseStartIndex { get; set; }
         public double BaseLevel { get; set; }
         public int CounterStartIndex { get; set; }
@@ -22,7 +23,8 @@ namespace Stock.Domain.Entities
             var trendline = new Trendline
             {
                 Id = dto.Id,
-                ShareId = dto.ShareId,
+                AssetId = dto.AssetId,
+                TimeframeId = dto.TimeframeId,
                 Slope = dto.Slope,
                 ShowOnChart = dto.ShowOnChart,
                 Value = dto.Value,

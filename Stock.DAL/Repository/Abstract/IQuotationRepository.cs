@@ -9,8 +9,8 @@ namespace Stock.DAL.Repositories
 {
     public interface IQuotationRepository
     {
-        AnalysisInfoDto GetAnalysisInfo(int shareId);
-        IEnumerable<QuotationDto> GetQuotations(int shareId);
-        IEnumerable<ExtremumDto> GetExtrema(int shareId);
+        AnalysisInfoDto GetAnalysisInfo(int assetId, int timeframeId);
+        IEnumerable<QuotationDto> GetQuotations(int assetId, int timeframeId);
+        IEnumerable<ExtremumDto> GetExtrema(int assetId, int timeframeId);
     }
 }
