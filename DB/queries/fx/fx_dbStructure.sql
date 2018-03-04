@@ -554,7 +554,6 @@ BEGIN
 			[TimeframeId] [int] NOT NULL,
 			[DateIndex] [int] NOT NULL,
 			[ExtremumTypeId] [int] NOT NULL,
-			[MasterExtremumDateIndex] [int] NOT NULL,
 			--Status
 			[IsEvaluationOpen] [bit] NOT NULL,
 			--Evaluation properties.
@@ -588,9 +587,6 @@ BEGIN
 
 		ALTER TABLE [dbo].[extrema]  WITH CHECK ADD CONSTRAINT [FK_Extrema_DateIndex] FOREIGN KEY([DateIndex], [TimeframeId])
 		REFERENCES [dbo].[dates] ([DateIndex], [TimeframeId]);
-
-		ALTER TABLE [dbo].[extrema]  WITH CHECK ADD CONSTRAINT [FK_Extrema_MasterExtremumDateIndex] FOREIGN KEY([MasterExtremumDateIndex], [TimeframeId])
-		REFERENCES [dbo].[dates] ([DateIndex], [TimeframeId]);
 		
 		ALTER TABLE [dbo].[extrema] ADD  CONSTRAINT [Default_Extrema_IsEvaluationOpen]  DEFAULT ((1)) FOR [IsEvaluationOpen];
 
@@ -599,9 +595,6 @@ BEGIN
 
 		CREATE NONCLUSTERED INDEX [ixDateIndex_extrema] ON [dbo].[extrema]
 		([DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
-		CREATE NONCLUSTERED INDEX [ixMasterExtremumDateIndex_extrema] ON [dbo].[extrema]
-		([MasterExtremumDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 	
 		CREATE NONCLUSTERED INDEX [ixAsset_extrema] ON [dbo].[extrema]
 		([AssetId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
@@ -968,7 +961,6 @@ END
 
 	GO
 
-
 	CREATE TRIGGER Trigger_Asset_Delete
 		ON [dbo].[assets]
 		INSTEAD OF DELETE
@@ -978,22 +970,6 @@ END
 			WHERE [AssetId] IN (SELECT [AssetId] FROM deleted)
 	
 			DELETE FROM [dbo].[assets] WHERE [AssetId] IN (SELECT [AssetId] FROM deleted);
-
-	GO
-
-
-
-
-
-	CREATE TRIGGER Trigger_ExtremumGroup_Delete
-		ON [dbo].[extremumGroups]
-		INSTEAD OF DELETE
-		AS
-			SET NOCOUNT ON
-			DELETE FROM [dbo].[trendlines]
-			WHERE [BaseExtremumGroupId] IN (SELECT [ExtremumGroupId] FROM deleted) OR [CounterExtremumGroupId] IN (SELECT [ExtremumGroupId] FROM deleted)
-	
-			DELETE FROM [dbo].[extremumGroups] WHERE [ExtremumGroupId] IN (SELECT [ExtremumGroupId] FROM deleted);
 
 	GO
 

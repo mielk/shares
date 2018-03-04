@@ -14,7 +14,7 @@ EXEC [dbo].[processExtrema] @assetId = 1, @timeframeId = 4;
 
 --SELECT 'Timestamps after', * FROM [dbo].[timestamps];
 --SELECT * FROM [dbo].[quotes] WHERE [TimeframeId] = 4;
-SELECT [ExtremumId], [DateIndex], IIF([ExtremumTypeId] < 3, 'Peak', 'Trough') AS [Peak/Trough], IIF([ExtremumTypeId] % 2 = 0, 'By Extremum', 'By OC'), [MasterExtremumDateIndex], [Value] FROM [dbo].[extrema] ORDER BY [DateIndex] ASC;
+SELECT [ExtremumId], [DateIndex], IIF([ExtremumTypeId] < 3, 'Peak', 'Trough') AS [Peak/Trough], IIF([ExtremumTypeId] % 2 = 0, 'By Extremum', 'By OC'), [Value] FROM [dbo].[extrema] ORDER BY [DateIndex] ASC;
 SELECT * FROM [dbo].[ExtremumGroups];
 
 
