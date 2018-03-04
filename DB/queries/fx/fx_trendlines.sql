@@ -4,31 +4,72 @@ BEGIN TRANSACTION;
 
 GO
 
+--Drop procedures
+IF OBJECT_ID('findNewTrendlines','P') IS NOT NULL DROP PROC [dbo].[findNewTrendlines];
+IF OBJECT_ID('processTrendlines','P') IS NOT NULL DROP PROC [dbo].[processTrendlines];
+
+GO
 
 --Drop functions
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[GetLastTrendlinesAnalysisDate]') AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))  DROP FUNCTION [dbo].[GetLastTrendlinesAnalysisDate]
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[GetTrendlinesAnalysisLastQuotationIndex]') AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))  DROP FUNCTION [dbo].[GetTrendlinesAnalysisLastQuotationIndex]
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[GetTrendlinesAnalysisLastExtremumIndex]') AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))  DROP FUNCTION [dbo].[GetTrendlinesAnalysisLastExtremumIndex]
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[GetStepPrecision]') AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))  DROP FUNCTION [dbo].[GetStepPrecision]
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[GetAssetCalculatingTrendlineStepFactor]') AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))  DROP FUNCTION [dbo].[GetAssetCalculatingTrendlineStepFactor]
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[GetTrendlineExtremaPairingPriceLevels]') AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))  DROP FUNCTION [dbo].[GetTrendlineExtremaPairingPriceLevels]
 
 
 GO
 
-CREATE FUNCTION [dbo].[GetLastTrendlinesAnalysisDate](@assetId AS INT, @timeframeId AS INT)
+
+CREATE FUNCTION [dbo].[GetTrendlinesAnalysisLastQuotationIndex](@assetId AS INT, @timeframeId AS INT)
 RETURNS INT
 AS
 BEGIN
 	DECLARE @index AS INT;
-	SELECT @index = [TrendlinesLastAnalyzedIndex] FROM [dbo].[timestamps] WHERE [AssetId] = @assetId AND [TimeframeId] = @timeframeId;
+	SELECT @index = [TrendlinesAnalysisLastQuotationIndex] FROM [dbo].[timestamps] WHERE [AssetId] = @assetId AND [TimeframeId] = @timeframeId;
 	RETURN IIF(@index IS NULL, 0, @index);
 END
 
 GO
 
+CREATE FUNCTION [dbo].[GetTrendlinesAnalysisLastExtremumIndex](@assetId AS INT, @timeframeId AS INT)
+RETURNS INT
+AS
+BEGIN
+	DECLARE @index AS INT;
+	SELECT @index = MAX([CounterStartIndex]) FROM [dbo].[trendlines] WHERE [AssetId] = @assetId AND [TimeframeId] = @timeframeId;
+	RETURN IIF(@index IS NULL, 0, @index);
+END
 
+GO
 
+CREATE FUNCTION [dbo].[GetAssetCalculatingTrendlineStepFactor](@assetId AS INT)
+RETURNS INT
+AS
+BEGIN
+	DECLARE @stepPrecision AS FLOAT = 2;
+	RETURN POWER(10, @stepPrecision);
+END
 
+GO
 
+CREATE FUNCTION [dbo].[GetTrendlineExtremaPairingPriceLevels](@minPrice AS FLOAT, @maxPrice AS FLOAT, @stepFactor AS FLOAT)
+RETURNS TABLE
+AS
+RETURN
+(
+	SELECT
+		(pn.[number] / @stepFactor) AS [level]
+	FROM
+		[dbo].[predefinedNumbers] pn,
+		(SELECT
+			CEILING(@minPrice * @stepFactor) / @stepFactor AS [Min],
+			FLOOR(@maxPrice * @stepFactor) / @stepFactor AS [Max]) pr
+	WHERE
+		pn.[number] BETWEEN (pr.[Min] * @stepFactor) AND (pr.[Max] * @stepFactor)
+);
 
-
-
+GO
 
 
 
@@ -36,8 +77,9 @@ CREATE PROC [dbo].[findNewTrendlines] @assetId AS INT, @timeframeId AS INT
 AS
 BEGIN
 
-	DECLARE @lastAnalyzedIndex AS INT = [dbo].[GetLastTrendlinesAnalysisDate](@assetId, @timeframeId);
+	DECLARE @lastAnalyzedIndex AS INT = [dbo].[GetTrendlinesAnalysisLastQuotationIndex](@assetId, @timeframeId);
 	DECLARE @lastQuote AS INT = [dbo].[GetLastQuote](@assetId, @timeframeId);
+	DECLARE @lastExtremum AS INT = 1 --[dbo].[GetTrendlinesAnalysisLastExtremumIndex](@assetId, @timeframeId);
 
 	IF (@lastQuote > @lastAnalyzedIndex)
 	BEGIN
@@ -47,18 +89,38 @@ BEGIN
 		DECLARE @startIndex AS INT = [dbo].[MaxValue](@lastAnalyzedIndex - @minDistance + 1, 0);
 		DECLARE @endIndex AS INT = @lastQuote - @minDistance;
 
+
 		--Get all extrema required for process of calculating new trendlines.
 		SELECT
-			*
+			e.[ExtremumId],
+			e.[DateIndex],
+			e.[ExtremumTypeId],
+			e.[MasterExtremumDateIndex],
+			e.[Value],
+			IIF(q.[Open] > q.[Close], q.[Open], q.[Close]) AS [MaxOC],
+			IIF(q.[Open] < q.[Close], q.[Open], q.[Close]) AS [MinOC],
+			q.[High] AS [High],
+			q.[Low] AS [Low]
 		INTO 
 			#ExtremaForComparing
 		FROM
-			[dbo].[extrema] e
-		WHERE
-			e.[AssetId] = @assetId AND
-			e.[TimeframeId] = @timeframeId AND
-			e.[DateIndex] BETWEEN (@startIndex - @maxDistance) AND @lastQuote;
+				(SELECT *
+				FROM [dbo].[extrema]
+				WHERE
+					[AssetId] = @assetId AND
+					[TimeframeId] = @timeframeId AND
+					[DateIndex] BETWEEN (@startIndex - @maxDistance) AND @lastQuote AND
+					[Value] > 50) e
+			LEFT JOIN 
+				(SELECT * 
+				 FROM [dbo].[quotes]
+				 WHERE
+					[AssetId] = @assetId AND
+					[TimeframeId] = @timeframeId AND
+					[DateIndex] BETWEEN (@startIndex - @maxDistance) AND @lastQuote) q
+			ON e.[DateIndex] = q.[DateIndex];
 		CREATE NONCLUSTERED INDEX [ixDateIndex_ExtremaForComparing] ON #ExtremaForComparing ([DateIndex] ASC);
+
 
 		--Get all extrema to be checked as the base for new trendlines.
 		SELECT
@@ -68,10 +130,37 @@ BEGIN
 		FROM
 			#ExtremaForComparing e
 		WHERE
-			e.[DateIndex] >= @startIndex;
+			e.[DateIndex] >= @lastExtremum;
 		
-		select * from #ExtremaForComparing;
-		select * from #NewExtrema;
+
+		--Get price levels for extrema pairing.
+		DECLARE @minPrice AS FLOAT = (SELECT MIN([Low]) FROM #NewExtrema);
+		DECLARE @maxPrice AS FLOAT = (SELECT MAX([High]) FROM #NewExtrema);
+		DECLARE @stepFactor AS FLOAT = [dbo].[GetAssetCalculatingTrendlineStepFactor](@assetId);
+		SELECT * INTO #PossiblePriceLevels FROM [dbo].[GetTrendlineExtremaPairingPriceLevels](@minPrice, @maxPrice, @stepFactor);
+
+
+		-- Price levels for specific extrema.
+		SELECT
+			ne.[ExtremumId],
+			IIF(ne.[ExtremumTypeId] < 3, ne.[High], ec.[MinOC]) AS [High],
+			IIF(ne.[ExtremumTypeId] < 3, ec.[MaxOC], ne.[Low]) AS [Low]
+		INTO
+			#PriceLevelForExtremaPairing
+		FROM
+			#NewExtrema ne
+			LEFT JOIN #ExtremaForComparing ec
+			ON ne.[MasterExtremumDateIndex] = ec.[DateIndex]
+
+
+		--Possible extrema pairs.
+		select 
+			'Possible extrema pairs', * 
+		from 
+			#NewExtrema ne
+			LEFT JOIN #ExtremaForComparing ec
+			ON ne.[DateIndex] - ec.[DateIndex] BETWEEN @minDistance AND @maxDistance
+
 
 	--	--Insert new extrema to the database.
 	--	BEGIN
@@ -137,6 +226,8 @@ BEGIN
 		BEGIN
 			DROP TABLE #ExtremaForComparing;
 			DROP TABLE #NewExtrema;
+			DROP TABLE #PossiblePriceLevels;
+			DROP TABLE #PriceLevelForExtremaPairing;
 		END
 
 	END	
@@ -147,7 +238,6 @@ GO
 
 
 
-
 CREATE PROC [dbo].[processTrendlines] @assetId AS INT, @timeframeId AS INT
 AS
 BEGIN
@@ -155,27 +245,24 @@ BEGIN
 	EXEC [dbo].[findNewTrendlines] @assetId = @assetId, @timeframeId = @timeframeId;
 	--EXEC [dbo].[analyzeTrendlines] @assetId = @assetId, @timeframeId = @timeframeId;
 
-	--Update timestamp.
-	BEGIN
+	----Update timestamp.
+	--BEGIN
 
-		DECLARE @lastQuote AS INT = [dbo].[GetLastQuote](@assetId, @timeframeId);
+	--	DECLARE @lastQuote AS INT = [dbo].[GetLastQuote](@assetId, @timeframeId);
 
-		UPDATE [dbo].[timestamps] 
-		SET [TrendlinesLastAnalyzedIndex] = @lastQuote
-		WHERE [AssetId] = @assetId AND [TimeframeId] = @timeframeId
-		IF @@ROWCOUNT=0
-			INSERT INTO [dbo].[timestamps]([AssetId], [TimeframeId], [TrendlinesLastAnalyzedIndex]) 
-			VALUES (@assetId, @timeframeId, @lastQuote);
+	--	UPDATE [dbo].[timestamps] 
+	--	SET [TrendlinesAnalysisLastQuotationIndex] = @lastQuote
+	--	WHERE [AssetId] = @assetId AND [TimeframeId] = @timeframeId
+	--	IF @@ROWCOUNT=0
+	--		INSERT INTO [dbo].[timestamps]([AssetId], [TimeframeId], [TrendlinesAnalysisLastQuotationIndex]) 
+	--		VALUES (@assetId, @timeframeId, @lastQuote);
 		
-	END
+	--END
 
 END
 
 GO
 
+--exec [dbo].[processTrendlines] @assetId  = 1, @timeframeId = 4
 
-
-EXEC [dbo].[findNewTrendlines] @assetId = 1, @timeframeId = 4;
-
-
-ROLLBACK TRANSACTION;
+commit transaction
