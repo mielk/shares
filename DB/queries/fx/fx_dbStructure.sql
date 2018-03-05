@@ -612,22 +612,59 @@ BEGIN
 
 		CREATE TABLE [dbo].[extremumGroups](
 			[ExtremumGroupId] [int] IDENTITY(1,1) NOT NULL,
+			[AssetId] [int] NOT NULL,
+			[TimeframeId] [int] NOT NULL,
+			[IsPeak] [int] NOT NULL,
 			[MasterExtremumId] [int] NOT NULL,
 			[SlaveExtremumId] [int] NOT NULL,
+			[MasterDateIndex] [int] NOT NULL,
+			[SlaveDateIndex] [int] NOT NULL,
+			[StartDateIndex] [int] NOT NULL,
+			[EndDateIndex] [int] NOT NULL,
+			[OCPriceLevel] [float] NOT NULL,
+			[ExtremumPriceLevel] [float] NOT NULL,
+			[MiddlePriceLevel] [float] NOT NULL,
 			CONSTRAINT [PK_extremaGroups] PRIMARY KEY CLUSTERED ([ExtremumGroupId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 		) ON [PRIMARY]
-	
+		
+		ALTER TABLE [dbo].[extremumGroups]  WITH CHECK ADD CONSTRAINT [FK_ExtremumGroups_AssetId] FOREIGN KEY([AssetId])
+		REFERENCES [dbo].[assets] ([AssetId]);
+
+		ALTER TABLE [dbo].[extremumGroups]  WITH CHECK ADD CONSTRAINT [FK_ExtremumGroups_TimeframeId] FOREIGN KEY([TimeframeId])
+		REFERENCES [dbo].[timeframes] ([TimeframeId]);
+			
 		ALTER TABLE [dbo].[extremumGroups]  WITH CHECK ADD  CONSTRAINT [FK_ExtremumGroups_MasterExtremum] FOREIGN KEY([MasterExtremumId])
 		REFERENCES [dbo].[extrema] ([ExtremumId])
 	
 		ALTER TABLE [dbo].[extremumGroups]  WITH CHECK ADD  CONSTRAINT [FK_ExtremumGroups_SlaveExtremum] FOREIGN KEY([SlaveExtremumId])
 		REFERENCES [dbo].[extrema] ([ExtremumId])
 
+		CREATE NONCLUSTERED INDEX [ixAsset_extrema] ON [dbo].[extremumGroups]
+		([AssetId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	
+		CREATE NONCLUSTERED INDEX [ixTimeframe_extrema] ON [dbo].[extremumGroups]
+		([TimeframeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+		
+		CREATE NONCLUSTERED INDEX [ixIsPeak_extremumGroups] ON [dbo].[extremumGroups]
+		([IsPeak] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
 		CREATE NONCLUSTERED INDEX [ixMasterExtremumId_extremumGroups] ON [dbo].[extremumGroups]
 		([MasterExtremumId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 	
 		CREATE NONCLUSTERED INDEX [ixSlaveExtremumId_extremumGroups] ON [dbo].[extremumGroups]
 		([SlaveExtremumId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixMasterDateIndex_extremumGroups] ON [dbo].[extremumGroups]
+		([MasterDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixSlaveDateIndex_extremumGroups] ON [dbo].[extremumGroups]
+		([SlaveDateIndex]  ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixStartDateIndex_extremumGroups] ON [dbo].[extremumGroups]
+		([StartDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixEndDateIndex_extremumGroups] ON [dbo].[extremumGroups]
+		([EndDateIndex]  ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
 	END
 
@@ -690,6 +727,93 @@ BEGIN
 	([CounterDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
 END
+
+
+GO
+
+CREATE TRIGGER Trigger_Extrema_Delete
+ON [dbo].[extrema]
+INSTEAD OF DELETE
+AS
+	SET NOCOUNT ON
+	DELETE FROM [dbo].[extremumGroups]
+	WHERE [MasterExtremumId] IN (SELECT [ExtremumId] FROM deleted) OR [SlaveExtremumId] IN (SELECT [ExtremumId] FROM deleted)
+	
+	DELETE FROM [dbo].[extrema] WHERE [ExtremumId] IN (SELECT [ExtremumId] FROM deleted);
+
+GO
+
+CREATE TRIGGER Trigger_ExtremumGroup_Delete
+	ON [dbo].[extremumGroups]
+	INSTEAD OF DELETE
+	AS
+		SET NOCOUNT ON
+		DELETE FROM [dbo].[trendlines]
+		WHERE [BaseExtremumGroupId] IN (SELECT [ExtremumGroupId] FROM deleted) OR [CounterExtremumGroupId] IN (SELECT [ExtremumGroupId] FROM deleted)
+	
+		DELETE FROM [dbo].[extremumGroups] WHERE [ExtremumGroupId] IN (SELECT [ExtremumGroupId] FROM deleted);
+
+GO
+
+CREATE TRIGGER Trigger_Asset_Delete
+	ON [dbo].[assets]
+	INSTEAD OF DELETE
+	AS
+		SET NOCOUNT ON
+		DELETE FROM [dbo].[extrema]
+		WHERE [AssetId] IN (SELECT [AssetId] FROM deleted)
+	
+		DELETE FROM [dbo].[assets] WHERE [AssetId] IN (SELECT [AssetId] FROM deleted);
+
+
+--FUNCTIONS
+GO
+
+
+
+CREATE VIEW [dbo].[ViewDataInfo] AS
+SELECT
+	q.[AssetId],
+	q.[TimeframeId],
+	MIN(d.[Date]) AS [StartDate],
+	MAX(d.[Date]) AS [EndDate],
+	MIN(q.[DateIndex]) AS [StartIndex],
+	MAX(q.[DateIndex]) AS [EndIndex],
+	CAST(MIN(q.[Low]) AS NUMERIC(36,2)) AS [MinLevel],
+	CAST(MAX(q.[High]) AS NUMERIC(36,2)) AS [MaxLevel],
+	COUNT(*) AS [Counter]
+FROM
+	[dbo].[quotes] q
+	LEFT JOIN [dbo].[dates] d
+	ON q.[TimeframeId] = d.[TimeframeId] AND q.[DateIndex] = d.[DateIndex]
+GROUP BY 
+	q.[AssetId], q.[TimeframeId];
+
+GO
+
+CREATE VIEW [dbo].[ViewQuotes] AS
+SELECT
+	q.*,
+	d.[Date] AS [Date]
+FROM
+	[dbo].[quotes] q
+	LEFT JOIN [dbo].[dates] d
+	ON q.[TimeframeId] = d.[TimeframeId] AND q.[DateIndex] = d.[DateIndex]
+
+GO
+
+
+
+
+--ROLLBACK TRANSACTION;
+COMMIT TRANSACTION;
+
+
+
+
+
+
+
 
 
 ----TREND BREAKS
@@ -934,82 +1058,3 @@ END
 
 
 --TRIGGERS
-
-	GO
-
-	CREATE TRIGGER Trigger_Extrema_Delete
-	ON [dbo].[extrema]
-	INSTEAD OF DELETE
-	AS
-		SET NOCOUNT ON
-		DELETE FROM [dbo].[extremumGroups]
-		WHERE [MasterExtremumId] IN (SELECT [ExtremumId] FROM deleted) OR [SlaveExtremumId] IN (SELECT [ExtremumId] FROM deleted)
-	
-		DELETE FROM [dbo].[extrema] WHERE [ExtremumId] IN (SELECT [ExtremumId] FROM deleted);
-
-	GO
-
-	CREATE TRIGGER Trigger_ExtremumGroup_Delete
-		ON [dbo].[extremumGroups]
-		INSTEAD OF DELETE
-		AS
-			SET NOCOUNT ON
-			DELETE FROM [dbo].[trendlines]
-			WHERE [BaseExtremumGroupId] IN (SELECT [ExtremumGroupId] FROM deleted) OR [CounterExtremumGroupId] IN (SELECT [ExtremumGroupId] FROM deleted)
-	
-			DELETE FROM [dbo].[extremumGroups] WHERE [ExtremumGroupId] IN (SELECT [ExtremumGroupId] FROM deleted);
-
-	GO
-
-	CREATE TRIGGER Trigger_Asset_Delete
-		ON [dbo].[assets]
-		INSTEAD OF DELETE
-		AS
-			SET NOCOUNT ON
-			DELETE FROM [dbo].[extrema]
-			WHERE [AssetId] IN (SELECT [AssetId] FROM deleted)
-	
-			DELETE FROM [dbo].[assets] WHERE [AssetId] IN (SELECT [AssetId] FROM deleted);
-
-	GO
-
-
---FUNCTIONS
-GO
-
-CREATE VIEW [dbo].[ViewDataInfo] AS
-SELECT
-	q.[AssetId],
-	q.[TimeframeId],
-	MIN(d.[Date]) AS [StartDate],
-	MAX(d.[Date]) AS [EndDate],
-	MIN(q.[DateIndex]) AS [StartIndex],
-	MAX(q.[DateIndex]) AS [EndIndex],
-	CAST(MIN(q.[Low]) AS NUMERIC(36,2)) AS [MinLevel],
-	CAST(MAX(q.[High]) AS NUMERIC(36,2)) AS [MaxLevel],
-	COUNT(*) AS [Counter]
-FROM
-	[dbo].[quotes] q
-	LEFT JOIN [dbo].[dates] d
-	ON q.[TimeframeId] = d.[TimeframeId] AND q.[DateIndex] = d.[DateIndex]
-GROUP BY 
-	q.[AssetId], q.[TimeframeId];
-
-GO
-
-CREATE VIEW [dbo].[ViewQuotes] AS
-SELECT
-	q.*,
-	d.[Date] AS [Date]
-FROM
-	[dbo].[quotes] q
-	LEFT JOIN [dbo].[dates] d
-	ON q.[TimeframeId] = d.[TimeframeId] AND q.[DateIndex] = d.[DateIndex]
-
-GO
-
-
-
-
---ROLLBACK TRANSACTION;
-COMMIT TRANSACTION;
