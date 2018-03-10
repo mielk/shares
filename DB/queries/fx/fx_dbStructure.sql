@@ -395,12 +395,13 @@ END
 
 --TIMESTAMPS
 BEGIN
-
+	
 	CREATE TABLE [dbo].[timestamps](
 		[AssetId] [int] NOT NULL,
 		[TimeframeId] [int] NOT NULL,
 		[ExtremaLastAnalyzedIndex] [int] NULL,
-		[TrendlinesAnalysisLastQuotationIndex] [int] NULL
+		[TrendlinesAnalysisLastQuotationIndex] [int] NULL,
+		[TrendlinesAnalysisLastExtremumGroupId] [int] NULL
 	) ON [PRIMARY];
 
 	ALTER TABLE [dbo].[timestamps]  WITH CHECK ADD CONSTRAINT [FK_Timestamps_AssetId] FOREIGN KEY([AssetId])
@@ -672,59 +673,168 @@ END
 
 
 
---TRENDLINE TABLES
+--TRENDLINE ANALYSIS
 BEGIN
 
-	CREATE TABLE [dbo].[trendlines](
-		[Id] [int] IDENTITY(1,1) NOT NULL,	
-		[AssetId] [int] NOT NULL,
-		[TimeframeId] [int] NOT NULL,
-		[BaseExtremumGroupId] [int] NOT NULL,
-		[BaseDateIndex] [int] NOT NULL,
-		[BaseLevel] [float] NOT NULL,
-		[CounterExtremumGroupId] [int] NOT NULL,
-		[CounterDateIndex] [int] NOT NULL,
-		[CounterLevel] [float] NOT NULL,
-		[Slope] [float] NOT NULL,
-		[StartDateIndex] [int] NULL,
-		[EndDateIndex] [int] NULL,
-		[IsOpenFromLeft] [bit] NOT NULL,
-		[IsOpenFromRight] [bit] NOT NULL,
-		[CandlesDistance] [int] NOT NULL,
-		[ShowOnChart] [bit] NOT NULL DEFAULT(0),
-		[Value] [float] NOT NULL DEFAULT(0),
-		CONSTRAINT [PK_trendlines] PRIMARY KEY CLUSTERED ([Id] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-	) ON [PRIMARY]
-	
-	ALTER TABLE [dbo].[trendlines]  WITH CHECK ADD  CONSTRAINT [FK_Trendlines_AssetId] FOREIGN KEY([AssetId])
-	REFERENCES [dbo].[assets] ([AssetId]) ON DELETE CASCADE
 
-	ALTER TABLE [dbo].[trendlines]  WITH CHECK ADD  CONSTRAINT [FK_Trendlines_Timeframe] FOREIGN KEY([TimeframeId])
-	REFERENCES [dbo].[timeframes] ([TimeframeId]) ON DELETE CASCADE
-	
-	ALTER TABLE [dbo].[trendlines]  WITH CHECK ADD  CONSTRAINT [FK_Trendlines_BaseExtremumGroup] FOREIGN KEY([BaseExtremumGroupId])
-	REFERENCES [dbo].[extremumGroups] ([ExtremumGroupId])
-	
-	ALTER TABLE [dbo].[trendlines]  WITH CHECK ADD  CONSTRAINT [FK_Trendlines_CounterExtremumGroup] FOREIGN KEY([CounterExtremumGroupId])
-	REFERENCES [dbo].[extremumGroups] ([ExtremumGroupId])
+	--TRENDLINES
+	BEGIN
 
-	CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_trendlines] ON [dbo].[trendlines]
-	([AssetId], [TimeframeId], [BaseExtremumGroupId], [CounterExtremumGroupId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+		CREATE TABLE [dbo].[trendlines](
+			[TrendlineId] [int] IDENTITY(1,1) NOT NULL,	
+			[AssetId] [int] NOT NULL,
+			[TimeframeId] [int] NOT NULL,
+			[BaseExtremumGroupId] [int] NOT NULL,
+			[BaseDateIndex] [int] NOT NULL,
+			[BaseLevel] [float] NOT NULL,
+			[CounterExtremumGroupId] [int] NOT NULL,
+			[CounterDateIndex] [int] NOT NULL,
+			[CounterLevel] [float] NOT NULL,
+			[Angle] [float] NOT NULL,
+			[StartDateIndex] [int] NULL,
+			[EndDateIndex] [int] NULL,
+			[IsOpenFromLeft] [bit] NOT NULL DEFAULT(1),
+			[IsOpenFromRight] [bit] NOT NULL DEFAULT(1),
+			[CandlesDistance] [int] NOT NULL,
+			[ShowOnChart] [bit] NOT NULL DEFAULT(0),
+			[Value] [float] NOT NULL DEFAULT(0),
+			CONSTRAINT [PK_trendlines] PRIMARY KEY CLUSTERED ([TrendlineId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+		) ON [PRIMARY]
 	
-	CREATE NONCLUSTERED INDEX [ixId_trendlines] ON [dbo].[trendlines]
-	([Id] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+		ALTER TABLE [dbo].[trendlines]  WITH CHECK ADD  CONSTRAINT [FK_Trendlines_AssetId] FOREIGN KEY([AssetId])
+		REFERENCES [dbo].[assets] ([AssetId]) ON DELETE CASCADE
+
+		ALTER TABLE [dbo].[trendlines]  WITH CHECK ADD  CONSTRAINT [FK_Trendlines_Timeframe] FOREIGN KEY([TimeframeId])
+		REFERENCES [dbo].[timeframes] ([TimeframeId]) ON DELETE CASCADE
 	
-	CREATE NONCLUSTERED INDEX [ixAsset_trendlines] ON [dbo].[trendlines]
-	([AssetId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+		ALTER TABLE [dbo].[trendlines]  WITH CHECK ADD  CONSTRAINT [FK_Trendlines_BaseExtremumGroup] FOREIGN KEY([BaseExtremumGroupId])
+		REFERENCES [dbo].[extremumGroups] ([ExtremumGroupId])
 	
-	CREATE NONCLUSTERED INDEX [ixTimeframe_trendlines] ON [dbo].[trendlines]
-	([TimeframeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+		ALTER TABLE [dbo].[trendlines]  WITH CHECK ADD  CONSTRAINT [FK_Trendlines_CounterExtremumGroup] FOREIGN KEY([CounterExtremumGroupId])
+		REFERENCES [dbo].[extremumGroups] ([ExtremumGroupId])
+
+		CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_trendlines] ON [dbo].[trendlines]
+		([AssetId], [TimeframeId], [BaseExtremumGroupId], [BaseLevel], [CounterExtremumGroupId], [CounterLevel]) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 	
-	CREATE NONCLUSTERED INDEX [ixBaseDateIndex_trendlines] ON [dbo].[trendlines]
-	([BaseDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+		CREATE NONCLUSTERED INDEX [ixAsset_trendlines] ON [dbo].[trendlines]
+		([AssetId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 	
-	CREATE NONCLUSTERED INDEX [ixCounterDateIndex_trendlines] ON [dbo].[trendlines]
-	([CounterDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+		CREATE NONCLUSTERED INDEX [ixTimeframe_trendlines] ON [dbo].[trendlines]
+		([TimeframeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	
+		CREATE NONCLUSTERED INDEX [ixBaseDateIndex_trendlines] ON [dbo].[trendlines]
+		([BaseDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	
+		CREATE NONCLUSTERED INDEX [ixCounterDateIndex_trendlines] ON [dbo].[trendlines]
+		([CounterDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixIsOpenFromLeft_trendlines] ON [dbo].[trendlines]
+		([IsOpenFromLeft] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixIsOpenFromRight_trendlines] ON [dbo].[trendlines]
+		([IsOpenFromRight] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+	END
+
+
+	--TREND HITS
+	BEGIN
+
+		CREATE TABLE [dbo].[trendHits](
+			[TrendHitId] [int] IDENTITY(1, 1) NOT NULL,
+			[TrendlineId] [int] NOT NULL,
+			[ExtremumGroupId] [int] NOT NULL,
+			[Value] [float] NULL,
+			CONSTRAINT [PK_trendHits] PRIMARY KEY CLUSTERED ([TrendHitId]) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+		) ON [PRIMARY];
+	
+		ALTER TABLE [dbo].[trendHits]  WITH CHECK ADD  CONSTRAINT [FK_TrendHits_TrendlineId] FOREIGN KEY([TrendlineId])
+		REFERENCES [dbo].[trendlines] ([TrendlineId]) ON DELETE CASCADE
+
+		ALTER TABLE [dbo].[trendHits]  WITH CHECK ADD  CONSTRAINT [FK_TrendHits_ExtremumGroupId] FOREIGN KEY([ExtremumGroupId])
+		REFERENCES [dbo].[extremumGroups] ([ExtremumGroupId]) ON DELETE CASCADE
+		
+		CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_trendHits] ON [dbo].[trendHits]
+		([TrendlineId] ASC, [ExtremumGroupId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixTrendlineId_trendHits] ON [dbo].[trendHits]
+		([TrendlineId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixExtremumGroup_trendHits] ON [dbo].[trendHits]
+		([ExtremumGroupId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+	END
+
+
+	--TREND BREAKS
+	BEGIN
+
+		CREATE TABLE [dbo].[trendBreaks](
+			[TrendBreakId] [int] IDENTITY(1, 1) NOT NULL,
+			[TrendlineId] [int] NOT NULL,
+			[DateIndex] [int] NOT NULL,
+			[BreakFromAbove] [int] NOT NULL,
+			[Value] [float] NULL,
+			CONSTRAINT [PK_trendBreaks] PRIMARY KEY CLUSTERED ([TrendBreakId]) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+		) ON [PRIMARY];
+
+		ALTER TABLE [dbo].[trendBreaks]  WITH CHECK ADD  CONSTRAINT [FK_TrendBreaks_TrendlineId] FOREIGN KEY([TrendlineId])
+		REFERENCES [dbo].[trendlines] ([TrendlineId]) ON DELETE CASCADE
+
+		CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_trendBreaks] ON [dbo].[trendBreaks]
+		([TrendlineId] ASC, [DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixTrendlineId_trendlinesBreaks] ON [dbo].[trendBreaks]
+		([TrendlineId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixDateIndex_trendlinesBreaks] ON [dbo].[trendBreaks]
+		([DateIndex] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+	END
+
+
+	--TREND RANGES
+	BEGIN
+
+		CREATE TABLE [dbo].[trendRanges](
+			[TrendRangeId] [int] IDENTITY(1, 1) NOT NULL,
+			[TrendlineId] [int] NOT NULL,
+			[BaseDateIndex] [int] NOT NULL,
+			[BaseIsHit] [int] NOT NULL,
+			[CounterDateIndex] [int] NOT NULL,
+			[CounterIsHit] [int] NOT NULL,
+			[IsPeak] [int] NOT NULL,
+			[ExtremumPriceCrossPenaltyPoints] [float] NULL,
+			[ExtremumPriceCrossCounter] [int] NULL,
+			[OCPriceCrossPenaltyPoints] [float] NULL,
+			[OCPriceCrossCounter] [int] NULL,
+			[TotalCandles] [int] NULL,
+			[AverageVariation] [float] NULL,
+			[ExtremumVariation] [float] NULL,
+			[OpenCloseVariation] [float] NULL,
+			[BaseHitValue] [float] NULL,
+			[CounterHitValue] [float] NULL,
+			[Value] [float] NULL,
+			CONSTRAINT [PK_trendRanges] PRIMARY KEY CLUSTERED ([TrendRangeId]) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+		) ON [PRIMARY];
+		
+		ALTER TABLE [dbo].[trendRanges]  WITH CHECK ADD  CONSTRAINT [FK_TrendRanges_TrendlineId] FOREIGN KEY([TrendlineId])
+		REFERENCES [dbo].[trendlines] ([TrendlineId]) ON DELETE CASCADE
+
+		CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_trendRanges] ON [dbo].[trendRanges]
+		([TrendlineId] ASC, [BaseDateIndex] ASC, [CounterDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixTrendlineId_trendRanges] ON [dbo].[trendRanges]
+		([TrendlineId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixBaseDateIndex_trendRanges] ON [dbo].[trendRanges]
+		([BaseDateIndex] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		CREATE NONCLUSTERED INDEX [ixCounterDateIndex_trendRanges] ON [dbo].[trendRanges]
+		([CounterDateIndex] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+	END
+
 
 END
 
@@ -770,7 +880,6 @@ CREATE TRIGGER Trigger_Asset_Delete
 GO
 
 
-
 CREATE VIEW [dbo].[ViewDataInfo] AS
 SELECT
 	q.[AssetId],
@@ -804,257 +913,5 @@ GO
 
 
 
-
 --ROLLBACK TRANSACTION;
 COMMIT TRANSACTION;
-
-
-
-
-
-
-
-
-
-----TREND BREAKS
---BEGIN
-
---	CREATE TABLE [dbo].[trendBreaks](
---		[TrendlineId] [int] NOT NULL,
---		[DateIndex] [int] NOT NULL,
---		[BreakFromAbove] [int] NOT NULL
---	) ON [PRIMARY];
-
---	ALTER TABLE [dbo].[trendBreaks]  WITH CHECK ADD  CONSTRAINT [FK_TrendBreaks_TrendlineId] FOREIGN KEY([TrendlineId])
---	REFERENCES [dbo].[trendlines] ([Id]) ON DELETE CASCADE
-
---	CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_trendBreaks] ON [dbo].[trendBreaks]
---	([TrendlineId], [DateIndex] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixTrendlineId_trendlinesBreaks] ON [dbo].[trendBreaks]
---	([TrendlineId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixDateIndex_trendlinesBreaks] ON [dbo].[trendBreaks]
---	([DateIndex] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---END
-
-
-----TREND HITS
---BEGIN
-
---	CREATE TABLE [dbo].[trendHits](
---		[TrendlineId] [int] NOT NULL,
---		[ExtremumGroupId] [int] NOT NULL,
---		[DateIndex] [int] NOT NULL
---	) ON [PRIMARY];
-	
---	ALTER TABLE [dbo].[trendHits]  WITH CHECK ADD  CONSTRAINT [FK_TrendHits_TrendlineId] FOREIGN KEY([TrendlineId])
---	REFERENCES [dbo].[trendlines] ([Id]) ON DELETE CASCADE
-
---	CREATE NONCLUSTERED INDEX [ixUniqueSet_trendHits] ON [dbo].[trendHits]
---	([TrendlineId], [ExtremumGroupId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixTrendlineId_trendHits] ON [dbo].[trendHits]
---	([TrendlineId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixExtremumGroup_trendHits] ON [dbo].[trendHits]
---	([ExtremumGroupId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixDateIndex_trendHits] ON [dbo].[trendHits]
---	([DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---END
-
-
-----TREND RANGES
---BEGIN
-
---	CREATE TABLE [dbo].[trendRanges](
---		[TrendlineId] [int] NOT NULL,
---		[BaseDateIndex] [int] NOT NULL,
---		[BaseIsHit] [int] NOT NULL,
---		[CounterDateIndex] [int] NOT NULL,
---		[CounterIsHit] [int] NOT NULL,
---		[IsPeak] [int] NOT NULL,
---		[ExtremumPriceCrossPenaltyPoints] [float] NULL,
---		[ExtremumPriceCrossCounter] [int] NULL,
---		[OCPriceCrossPenaltyPoints] [float] NULL,
---		[OCPriceCrossCounter] [int] NULL,
---		[TotalCandles] [int] NULL,
---		[AverageVariation] [float] NULL,
---		[ExtremumVariation] [float] NULL,
---		[OpenCloseVariation] [float] NULL,
---		[BaseHitValue] [float] NULL,
---		[CounterHitValue] [float] NULL,
---		[Value] [float] NULL
---	) ON [PRIMARY];
-
---	CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_trendRanges] ON [dbo].[trendRanges]
---	([TrendlineId] ASC, [BaseDateIndex] ASC, [CounterDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixTrendlineId_trendRanges] ON [dbo].[trendRanges]
---	([TrendlineId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixBaseDateIndex_trendRanges] ON [dbo].[trendRanges]
---	([BaseDateIndex] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixCounterDateIndex_trendRanges] ON [dbo].[trendRanges]
---	([CounterDateIndex] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---END
-
-
-
-
-----ARCHIVE TRENDLINES
---BEGIN
-
---	CREATE TABLE [dbo].[archive_trendlines](
---		[Id] [int] NOT NULL,	
---		[AssetId] [int] NOT NULL,
---		[TimeframeId] [int] NOT NULL,
---		[BaseStartIndex] [int] NOT NULL,
---		[BaseIsPeak] [bit] NOT NULL,
---		[BaseLevel] [float] NOT NULL,
---		[CounterStartIndex] [int] NOT NULL,
---		[CounterIsPeak] [bit] NOT NULL,
---		[CounterLevel] [float] NOT NULL,
---		[Slope] [float] NOT NULL,
---		[StartDateIndex] [int] NULL,
---		[EndDateIndex] [int] NULL,
---		[IsOpenFromLeft] [bit] NOT NULL,
---		[IsOpenFromRight] [bit] NOT NULL,
---		[CandlesDistance] [int] NOT NULL,
---		[ShowOnChart] [bit] NOT NULL DEFAULT(0),
---		[Value] [float] NOT NULL DEFAULT(0),
---		CONSTRAINT [PK_archive_trendlines] PRIMARY KEY CLUSTERED ([Id] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
---	) ON [PRIMARY]
-	
---	ALTER TABLE [dbo].[archive_trendlines]  WITH CHECK ADD  CONSTRAINT [FK_archive_Trendlines_AssetId] FOREIGN KEY([AssetId])
---	REFERENCES [dbo].[assets] ([Id]) ON DELETE CASCADE
-
---	ALTER TABLE [dbo].[archive_trendlines]  WITH CHECK ADD  CONSTRAINT [FK_archive_Trendlines_Timeframe] FOREIGN KEY([TimeframeId])
---	REFERENCES [dbo].[timeframes] ([Id]) ON DELETE CASCADE
-	
---	ALTER TABLE [dbo].[archive_trendlines]  WITH CHECK ADD  CONSTRAINT [FK_archive_Trendlines_BaseExtremumGroup] FOREIGN KEY([AssetId], [TimeframeId], [BaseStartIndex], [BaseIsPeak])
---	REFERENCES [dbo].[archive_extremumGroups] ([AssetId], [TimeframeId], [StartIndex], [IsPeak])
-	
---	ALTER TABLE [dbo].[archive_trendlines]  WITH CHECK ADD  CONSTRAINT [FK_archive_Trendlines_CounterExtremumGroup] FOREIGN KEY([AssetId], [TimeframeId], [CounterStartIndex], [CounterIsPeak])
---	REFERENCES [dbo].[archive_extremumGroups] ([AssetId], [TimeframeId], [StartIndex], [IsPeak])
-
---	CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_archive_trendlines] ON [dbo].[archive_trendlines]
---	([AssetId], [TimeframeId], [BaseStartIndex], [BaseIsPeak], [CounterStartIndex], [CounterIsPeak] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-	
---	CREATE NONCLUSTERED INDEX [ixId_archive_trendlines] ON [dbo].[archive_trendlines]
---	([Id] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-	
---	CREATE NONCLUSTERED INDEX [ixAsset_archive_trendlines] ON [dbo].[archive_trendlines]
---	([AssetId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-	
---	CREATE NONCLUSTERED INDEX [ixTimeframe_archive_trendlines] ON [dbo].[archive_trendlines]
---	([TimeframeId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-	
---	CREATE NONCLUSTERED INDEX [ixBaseStartIndex_archive_trendlines] ON [dbo].[archive_trendlines]
---	([BaseStartIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-	
---	CREATE NONCLUSTERED INDEX [ixCounterStartIndex_archive_trendlines] ON [dbo].[archive_trendlines]
---	([CounterStartIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-	
---END
-
-
-----ARCHIVE TREND BREAKS
---BEGIN
-
---	CREATE TABLE [dbo].[archive_trendBreaks](
---		[TrendlineId] [int] NOT NULL,
---		[DateIndex] [int] NOT NULL,
---		[BreakFromAbove] [int] NOT NULL
---	) ON [PRIMARY];
-
---	ALTER TABLE [dbo].[archive_trendBreaks]  WITH CHECK ADD  CONSTRAINT [FK_archive_TrendBreaks_TrendlineId] FOREIGN KEY([TrendlineId])
---	REFERENCES [dbo].[archive_trendlines] ([Id]) ON DELETE CASCADE
-
---	CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_archive_trendBreaks] ON [dbo].[archive_trendBreaks]
---	([TrendlineId], [DateIndex] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixTrendlineId_archive_trendlinesBreaks] ON [dbo].[archive_trendBreaks]
---	([TrendlineId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixDateIndex_archive_trendlinesBreaks] ON [dbo].[archive_trendBreaks]
---	([DateIndex] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---END
-
-
-----ARCHIVE TREND HITS
---BEGIN
-
---	CREATE TABLE [dbo].[archive_trendHits](
---		[TrendlineId] [int] NOT NULL,
---		[ExtremumGroupId] [int] NOT NULL,
---		[DateIndex] [int] NOT NULL
---	) ON [PRIMARY];
-		
---	ALTER TABLE [dbo].[archive_trendHits]  WITH CHECK ADD  CONSTRAINT [FK_archive_trendHits_TrendlineId] FOREIGN KEY([TrendlineId])
---	REFERENCES [dbo].[archive_trendlines] ([Id]) ON DELETE CASCADE
-
---	CREATE NONCLUSTERED INDEX [ixUniqueSet_archive_trendHits] ON [dbo].[archive_TrendHits]
---	([TrendlineId], [ExtremumGroupId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixTrendlineId_archive_trendHits] ON [dbo].[archive_TrendHits]
---	([TrendlineId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixExtremumGroup_archive_trendHits] ON [dbo].[archive_TrendHits]
---	([ExtremumGroupId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixDateIndex_archive_trendHits] ON [dbo].[archive_TrendHits]
---	([DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---END
-
-
-----ARCHIVE TREND RANGES
---BEGIN
-
---	CREATE TABLE [dbo].[archive_trendRanges](
---		[TrendlineId] [int] NOT NULL,
---		[BaseDateIndex] [int] NOT NULL,
---		[BaseIsHit] [int] NOT NULL,
---		[CounterDateIndex] [int] NOT NULL,
---		[CounterIsHit] [int] NOT NULL,
---		[IsPeak] [int] NOT NULL,
---		[ExtremumPriceCrossPenaltyPoints] [float] NULL,
---		[ExtremumPriceCrossCounter] [int] NULL,
---		[OCPriceCrossPenaltyPoints] [float] NULL,
---		[OCPriceCrossCounter] [int] NULL,
---		[TotalCandles] [int] NULL,
---		[AverageVariation] [float] NULL,
---		[ExtremumVariation] [float] NULL,
---		[OpenCloseVariation] [float] NULL,
---		[BaseHitValue] [float] NULL,
---		[CounterHitValue] [float] NULL,
---		[Value] [float] NULL
---	) ON [PRIMARY];
-	
---	ALTER TABLE [dbo].[archive_trendRanges]  WITH CHECK ADD  CONSTRAINT [FK_archive_trendRanges_TrendlineId] FOREIGN KEY([TrendlineId])
---	REFERENCES [dbo].[archive_trendlines] ([Id]) ON DELETE CASCADE
-
---	CREATE UNIQUE NONCLUSTERED INDEX [ixUniqueSet_archive_trendRanges] ON [dbo].[archive_trendRanges]
---	([TrendlineId] ASC, [BaseDateIndex] ASC, [CounterDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixTrendlineId_archive_trendRanges] ON [dbo].[archive_trendRanges]
---	([TrendlineId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixBaseDateIndex_archive_trendRanges] ON [dbo].[archive_trendRanges]
---	([BaseDateIndex] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---	CREATE NONCLUSTERED INDEX [ixCounterDateIndex_archive_trendRanges] ON [dbo].[archive_trendRanges]
---	([CounterDateIndex] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
---END
-
-
-
---TRIGGERS
