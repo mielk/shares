@@ -27,7 +27,7 @@ namespace Stock.DAL.Repositories
         {
             using (var context = new EFDbContext())
             {
-                return context.Trendlines.SingleOrDefault(t => t.Id == id);
+                return context.Trendlines.SingleOrDefault(t => t.TrendlineId == id);
             }
         }
 

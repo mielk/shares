@@ -8,18 +8,30 @@ USE [fx];
 
 BEGIN TRANSACTION
 
-EXEC [dbo].[test_addQuoteFromRawH1] @counter = 5
+EXEC [dbo].[test_addQuoteFromRawH1] @counter = 10
 EXEC [dbo].[processExtrema] @assetId = 1, @timeframeId = 4;
 EXEC [dbo].[processTrendlines] @assetId = 1, @timeframeId = 4;
 
 SELECT 'Timestamps after', * FROM [dbo].[timestamps];
 --SELECT * FROM [dbo].[quotes] WHERE [TimeframeId] = 4;
 SELECT [ExtremumId], [DateIndex], IIF([ExtremumTypeId] < 3, 'Peak', 'Trough') AS [Peak/Trough], IIF([ExtremumTypeId] % 2 = 0, 'By Extremum', 'By OC'), [Value] FROM [dbo].[extrema] ORDER BY [DateIndex] ASC;
-SELECT * FROM [dbo].[ExtremumGroups];
-SELECT * FROM [dbo].[trendlines];
-SELECT * FROM [dbo].[trendBreaks];
+--SELECT * FROM [dbo].[ExtremumGroups];
+--SELECT * FROM [dbo].[trendlines];
+--SELECT * FROM [dbo].[trendBreaks];
 --SELECT * FROM [dbo].[trendHits];
-SELECT [TrendlineId], COUNT(*) FROM [dbo].[trendHits] GROUP BY [TrendlineId] HAVING COUNT(*) > 1 ORDER BY COUNT(*) DESC;
+
+
+SELECT
+	t.[TrendlineId],
+	b.[Counter] AS [Breaks],
+	h.[Counter] AS [Hits]
+FROM
+	[dbo].[trendlines] t
+	LEFT JOIN (SELECT [TrendlineId], COUNT(*) AS [Counter] FROM [dbo].[trendBreaks] GROUP BY [TrendlineId]) b ON t.[TrendlineId] = b.[TrendlineId]
+	LEFT JOIN (SELECT [TrendlineId], COUNT(*) AS [Counter] FROM [dbo].[trendHits] GROUP BY [TrendlineId]) h ON t.[TrendlineId] = h.[TrendlineId]
+ORDER BY
+	b.[Counter] * h.[Counter] DESC,
+	h.[Counter] DESC;
 
 --select * from [dbo].[quotes];
 

@@ -392,7 +392,7 @@ function PriceSvgRenderer(params) {
             updateSizeParams();
 
             prepareQuotationsSvgPaths();
-            //prepareTrendlinesSvgPaths();
+            prepareTrendlinesSvgPaths();
             prepareExtremaPaths();
 
             return getCombinedPaths();
@@ -458,7 +458,7 @@ function PriceSvgRenderer(params) {
 
         function calculateTrendlinePath(item) {
             var startIndex = item.StartIndex - 3;
-            var endIndex = (item.EndIndex ? item.EndIndex : quotations.length - 1) + 3;
+            var endIndex = (item.EndIndex > 0 ? item.EndIndex : quotations.length - 1) + 3;
             var startLevel = (startIndex - item.BaseStartIndex) * item.Slope + item.BaseLevel;
             var endLevel = (endIndex - item.BaseStartIndex) * item.Slope + item.BaseLevel;
 

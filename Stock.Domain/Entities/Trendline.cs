@@ -22,15 +22,15 @@ namespace Stock.Domain.Entities
         {
             var trendline = new Trendline
             {
-                Id = dto.Id,
+                Id = dto.TrendlineId,
                 AssetId = dto.AssetId,
                 TimeframeId = dto.TimeframeId,
-                Slope = dto.Slope,
+                Slope = dto.Angle,
                 ShowOnChart = dto.ShowOnChart,
                 Value = dto.Value,
-                BaseStartIndex = dto.BaseStartIndex,
+                BaseStartIndex = dto.BaseDateIndex,
                 BaseLevel = dto.BaseLevel,
-                CounterStartIndex = dto.CounterStartIndex,
+                CounterStartIndex = dto.CounterDateIndex,
                 CounterLevel = dto.CounterLevel,
                 StartIndex = dto.StartDateIndex ?? -1,
                 EndIndex = dto.EndDateIndex ?? -1

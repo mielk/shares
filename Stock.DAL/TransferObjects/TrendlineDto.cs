@@ -6,17 +6,17 @@ namespace Stock.DAL.TransferObjects
     public class TrendlineDto
     {
         [Key]
-        public int Id { get; set; }
+        public int TrendlineId { get; set; }
         public int AssetId { get; set; }
         public int TimeframeId { get; set; }
-        public int BaseStartIndex { get; set; }
+        public int BaseDateIndex { get; set; }
         public double BaseLevel { get; set; }
-        public int CounterStartIndex { get; set; }
+        public int CounterDateIndex { get; set; }
         public double CounterLevel { get; set; }
         public int? StartDateIndex { get; set; }
         public int? EndDateIndex { get; set; }
         public double Value { get; set; }
         public bool ShowOnChart { get; set; }
-        public double Slope { get; set; }
+        public double Angle { get; set; }
     }
 }

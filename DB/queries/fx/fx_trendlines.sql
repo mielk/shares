@@ -205,6 +205,7 @@ BEGIN
 				[TrendlineId] [int] NOT NULL,
 				[DateIndex] [int] NOT NULL,
 				[BreakFromAbove] [int] NOT NULL,
+				[ProductionId] [int] NULL,
 				CONSTRAINT [PK_temp_trendBreaks] PRIMARY KEY CLUSTERED ([TrendBreakId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 			) ON [PRIMARY];
 
@@ -224,6 +225,7 @@ BEGIN
 				[TrendlineId] [int] NOT NULL,
 				[ExtremumGroupId] [int] NOT NULL,
 				[DateIndex] [int] NOT NULL,
+				[ProductionId] [int] NULL,
 				CONSTRAINT [PK_temp_trendlinesHits] PRIMARY KEY CLUSTERED ([TrendHitId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 			) ON [PRIMARY];
 
@@ -244,10 +246,13 @@ BEGIN
 			CREATE TABLE #TrendRanges(
 				[TrendRangeId] [int] IDENTITY(1,1) NOT NULL,
 				[TrendlineId] [int] NOT NULL,
+				[BaseId] [int] NOT NULL,
 				[BaseDateIndex] [int] NOT NULL,
 				[BaseIsHit] [int] NOT NULL,
-				[CounterDateIndex] [int] NOT NULL,
+				[CounterId] [int] NOT NULL,
 				[CounterIsHit] [int] NOT NULL,
+				[CounterDateIndex] [int] NOT NULL,
+				[ProductionId] [int] NULL,
 				[IsPeak] [int] NOT NULL DEFAULT(0),
 				CONSTRAINT [PK_temp_trendRanges] PRIMARY KEY CLUSTERED ([TrendRangeId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 			) ON [PRIMARY];
@@ -255,9 +260,15 @@ BEGIN
 			CREATE NONCLUSTERED INDEX [ixTrendlineId_temp_trendRanges] ON #TrendRanges
 			([TrendlineId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
+			CREATE NONCLUSTERED INDEX [ixBaseId_temp_trendRanges] ON #TrendRanges
+			([BaseId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
 			CREATE NONCLUSTERED INDEX [ixBaseDateIndex_temp_trendRanges] ON #TrendRanges
 			([BaseDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
+			CREATE NONCLUSTERED INDEX [ixCounterId_temp_trendRanges] ON #TrendRanges
+			([CounterId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+			
 			CREATE NONCLUSTERED INDEX [ixCounterDateIndex_temp_trendRanges] ON #TrendRanges
 			([CounterDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 			
@@ -717,8 +728,8 @@ BEGIN
 				BEGIN
 
 					WITH CTE AS(
-					   SELECT [TrendlineId], [ExtremumGroupId], [DateIndex], RN = ROW_NUMBER()
-					   OVER(PARTITION BY [TrendlineId], [ExtremumGroupId], [DateIndex] ORDER BY [TrendlineId], [ExtremumGroupId], [DateIndex])
+					   SELECT [TrendlineId], [ExtremumGroupId], RN = ROW_NUMBER()
+					   OVER(PARTITION BY [TrendlineId], [ExtremumGroupId] ORDER BY [TrendlineId], [ExtremumGroupId])
 					   FROM #TrendHits
 					)
 					DELETE FROM CTE WHERE RN > 1					
@@ -831,37 +842,197 @@ BEGIN
 	-- Feed production DB tables with data obtained above.
 	BEGIN
 		
-		
-			--SELECT 'ClosedTrendlines', * FROM #ClosedTrendlines;
-			--SELECT 'TrendlinesAfter', * FROM #Trendlines;
-			--SELECT 'TrendBreaks', * FROM #TrendBreaks;
-			--SELECT 'TrendHits', * FROM #TrendHits;
-
-
-
 		-- [1] Update data about validated trendlines into production tables.
 		BEGIN
+			
+			-- [1.0] Create temporary table with trendlines qualified for further analysis.
+			BEGIN
+
+				-- [1.0.1] Create table with data about validated trendlines.
+				SELECT 
+					*
+				INTO
+					#ValidatedTrendlines
+				FROM
+					#ClosedTrendlines ct
+				WHERE
+					ct.[StartDateIndex] <= ct.[BaseDateIndex];
+
+				-- [1.0.2] Create table containing IDs of all trendlines without a single hit to the left side.
+				SELECT 
+					ct.[TrendlineId]
+				INTO
+					#InvalidatedTrendlines
+				FROM
+					#ClosedTrendlines ct
+				WHERE
+					ct.[StartDateIndex] > ct.[BaseDateIndex];
+
+			END
 
 			-- [1.1] Move data of trend hits into the production TrendHits table.
-			INSERT INTO [dbo].[trendHits]([TrendlineId], [ExtremumGroupId])
-			SELECT [TrendlineId], [ExtremumGroupId]
-			FROM #TrendHits;
+			BEGIN
+				
+				-- [1.1.1] Remove info about trend breaks for invalidated trendlines.
+				DELETE
+				FROM 
+					#TrendHits
+				WHERE 
+					[TrendlineId] IN (SELECT * FROM #InvalidatedTrendlines);
+
+				-- [1.1.2] Remove records with trend breaks before trendline start.
+				DELETE th
+				FROM
+					#TrendHits th
+					LEFT JOIN #ClosedTrendlines ct
+					ON th.[TrendlineId] = ct.[TrendlineId]
+				WHERE
+					th.[DateIndex] < ct.[StartDateIndex];
+
+				-- [1.1.3] Insert records for hits at Counter Extremum Group date index.
+				INSERT INTO #TrendHits([TrendlineId], [ExtremumGroupId], [DateIndex])
+				SELECT 
+					vt.[TrendlineId],
+					vt.[CounterExtremumGroupId],
+					vt.[CounterDateIndex]
+				FROM 
+					#ValidatedTrendlines vt;
+					
+				-- [1.1.4] Remove duplicates from #TrendHits table.
+				WITH CTE AS(
+					SELECT [TrendlineId], [ExtremumGroupId], RN = ROW_NUMBER()
+					OVER(PARTITION BY [TrendlineId], [ExtremumGroupId] ORDER BY [TrendlineId], [ExtremumGroupId])
+					FROM #TrendHits
+				)
+				DELETE FROM CTE WHERE RN > 1
+
+				-- [1.1.5] Create temporary table to store IDs given by DB engine.
+				CREATE TABLE #TempTrendHitsForIdentityMatching(
+					[TrendHitId] [int] NOT NULL,
+					[TrendlineId] [int] NOT NULL,
+					[ExtremumGroupId] [int] NOT NULL
+				);
+
+				SELECT '#TrendHits', [TrendlineId], [ExtremumGroupId]
+				FROM #TrendHits;
+
+				-- [1.1.6] Insert data into DB table.
+				INSERT INTO [dbo].[trendHits]([TrendlineId], [ExtremumGroupId])
+				OUTPUT Inserted.[TrendHitId], Inserted.[TrendlineId], Inserted.[ExtremumGroupId]
+				INTO #TempTrendHitsForIdentityMatching
+				SELECT [TrendlineId], [ExtremumGroupId]
+				FROM #TrendHits;
+
+				-- [1.1.7] Append IDs given by the DB engine to the records in the temporary table.
+				UPDATE th
+				SET 
+					[ProductionId] = h.[TrendHitId]
+				FROM
+					#TrendHits th
+					LEFT JOIN #TempTrendHitsForIdentityMatching h
+					ON  th.[TrendlineId] = h.[TrendlineId] AND
+						th.[ExtremumGroupId] = h.[ExtremumGroupId];
+
+				-- [1.1.8] Drop temporary table.
+				DROP TABLE #TempTrendHitsForIdentityMatching;
+
+			END
 
 			-- [1.2] Move data of trend breaks into the production TrendBreaks table.
-			INSERT INTO [dbo].[TrendBreaks]([TrendlineId], [DateIndex], [BreakFromAbove])
-			SELECT
-				tb.[TrendlineId],
-				tb.[DateIndex],
-				tb.[BreakFromAbove]
-			FROM
-				#TrendBreaks tb
-				LEFT JOIN #ClosedTrendlines ct
-				ON tb.[TrendlineId] = ct.[TrendlineId]
-			WHERE
-				tb.[DateIndex] > ct.[StartDateIndex];
+			BEGIN
 				
+				-- [1.2.1] Remove info about trend breaks for invalidated trendlines.
+				DELETE
+				FROM 
+					#TrendBreaks
+				WHERE 
+					[TrendlineId] IN (SELECT * FROM #InvalidatedTrendlines);
 
-			-- [1.3] Update trendlines with any hit found.
+				-- [1.2.2] Remove records with trend breaks before trendline start.
+				DELETE tb
+				FROM
+					#TrendBreaks tb
+					LEFT JOIN #ClosedTrendlines ct
+					ON tb.[TrendlineId] = ct.[TrendlineId]
+				WHERE
+					tb.[DateIndex] < ct.[StartDateIndex];
+
+				-- [1.2.3] Create temporary table to store IDs given by DB engine.
+				CREATE TABLE #TempTrendBreaksForIdentityMatching(
+					[TrendBreakId] [int] NOT NULL,
+					[TrendlineId] [int] NOT NULL,
+					[DateIndex] [int] NOT NULL
+				);
+
+				-- [1.2.4] Insert remaining trendlines into TrendBreaks table.
+				INSERT INTO [dbo].[TrendBreaks]([TrendlineId], [DateIndex], [BreakFromAbove])
+				OUTPUT Inserted.[TrendBreakId], Inserted.[TrendlineId], Inserted.[DateIndex]
+				INTO #TempTrendBreaksForIdentityMatching
+				SELECT
+					tb.[TrendlineId],
+					tb.[DateIndex],
+					tb.[BreakFromAbove]
+				FROM
+					#TrendBreaks tb;
+
+				-- [1.2.5] Append IDs given by the DB engine to the records in the temporary table.
+				UPDATE tb
+				SET 
+					[ProductionId] = b.[TrendBreakId]
+				FROM
+					#TrendBreaks tb
+					LEFT JOIN #TempTrendBreaksForIdentityMatching b
+					ON  tb.[TrendlineId] = b.[TrendlineId] AND
+						tb.[DateIndex] = b.[DateIndex];
+
+				-- [1.2.6] Drop temporary table.
+				DROP TABLE #TempTrendBreaksForIdentityMatching;
+
+			END
+
+			-- [1.3] Create and insert records about trend ranges.
+			BEGIN
+
+				-- [1.3.1] Create temporary table containing all breaks and hits from temporary tables.
+				SELECT
+					*, 
+					[number] = ROW_NUMBER() OVER (ORDER BY [TrendlineId], [DateIndex])
+				INTO
+					#CombinedBreaksAndHits
+				FROM
+					(SELECT [TrendlineId], [ProductionId], [DateIndex], 0 AS [IsHit]
+					FROM #TrendBreaks
+					UNION ALL
+					SELECT [TrendlineId], [ProductionId], [DateIndex], 1 AS [IsHit]
+					FROM #TrendHits) a;
+
+				-- [1.3.2] Create trend range border pairs and insert them into #TrendRanges temporary table.
+				INSERT INTO #TrendRanges([TrendlineId], [BaseId], [BaseDateIndex], [BaseIsHit], [CounterId], [CounterDateIndex], [CounterIsHit])
+				SELECT 
+					cb1.[TrendlineId], cb1.[ProductionId], cb1.[DateIndex], cb1.[IsHit], cb2.[ProductionId], cb2.[DateIndex], cb2.[IsHit]
+				FROM 
+					#CombinedBreaksAndHits cb1
+					INNER JOIN #CombinedBreaksAndHits cb2
+					ON  cb1.[TrendlineId] = cb2.[TrendlineId] AND
+						cb1.[number] = cb2.[number] - 1;
+
+				-- [1.3.3] Append info if the given trend range is top or bottom.
+				SELECT
+					tr.*,
+					eg.[IsPeak]
+				FROM
+					#TrendRanges tr
+					LEFT JOIN #TrendHits th ON (tr.[BaseIsHit] = 1 AND tr.[BaseId] = th.[ProductionId]) OR (tr.[CounterIsHit] = 1 AND tr.[CounterId] = th.[ProductionId])
+					LEFT JOIN [dbo].[extremumGroups] eg ON th.[ExtremumGroupId] = eg.[ExtremumGroupId]
+
+				-- [1.3.x] Clean up
+				BEGIN
+					DROP TABLE #CombinedBreaksAndHits;
+				END
+
+			END
+
+			-- [1.4] Update trendlines with any hit found.
 			UPDATE t
 			SET
 				[IsOpenFromLeft] = 0,
@@ -878,17 +1049,7 @@ BEGIN
 		-- [2] Remove trendlines without a single hit.
 		BEGIN
 
-			-- [2.1] Get table containing IDs of all trendlines without a single hit to the left side.
-			SELECT 
-				ct.[TrendlineId]
-			INTO
-				#InvalidatedTrendlines
-			FROM
-				#ClosedTrendlines ct
-			WHERE
-				ct.[StartDateIndex] > ct.[BaseDateIndex];
-
-			-- [2.2] Remove trendlines with IDs listed above from production table.
+			-- [2.1] Remove trendlines with IDs listed above from production table.
 			BEGIN
 				
 				DELETE t
@@ -901,12 +1062,12 @@ BEGIN
 
 			END
 
-
 		END
 
 		-- [3] Clean up
 		BEGIN
 			DROP TABLE #InvalidatedTrendlines;
+			DROP TABLE #ValidatedTrendlines;
 		END
 
 	

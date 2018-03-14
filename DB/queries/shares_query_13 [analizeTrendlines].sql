@@ -551,94 +551,6 @@ END
 -- EVALUTE TRENDLINES
 BEGIN
 
-	--Create table with ranges (Hit-Hit, Hit-Break or Break-Hit)
-	BEGIN 
-		
-		--Create table containing all breaks and hits assigned to the proper trendline.
-		SELECT
-			*
-		INTO
-			#CombinedBreaksAndHits
-		FROM
-			(SELECT [Id], [TrendlineId], [DateIndex], 0 AS [IsHit]
-			FROM #TrendlinesBreaks
-			UNION ALL
-			SELECT [Id], [TrendlineId], [DateIndex], 1 AS [IsHit]
-			FROM #TrendlinesHits) a;
-
-		--Create table like above, but without right border points
-		SELECT
-			cbh.*
-		INTO
-			#CombinedBreaksAndHitsExcludingEndPoint
-		FROM
-			#CombinedBreaksAndHits cbh
-			LEFT JOIN #TrendlinesTemp tt
-			ON cbh.[TrendlineId] = tt.[Id]
-		WHERE
-			cbh.[DateIndex] < tt.[EndDateIndex]
-
-		--Create table containing all pairs hit/break-break/break.
-		SELECT
-			c1.[TrendlineId],
-			c1.[Id] AS [BaseId], 
-			c1.[IsHit] AS [BaseIsHit],
-			c1.[DateIndex] AS [BaseDateIndex],
-			c2.[DateIndex] AS [CounterDateIndex]
-		INTO 
-			#PossibleBreakHitPairs
-		FROM
-			#CombinedBreaksAndHitsExcludingEndPoint c1
-			LEFT JOIN #CombinedBreaksAndHits c2
-			ON 
-				c1.[TrendlineId] = c2.[TrendlineId]
-				AND c1.[DateIndex] < c2.[DateIndex];
-
-		--For each point (Hit/Break) select only adjacent point.
-		SELECT 
-			bhp.[TrendlineId],
-			bhp.[BaseId],
-			bhp.[BaseIsHit],
-			bhp.[BaseDateIndex],
-			MIN(bhp.[CounterDateIndex]) AS [CounterDateIndex]
-		INTO
-			#TrendRanges_SimpleView
-		FROM 
-			#PossibleBreakHitPairs bhp
-		GROUP BY
-			bhp.[BaseId],
-			bhp.[BaseIsHit],
-			bhp.[BaseDateIndex],
-			bhp.[TrendlineId];
-
-		--Join it back with all data required for further analysis.
-		INSERT INTO #TrendRanges([TrendlineId], [BaseId], [BaseIsHit], [BaseDateIndex], [CounterId], [CounterIsHit], [CounterDateIndex])
-		SELECT 
-			tr.[TrendlineId],
-			tr.[BaseId],
-			tr.[BaseIsHit],
-			tr.[BaseDateIndex],
-			cbh.[Id] AS [CounterId],
-			cbh.[IsHit] AS [CounterIsHit],
-			cbh.[DateIndex] AS [CounterDateIndex]
-		FROM 
-			#TrendRanges_SimpleView tr
-			LEFT JOIN #CombinedBreaksAndHits cbh
-			ON 
-				tr.[TrendlineId] = cbh.[TrendlineId] 
-				AND tr.[CounterDateIndex] = cbh.[DateIndex];
-
-		--Clean up
-		BEGIN
-			
-			DROP TABLE #TrendRanges_SimpleView;
-			DROP TABLE #PossibleBreakHitPairs;
-			DROP TABLE #CombinedBreaksAndHits;
-			DROP TABLE #CombinedBreaksAndHitsExcludingEndPoint;
-
-		END
-
-	END
 	
 	--Append trendline type.	
 	BEGIN
@@ -1126,6 +1038,7 @@ BEGIN
 		#TrendlinesHits th
 		LEFT JOIN #ExtremumGroups eg
 		ON th.[ExtremumGroupId] = eg.[Id];
+
 
 	--Combine all evaluation data for trend ranges.
 	SELECT

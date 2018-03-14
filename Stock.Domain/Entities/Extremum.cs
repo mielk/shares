@@ -16,7 +16,6 @@ namespace Stock.Domain.Entities
         public int TimeframeId { get; set; }
         public int DateIndex { get; set; }
         public int ExtremumTypeId { get; set; }
-        public int MasterExtremumDateIndex { get; set; }
         public double Value { get; set; }
 
         public static Extremum FromDto(ExtremumDto dto)
@@ -28,7 +27,6 @@ namespace Stock.Domain.Entities
                 AssetId = dto.AssetId,
                 TimeframeId = dto.TimeframeId,
                 ExtremumTypeId = dto.ExtremumTypeId,
-                MasterExtremumDateIndex = dto.MasterExtremumDateIndex,
                 Value = dto.Value
             };
             return extremum;
