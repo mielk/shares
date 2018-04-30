@@ -19,9 +19,31 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[GetSte
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[GetAssetCalculatingTrendlineStepFactor]') AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))  DROP FUNCTION [dbo].[GetAssetCalculatingTrendlineStepFactor]
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[GetTrendlineExtremaPairingPriceLevels]') AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))  DROP FUNCTION [dbo].[GetTrendlineExtremaPairingPriceLevels]
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[GetTrendlineCheckDistance]') AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))  DROP FUNCTION [dbo].[GetTrendlineCheckDistance]
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[GetTrendRangesCrossDetails]') AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))  DROP FUNCTION [dbo].[GetTrendRangesCrossDetails]
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[GetTrendRangesVariations]') AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))  DROP FUNCTION [dbo].[GetTrendRangesVariations]
 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[GetTrendRangesStats]') AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))  DROP FUNCTION [dbo].[GetTrendRangesStats]
+
+--Types
+--IF EXISTS (SELECT * FROM sys.types WHERE is_table_type = 1 AND name = 'DateIndexPrice') DROP TYPE [dbo].[DateIndexPrice];
+--IF EXISTS (SELECT * FROM sys.types WHERE is_table_type = 1 AND name = 'IdAndDateIndex') DROP TYPE [dbo].[IdAndDateIndex];
 
 GO
+
+
+----Creating types.
+--CREATE TYPE [dbo].[TrendRangeBasicData] AS TABLE(
+--	[TrendRangeId] [int] NOT NULL PRIMARY KEY CLUSTERED,
+--	[TrendlineStartDateIndex] [int] NOT NULL,
+--	[TrendlineStartLevel] [float] NOT NULL,
+--	[TrendlineAngle] [float] NOT NULL,
+--	[StartIndex] [int] NOT NULL,
+--	[EndIndex] [int] NOT NULL,
+--	[IsPeak] [int] NOT NULL
+--);
+
+
+--GO
 
 CREATE FUNCTION [dbo].[GetTrendlinesAnalysisLastExtremumGroupId](@assetId AS INT, @timeframeId AS INT)
 RETURNS INT
@@ -83,6 +105,135 @@ BEGIN
 END
 
 GO
+
+
+
+CREATE FUNCTION [dbo].[GetTrendRangesVariations](
+		@assetId AS INT,
+		@timeframeId AS INT, 
+		@basicData AS [dbo].[TrendRangeBasicData] READONLY
+	)
+RETURNS TABLE
+AS
+RETURN
+(
+
+		SELECT
+			b.[TrendRangeId],
+			COUNT(b.[HLVariation]) AS [TotalCandles],
+			SUM(b.[HLVariation]) AS [TotalVariation],
+			MAX(b.[HLVariation]) AS [ExtremumVariation],
+			MAX(b.[OCVariation]) AS [OCVariation]
+		FROM	
+			(SELECT
+				ptc.*,
+				ABS(ptc.[ModifiedTrendlineLevel] - ptc.[ModifiedExtremumPrice]) AS [HLVariation],
+				ABS(ptc.[ModifiedTrendlineLevel] - ptc.[ModifiedOpenClosePrice]) AS [OCVariation]
+			FROM
+				(SELECT
+					a.*,
+					a.[TrendlineLevel] * CAST(a.[IsPeak] AS FLOAT) AS [ModifiedTrendlineLevel],
+					a.[ExtremumPrice] * CAST(a.[IsPeak] AS FLOAT) AS [ModifiedExtremumPrice],
+					a.[OpenClosePrice] * CAST(a.[IsPeak] AS FLOAT) AS [ModifiedOpenClosePrice]
+				FROM
+					(SELECT
+						bd.[TrendRangeId],
+						CAST((tq.[DateIndex] - bd.[TrendlineStartDateIndex]) AS FLOAT) * bd.[TrendlineAngle] + bd.[TrendlineStartLevel] AS [TrendlineLevel],
+						IIF(bd.[IsPeak] = 1, tq.[High], tq.[Low]) AS [ExtremumPrice],
+						IIF(bd.[IsPeak] = tq.[IsBullish], tq.[Close], tq.[Open]) AS [OpenClosePrice],
+						bd.[IsPeak]
+					FROM
+						@basicData bd
+						LEFT JOIN (	SELECT *, IIF(q.[Close] > q.[Open], 1, -1) AS [IsBullish]
+									FROM
+										(SELECT * FROM [dbo].[quotes] WHERE [AssetId] = @assetId AND [TimeframeId] = @timeframeId) q
+										LEFT JOIN (SELECT MIN([StartIndex]) AS [Min], MAX([EndIndex]) AS [Max] FROM @basicData) qr
+										ON q.[DateIndex] BETWEEN qr.[Min] AND qr.[Max]
+									WHERE	
+										[AssetId] = @assetId AND [TimeframeId] = @timeframeId) tq
+						ON tq.[DateIndex] BETWEEN bd.[StartIndex] AND bd.[EndIndex]) a) ptc) b
+		GROUP BY 
+			b.[TrendRangeId]
+
+);
+
+
+GO
+
+
+CREATE FUNCTION [dbo].[GetTrendRangesCrossDetails](
+		@assetId AS INT,
+		@timeframeId AS INT, 
+		@basicData AS [dbo].[TrendRangeBasicData] READONLY
+	)
+RETURNS TABLE
+AS
+RETURN
+(
+
+	SELECT
+		d.[TrendRangeId],
+		d.[ExCrossRangeSum] + d.[ExCrossRangeAverage] + [ExCrossRangeStDeviation] AS [ExtremumPriceCrossPenaltyPoints],
+		d.[ExCrossRangeCounter] AS [ExtremumPriceCrossCounter],
+		d.[OcCrossRangeSum] + d.[OcCrossRangeAverage] + [OcCrossRangeStDeviation] AS [OCPriceCrossPenaltyPoints],
+		d.[OcCrossRangeCounter] AS [OCPriceCrossCounter]
+	FROM
+		(SELECT
+			c.[TrendRangeId],
+			SUM([ExCrossRange]) AS ExCrossRangeSum,
+			AVG([ExCrossRange]) AS ExCrossRangeAverage,
+			STDEVP([ExCrossRange]) AS ExCrossRangeStDeviation,
+			COUNT([ExCrossRange]) AS ExCrossRangeCounter,
+			SUM([OcCrossRange]) AS OcCrossRangeSum,
+			AVG([OcCrossRange]) AS OcCrossRangeAverage,
+			STDEVP([OcCrossRange]) AS OcCrossRangeStDeviation,
+			COUNT([OcCrossRange]) AS OcCrossRangeCounter
+		FROM
+			(SELECT
+				b.[TrendRangeId],
+				b.[DateIndex],
+				IIF(b.[ModifiedExtremumPrice] > b.[ModifiedTrendlineLevel], b.[ModifiedExtremumPrice] - b.[ModifiedTrendlineLevel], NULL) AS [ExCrossRange],
+				IIF(b.[ModifiedOpenClosePrice] > b.[ModifiedTrendlineLevel], b.[ModifiedOpenClosePrice] - b.[ModifiedTrendlineLevel], NULL) AS [OcCrossRange]
+			FROM
+				(SELECT
+						a.*,
+						a.[TrendlineLevel] * CAST(a.[IsPeak] AS FLOAT) AS [ModifiedTrendlineLevel],
+						a.[ExtremumPrice] * CAST(a.[IsPeak] AS FLOAT) AS [ModifiedExtremumPrice],
+						a.[OpenClosePrice] * CAST(a.[IsPeak] AS FLOAT) AS [ModifiedOpenClosePrice]
+					FROM
+						(SELECT
+							bd.[TrendRangeId],
+							tq.[DateIndex],
+							CAST((tq.[DateIndex] - bd.[TrendlineStartDateIndex]) AS FLOAT) * bd.[TrendlineAngle] + bd.[TrendlineStartLevel] AS [TrendlineLevel],
+							IIF(bd.[IsPeak] = 1, tq.[High], tq.[Low]) AS [ExtremumPrice],
+							IIF(bd.[IsPeak] = tq.[IsBullish], tq.[Close], tq.[Open]) AS [OpenClosePrice],
+							bd.[IsPeak]
+						FROM
+							@basicData bd
+							LEFT JOIN (	SELECT *, IIF(q.[Close] > q.[Open], 1, -1) AS [IsBullish]
+										FROM
+											(SELECT * FROM [dbo].[quotes] WHERE [AssetId] = @assetId AND [TimeframeId] = @timeframeId) q
+											LEFT JOIN (SELECT MIN([StartIndex]) AS [Min], MAX([EndIndex]) AS [Max] FROM @basicData) qr
+											ON q.[DateIndex] BETWEEN qr.[Min] AND qr.[Max]
+										WHERE	
+											[AssetId] = @assetId AND [TimeframeId] = @timeframeId) tq
+							ON tq.[DateIndex] BETWEEN bd.[StartIndex] AND bd.[EndIndex]) a) b) c
+			GROUP BY c.[TrendRangeId]) d
+);
+
+GO
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 CREATE PROC [dbo].[findNewTrendlines] @assetId AS INT, @timeframeId AS INT
@@ -247,13 +398,23 @@ BEGIN
 				[TrendRangeId] [int] IDENTITY(1,1) NOT NULL,
 				[TrendlineId] [int] NOT NULL,
 				[BaseId] [int] NOT NULL,
-				[BaseDateIndex] [int] NOT NULL,
 				[BaseIsHit] [int] NOT NULL,
+				[BaseDateIndex] [int] NOT NULL,
 				[CounterId] [int] NOT NULL,
 				[CounterIsHit] [int] NOT NULL,
 				[CounterDateIndex] [int] NOT NULL,
 				[ProductionId] [int] NULL,
 				[IsPeak] [int] NOT NULL DEFAULT(0),
+				[ExtremumPriceCrossPenaltyPoints] [float] NULL,
+				[ExtremumPriceCrossCounter] [int] NULL,
+				[OCPriceCrossPenaltyPoints] [float] NULL,
+				[OCPriceCrossCounter] [int] NULL,
+				[TotalCandles] [int] NULL,
+				[AverageVariation] [float] NULL,
+				[ExtremumVariation] [float] NULL,
+				[OpenCloseVariation] [float] NULL,
+				[BaseHitValue] [float] NULL,
+				[CounterHitValue] [float] NULL,
 				CONSTRAINT [PK_temp_trendRanges] PRIMARY KEY CLUSTERED ([TrendRangeId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 			) ON [PRIMARY];
 
@@ -404,6 +565,9 @@ BEGIN
 				CONSTRAINT [PK_temp_quotesAssetTimeframe] PRIMARY KEY CLUSTERED ([DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 			) ON [PRIMARY]
 
+			CREATE NONCLUSTERED INDEX [ixDateIndex_temp_QuotesAssetTimeframe] ON #Quotes_AssetTimeframe
+			([DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
 			CREATE TABLE #Quotes_Iteration(
 				[DateIndex] [int] NOT NULL,
 				[Open] [float] NOT NULL,
@@ -412,6 +576,9 @@ BEGIN
 				[Close] [float] NOT NULL,
 				CONSTRAINT [PK_temp_quotesIteration] PRIMARY KEY CLUSTERED ([DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 			) ON [PRIMARY]
+
+			CREATE NONCLUSTERED INDEX [ixDateIndex_temp_QuotesIteration] ON #Quotes_Iteration
+			([DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
 		END
 
@@ -499,7 +666,7 @@ BEGIN
 	BEGIN
 		
 		DECLARE @trendlineStartOffset AS INT = 0;
-		DECLARE @maxDeviationFromTrendline AS FLOAT = 0.008;
+		DECLARE @maxDeviationFromTrendline AS FLOAT = 0.001;
 		DECLARE @minDistanceFromExtremumToBreak AS INT = 5;
 		DECLARE @maxCheckRange AS INT = 10; -- as multiplier of distance between extrema.
 		DECLARE @remainingTrendlines AS BIT = (SELECT COUNT(*) FROM #Trendlines);
@@ -530,7 +697,7 @@ BEGIN
 					DECLARE @maxQuoteIndex AS INT = (SELECT [Max] FROM #BorderPoints);
 
 
-					-- [1.1.2] Load propert set of quotes based on [min] and [max] value obtained above.
+					-- [1.1.2] Load proper set of quotes based on [min] and [max] value obtained above.
 					DELETE FROM #Quotes_Iteration;
 					INSERT INTO #Quotes_Iteration
 					SELECT * 
@@ -838,7 +1005,6 @@ BEGIN
 
 	END
 
-
 	-- Feed production DB tables with data obtained above.
 	BEGIN
 		
@@ -912,9 +1078,6 @@ BEGIN
 					[TrendlineId] [int] NOT NULL,
 					[ExtremumGroupId] [int] NOT NULL
 				);
-
-				SELECT '#TrendHits', [TrendlineId], [ExtremumGroupId]
-				FROM #TrendHits;
 
 				-- [1.1.6] Insert data into DB table.
 				INSERT INTO [dbo].[trendHits]([TrendlineId], [ExtremumGroupId])
@@ -1007,9 +1170,9 @@ BEGIN
 					FROM #TrendHits) a;
 
 				-- [1.3.2] Create trend range border pairs and insert them into #TrendRanges temporary table.
-				INSERT INTO #TrendRanges([TrendlineId], [BaseId], [BaseDateIndex], [BaseIsHit], [CounterId], [CounterDateIndex], [CounterIsHit])
+				INSERT INTO #TrendRanges([TrendlineId], [BaseId], [BaseIsHit], [BaseDateIndex], [CounterId], [CounterIsHit], [CounterDateIndex])
 				SELECT 
-					cb1.[TrendlineId], cb1.[ProductionId], cb1.[DateIndex], cb1.[IsHit], cb2.[ProductionId], cb2.[DateIndex], cb2.[IsHit]
+					cb1.[TrendlineId], cb1.[ProductionId], cb1.[IsHit], cb1.[DateIndex], cb2.[ProductionId], cb2.[IsHit], cb2.[DateIndex]
 				FROM 
 					#CombinedBreaksAndHits cb1
 					INNER JOIN #CombinedBreaksAndHits cb2
@@ -1017,15 +1180,109 @@ BEGIN
 						cb1.[number] = cb2.[number] - 1;
 
 				-- [1.3.3] Append info if the given trend range is top or bottom.
-				SELECT
-					tr.*,
-					eg.[IsPeak]
+				UPDATE tr
+				SET
+					[IsPeak] = eg.[IsPeak]
 				FROM
 					#TrendRanges tr
 					LEFT JOIN #TrendHits th ON (tr.[BaseIsHit] = 1 AND tr.[BaseId] = th.[ProductionId]) OR (tr.[CounterIsHit] = 1 AND tr.[CounterId] = th.[ProductionId])
-					LEFT JOIN [dbo].[extremumGroups] eg ON th.[ExtremumGroupId] = eg.[ExtremumGroupId]
+					LEFT JOIN [dbo].[extremumGroups] eg ON th.[ExtremumGroupId] = eg.[ExtremumGroupId];
 
-				-- [1.3.x] Clean up
+				-- [1.3.4] Call function evaluating trend ranges.
+				BEGIN
+					
+					DECLARE @TrendRangeBasicData AS [dbo].[TrendRangeBasicData];
+					INSERT INTO @TrendRangeBasicData
+					SELECT
+						tr.[TrendRangeId],
+						--tr.[TrendlineId],
+						t.[BaseDateIndex] AS [TrendlineStartDateIndex],
+						t.[BaseLevel] AS [TrendlineStartLevel],
+						t.[Angle] As [TrendlineAngle],
+						IIF(tr.[BaseIsHit] = 1, eg.[EndDateIndex] + 1, tr.[BaseDateIndex]) AS [StartIndex],
+						IIF(tr.[CounterIsHit] = 1, eg2.[StartDateIndex] - 1, tr.[CounterDateIndex]) AS [EndIndex],
+						tr.[IsPeak]
+					FROM
+						#TrendRanges tr
+						LEFT JOIN #TrendHits th ON tr.[BaseId] = th.[ProductionId]
+						LEFT JOIN [dbo].[extremumGroups] eg ON th.[ExtremumGroupId] = eg.[ExtremumGroupId]
+						LEFT JOIN #TrendHits th2 ON tr.[CounterId] = th2.[ProductionId]
+						LEFT JOIN [dbo].[extremumGroups] eg2 ON th2.[ExtremumGroupId] = eg2.[ExtremumGroupId]
+						LEFT JOIN [dbo].[trendlines] t ON tr.[TrendlineId] = t.[TrendlineId];
+
+
+					-- [1.3.4.1] Update variation data.
+					UPDATE tr
+					SET
+						[TotalCandles] = v.[TotalCandles],
+						[AverageVariation] = v.[TotalVariation] / v.[TotalCandles],
+						[ExtremumVariation] = v.[ExtremumVariation],
+						[OpenCloseVariation] = v.[OCVariation]
+					FROM
+						#TrendRanges tr
+						LEFT JOIN [dbo].[GetTrendRangesVariations](@assetId, @timeframeId, @TrendRangeBasicData) v ON tr.[TrendRangeId] = v.[TrendRangeId]
+
+					-- [1.3.4.2] Update cross data.
+					UPDATE tr
+					SET
+						[ExtremumPriceCrossPenaltyPoints] = v.[ExtremumPriceCrossPenaltyPoints],
+						[ExtremumPriceCrossCounter] = v.[ExtremumPriceCrossCounter],
+						[OCPriceCrossPenaltyPoints] = v.[OCPriceCrossPenaltyPoints],
+						[OCPriceCrossCounter] = v.[OCPriceCrossCounter]
+					FROM
+						#TrendRanges tr
+						LEFT JOIN [dbo].[GetTrendRangesCrossDetails](@assetId, @timeframeId, @TrendRangeBasicData) v ON tr.[TrendRangeId] = v.[TrendRangeId]
+							
+
+					--[TrendRangeBasicData]
+
+					--Select quotations necessary for evaluating trend ranges.
+
+					--SET @minQuoteIndex = (SELECT MIN([StartIndex]) FROM #TrendRangesLimits);
+					--SET @maxQuoteIndex = (SELECT MAX([EndIndex]) FROM #TrendRangesLimits);
+
+					--DELETE FROM #Quotes_Iteration;
+
+					--INSERT INTO #Quotes_Iteration
+					--SELECT
+					--	*
+					--FROM
+					--	#Quotes_AssetTimeframe qat
+					--WHERE
+					--	[DateIndex] BETWEEN @minQuoteIndex AND @maxQuoteIndex;
+
+				END
+
+
+
+
+				-- [1.3.x] Move ranges to the production table.
+				INSERT INTO [dbo].[trendRanges]([TrendlineId], [BaseId], [BaseIsHit], [BaseDateIndex], [CounterId], [CounterIsHit], [CounterDateIndex], [IsPeak],
+												[ExtremumPriceCrossPenaltyPoints], [ExtremumPriceCrossCounter], [OCPriceCrossPenaltyPoints], [OCPriceCrossCounter],
+												[TotalCandles], [AverageVariation], [ExtremumVariation], [OpenCloseVariation], [BaseHitValue], [CounterHitValue])
+				SELECT
+					[TrendlineId], 
+					[BaseId], 
+					[BaseIsHit], 
+					[BaseDateIndex], 
+					[CounterId], 
+					[CounterIsHit], 
+					[CounterDateIndex], 
+					[IsPeak],
+					[ExtremumPriceCrossPenaltyPoints], 
+					[ExtremumPriceCrossCounter], 
+					[OCPriceCrossPenaltyPoints], 
+					[OCPriceCrossCounter],
+					[TotalCandles], 
+					[AverageVariation], 
+					[ExtremumVariation], 
+					[OpenCloseVariation], 
+					[BaseHitValue], 
+					[CounterHitValue]
+				FROM
+					#TrendRanges;
+
+				-- [1.3.y] Clean up
 				BEGIN
 					DROP TABLE #CombinedBreaksAndHits;
 				END
@@ -1073,7 +1330,6 @@ BEGIN
 	
 	END
 
-
 	-- Drop temporary tables.
 	BEGIN
 
@@ -1090,6 +1346,9 @@ BEGIN
 
 END
 GO
+
+
+
 
 
 

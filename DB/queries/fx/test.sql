@@ -19,19 +19,19 @@ SELECT [ExtremumId], [DateIndex], IIF([ExtremumTypeId] < 3, 'Peak', 'Trough') AS
 --SELECT * FROM [dbo].[trendlines];
 --SELECT * FROM [dbo].[trendBreaks];
 --SELECT * FROM [dbo].[trendHits];
+SELECT * FROM [dbo].[trendRanges];
 
-
-SELECT
-	t.[TrendlineId],
-	b.[Counter] AS [Breaks],
-	h.[Counter] AS [Hits]
-FROM
-	[dbo].[trendlines] t
-	LEFT JOIN (SELECT [TrendlineId], COUNT(*) AS [Counter] FROM [dbo].[trendBreaks] GROUP BY [TrendlineId]) b ON t.[TrendlineId] = b.[TrendlineId]
-	LEFT JOIN (SELECT [TrendlineId], COUNT(*) AS [Counter] FROM [dbo].[trendHits] GROUP BY [TrendlineId]) h ON t.[TrendlineId] = h.[TrendlineId]
-ORDER BY
-	b.[Counter] * h.[Counter] DESC,
-	h.[Counter] DESC;
+--SELECT
+--	t.[TrendlineId],
+--	b.[Counter] AS [Breaks],
+--	h.[Counter] AS [Hits]
+--FROM
+--	[dbo].[trendlines] t
+--	LEFT JOIN (SELECT [TrendlineId], COUNT(*) AS [Counter] FROM [dbo].[trendBreaks] GROUP BY [TrendlineId]) b ON t.[TrendlineId] = b.[TrendlineId]
+--	LEFT JOIN (SELECT [TrendlineId], COUNT(*) AS [Counter] FROM [dbo].[trendHits] GROUP BY [TrendlineId]) h ON t.[TrendlineId] = h.[TrendlineId]
+--ORDER BY
+--	b.[Counter] * h.[Counter] DESC,
+--	h.[Counter] DESC;
 
 --select * from [dbo].[quotes];
 
