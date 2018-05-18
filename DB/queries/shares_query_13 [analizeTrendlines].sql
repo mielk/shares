@@ -1,4 +1,20 @@
-﻿USE [shares];
+﻿
+			NULL AS [BreakIndex],
+			NULL AS [PrevBreakIndex],
+			NULL AS [HitIndex],
+			NULL AS [PrevHitIndex],
+
+
+
+
+
+
+
+
+
+
+
+USE [shares];
 
 GO
 

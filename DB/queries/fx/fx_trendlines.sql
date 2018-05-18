@@ -8,6 +8,7 @@ GO
 IF OBJECT_ID('findNewTrendlines','P') IS NOT NULL DROP PROC [dbo].[findNewTrendlines];
 IF OBJECT_ID('processTrendlines','P') IS NOT NULL DROP PROC [dbo].[processTrendlines];
 IF OBJECT_ID('analyzeTrendlinesLeftSide','P') IS NOT NULL DROP PROC [dbo].[analyzeTrendlinesLeftSide];
+IF OBJECT_ID('analyzeTrendlinesRightSide','P') IS NOT NULL DROP PROC [dbo].[analyzeTrendlinesRightSide];
 
 GO
 
@@ -496,7 +497,7 @@ BEGIN
 
 			END
 
-			-- Open trendlines
+			-- Closed trendlines
 			BEGIN
 
 				CREATE TABLE #ClosedTrendlines(
@@ -669,7 +670,7 @@ BEGIN
 		DECLARE @maxDeviationFromTrendline AS FLOAT = 0.001;
 		DECLARE @minDistanceFromExtremumToBreak AS INT = 5;
 		DECLARE @maxCheckRange AS INT = 10; -- as multiplier of distance between extrema.
-		DECLARE @remainingTrendlines AS BIT = (SELECT COUNT(*) FROM #Trendlines);
+		DECLARE @remainingTrendlines AS INT = (SELECT COUNT(*) FROM #Trendlines);
 
 		WHILE @remainingTrendlines > 0
 		BEGIN
@@ -811,7 +812,7 @@ BEGIN
 					DECLARE @maxDateIndex AS INT = (SELECT [Max] FROM #ExtremumGroupsBorderPoints);
 
 
-					-- [2.1.2] Load propert set of extremum group based on [min] and [max] value obtained above.
+					-- [2.1.2] Load proper set of extremum group based on [min] and [max] value obtained above.
 					DELETE FROM #ExtremumGroups;
 					INSERT INTO #ExtremumGroups
 					SELECT * 
@@ -1350,6 +1351,774 @@ GO
 
 
 
+CREATE PROC [dbo].[analyzeTrendlinesRightSide] @assetId AS INT, @timeframeId AS INT
+AS
+BEGIN
+
+
+	-- Prepare temp tables.
+	BEGIN
+		
+		-- Trend breaks
+		BEGIN
+
+			CREATE TABLE #TrendBreaks(
+				[TrendBreakId] [int] IDENTITY(1,1) NOT NULL,
+				[TrendlineId] [int] NOT NULL,
+				[DateIndex] [int] NOT NULL,
+				[BreakFromAbove] [int] NOT NULL,
+				[ProductionId] [int] NULL,
+				CONSTRAINT [PK_temp_trendBreaks] PRIMARY KEY CLUSTERED ([TrendBreakId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+			) ON [PRIMARY];
+
+			CREATE NONCLUSTERED INDEX [ixTrendlineId_temp_trendlinesBreaks] ON #TrendBreaks
+			([TrendlineId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+			CREATE NONCLUSTERED INDEX [ixDateIndex_temp_trendlinesBreaks] ON #TrendBreaks
+			([DateIndex] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		END
+
+		-- Trend hits
+		BEGIN
+
+			CREATE TABLE #TrendHits(
+				[TrendHitId] [int] IDENTITY(1,1) NOT NULL,
+				[TrendlineId] [int] NOT NULL,
+				[ExtremumGroupId] [int] NOT NULL,
+				[DateIndex] [int] NOT NULL,
+				[ProductionId] [int] NULL,
+				CONSTRAINT [PK_temp_trendlinesHits] PRIMARY KEY CLUSTERED ([TrendHitId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+			) ON [PRIMARY];
+
+			CREATE NONCLUSTERED INDEX [ixTrendlineId_temp_trendlinesHits] ON #TrendHits
+			([TrendlineId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+			CREATE NONCLUSTERED INDEX [ixExtremumGroup_temp_trendlinesHits] ON #TrendHits
+			([ExtremumGroupId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+			CREATE NONCLUSTERED INDEX [ixDateIndex_temp_trendlinesHits] ON #TrendHits
+			([DateIndex] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		END
+
+		-- Trend ranges
+		BEGIN
+		
+			CREATE TABLE #TrendRanges(
+				[TrendRangeId] [int] IDENTITY(1,1) NOT NULL,
+				[TrendlineId] [int] NOT NULL,
+				[BaseId] [int] NOT NULL,
+				[BaseIsHit] [int] NOT NULL,
+				[BaseDateIndex] [int] NOT NULL,
+				[CounterId] [int] NOT NULL,
+				[CounterIsHit] [int] NOT NULL,
+				[CounterDateIndex] [int] NOT NULL,
+				[ProductionId] [int] NULL,
+				[IsPeak] [int] NOT NULL DEFAULT(0),
+				[ExtremumPriceCrossPenaltyPoints] [float] NULL,
+				[ExtremumPriceCrossCounter] [int] NULL,
+				[OCPriceCrossPenaltyPoints] [float] NULL,
+				[OCPriceCrossCounter] [int] NULL,
+				[TotalCandles] [int] NULL,
+				[AverageVariation] [float] NULL,
+				[ExtremumVariation] [float] NULL,
+				[OpenCloseVariation] [float] NULL,
+				[BaseHitValue] [float] NULL,
+				[CounterHitValue] [float] NULL,
+				CONSTRAINT [PK_temp_trendRanges] PRIMARY KEY CLUSTERED ([TrendRangeId] ASC)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+			) ON [PRIMARY];
+
+			CREATE NONCLUSTERED INDEX [ixTrendlineId_temp_trendRanges] ON #TrendRanges
+			([TrendlineId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+			CREATE NONCLUSTERED INDEX [ixBaseId_temp_trendRanges] ON #TrendRanges
+			([BaseId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+			CREATE NONCLUSTERED INDEX [ixBaseDateIndex_temp_trendRanges] ON #TrendRanges
+			([BaseDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+			CREATE NONCLUSTERED INDEX [ixCounterId_temp_trendRanges] ON #TrendRanges
+			([CounterId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+			
+			CREATE NONCLUSTERED INDEX [ixCounterDateIndex_temp_trendRanges] ON #TrendRanges
+			([CounterDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+			
+			CREATE NONCLUSTERED INDEX [ixIsPeak_temp_trendRanges] ON #TrendRanges
+			([IsPeak] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		END
+
+		-- Trendlines
+		BEGIN
+
+			-- All trendlines
+			BEGIN
+
+				CREATE TABLE #Trendlines(
+					[TrendlineId] [int] NOT NULL,	
+					[BaseExtremumGroupId] [int] NOT NULL,
+					[BaseDateIndex] [int] NOT NULL,
+					[BaseLevel] [float] NOT NULL,
+					[CounterExtremumGroupId] [int] NOT NULL,
+					[CounterDateIndex] [int] NOT NULL,
+					[CounterLevel] [float] NOT NULL,
+					[Angle] [float] NOT NULL,
+					[StartDateIndex] [int] NULL,
+					[EndDateIndex] [int] NULL,
+					[IsOpenFromLeft] [bit] NOT NULL DEFAULT(1),
+					[IsOpenFromRight] [bit] NOT NULL DEFAULT(1),
+					[CandlesDistance] [int] NOT NULL,
+					[BreakIndex] [int] NULL,
+					[PrevBreakIndex] [int] NULL,
+					[HitIndex] [int] NULL,
+					[PrevHitIndex] [int] NULL,
+					[LookForPeaks] [int] NOT NULL,
+					[AnalysisStartPoint] [int] NOT NULL
+					CONSTRAINT [PK_temp_trendlines] PRIMARY KEY CLUSTERED ([TrendlineId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+				) ON [PRIMARY]
+		
+				CREATE NONCLUSTERED INDEX [ixBaseDateIndex_temp_trendlines] ON #Trendlines
+				([BaseDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	
+				CREATE NONCLUSTERED INDEX [ixCounterDateIndex_temp_trendlines] ON #Trendlines
+				([CounterDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+				CREATE NONCLUSTERED INDEX [ixIsOpenFromLeft_temp_trendlines] ON #Trendlines
+				([IsOpenFromLeft] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+				CREATE NONCLUSTERED INDEX [ixBreakIndex_temp_trendlines] ON #Trendlines
+				(BreakIndex ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+				CREATE NONCLUSTERED INDEX [ixPrevBreakIndex_temp_trendlines] ON #Trendlines
+				([PrevBreakIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+				CREATE NONCLUSTERED INDEX [ixHitIndex_temp_trendlines] ON #Trendlines
+				([HitIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+				CREATE NONCLUSTERED INDEX [ixPrevHitIndex_temp_trendlines] ON #Trendlines
+				([PrevHitIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+				CREATE NONCLUSTERED INDEX [ixLookForPeaks_temp_trendlines] ON #Trendlines
+				([LookForPeaks] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+				CREATE NONCLUSTERED INDEX [ixAnalysisStartPoint_temp_trendlines] ON #Trendlines
+				([AnalysisStartPoint] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+			END
+
+			-- Closed trendlines
+			BEGIN
+
+				CREATE TABLE #ClosedTrendlines(
+					[TrendlineId] [int] NOT NULL,	
+					[BaseExtremumGroupId] [int] NOT NULL,
+					[BaseDateIndex] [int] NOT NULL,
+					[BaseLevel] [float] NOT NULL,
+					[CounterExtremumGroupId] [int] NOT NULL,
+					[CounterDateIndex] [int] NOT NULL,
+					[CounterLevel] [float] NOT NULL,
+					[Angle] [float] NOT NULL,
+					[StartDateIndex] [int] NULL,
+					[EndDateIndex] [int] NULL,
+					[IsOpenFromLeft] [bit] NOT NULL DEFAULT(1),
+					[IsOpenFromRight] [bit] NOT NULL DEFAULT(1),
+					[CandlesDistance] [int] NOT NULL,
+					[BreakIndex] [int] NULL,
+					[PrevBreakIndex] [int] NULL,
+					[HitIndex] [int] NULL,
+					[PrevHitIndex] [int] NULL,
+					[LookForPeaks] [int] NOT NULL,
+					[AnalysisStartPoint] [int] NOT NULL
+					CONSTRAINT [PK_temp_openTrendlines] PRIMARY KEY CLUSTERED ([TrendlineId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+				) ON [PRIMARY]
+		
+				CREATE NONCLUSTERED INDEX [ixBaseDateIndex_temp_closedTrendlines] ON #ClosedTrendlines
+				([BaseDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	
+				CREATE NONCLUSTERED INDEX [ixCounterDateIndex_temp_closedTrendlines] ON #ClosedTrendlines
+				([CounterDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+				CREATE NONCLUSTERED INDEX [ixIsOpenFromLeft_temp_closedTrendlines] ON #ClosedTrendlines
+				([IsOpenFromLeft] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+				CREATE NONCLUSTERED INDEX [ixBreakIndex_temp_closedTrendlines] ON #ClosedTrendlines
+				(BreakIndex ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+				CREATE NONCLUSTERED INDEX [ixPrevBreakIndex_temp_closedTrendlines] ON #ClosedTrendlines
+				([PrevBreakIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+				CREATE NONCLUSTERED INDEX [ixHitIndex_temp_closedTrendlines] ON #ClosedTrendlines
+				([HitIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+				CREATE NONCLUSTERED INDEX [ixPrevHitIndex_temp_closedTrendlines] ON #ClosedTrendlines
+				([PrevHitIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+				CREATE NONCLUSTERED INDEX [ixLookForPeaks_temp_closedTrendlines] ON #ClosedTrendlines
+				([LookForPeaks] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+				CREATE NONCLUSTERED INDEX [ixAnalysisStartPoint_temp_closedTrendlines] ON #ClosedTrendlines
+				([AnalysisStartPoint] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+			END
+
+		END
+
+		-- Quotes
+		BEGIN
+
+			CREATE TABLE #Quotes_AssetTimeframe(
+				[DateIndex] [int] NOT NULL,
+				[Open] [float] NOT NULL,
+				[Low] [float] NOT NULL,
+				[High] [float] NOT NULL,
+				[Close] [float] NOT NULL,
+				CONSTRAINT [PK_temp_quotesAssetTimeframe] PRIMARY KEY CLUSTERED ([DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+			) ON [PRIMARY]
+
+			CREATE NONCLUSTERED INDEX [ixDateIndex_temp_QuotesAssetTimeframe] ON #Quotes_AssetTimeframe
+			([DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+			CREATE TABLE #Quotes_Iteration(
+				[DateIndex] [int] NOT NULL,
+				[Open] [float] NOT NULL,
+				[Low] [float] NOT NULL,
+				[High] [float] NOT NULL,
+				[Close] [float] NOT NULL,
+				CONSTRAINT [PK_temp_quotesIteration] PRIMARY KEY CLUSTERED ([DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+			) ON [PRIMARY]
+
+			CREATE NONCLUSTERED INDEX [ixDateIndex_temp_QuotesIteration] ON #Quotes_Iteration
+			([DateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+		END
+
+		-- Extremum groups
+		BEGIN
+			
+			CREATE TABLE #ExtremumGroups(
+				[ExtremumGroupId] [int] NOT NULL,
+				[AssetId] [int] NOT NULL,
+				[TimeframeId] [int] NOT NULL,
+				[IsPeak] [int] NOT NULL,
+				[MasterExtremumId] [int] NOT NULL,
+				[SlaveExtremumId] [int] NOT NULL,
+				[MasterDateIndex] [int] NOT NULL,
+				[SlaveDateIndex] [int] NOT NULL,
+				[StartDateIndex] [int] NOT NULL,
+				[EndDateIndex] [int] NOT NULL,
+				[OCPriceLevel] [float] NOT NULL,
+				[ExtremumPriceLevel] [float] NOT NULL,
+				[MiddlePriceLevel] [float] NOT NULL,
+				CONSTRAINT [PK_extremaGroups] PRIMARY KEY CLUSTERED ([ExtremumGroupId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+			);
+
+		
+			CREATE NONCLUSTERED INDEX [ixIsPeak_temp_extremumGroups] ON #ExtremumGroups
+			([IsPeak] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+			CREATE NONCLUSTERED INDEX [ixMasterExtremumId_temp_extremumGroups] ON #ExtremumGroups
+			([MasterExtremumId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+	
+			CREATE NONCLUSTERED INDEX [ixSlaveExtremumId_temp_extremumGroups] ON #ExtremumGroups
+			([SlaveExtremumId] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+			CREATE NONCLUSTERED INDEX [ixMasterDateIndex_temp_extremumGroups] ON #ExtremumGroups
+			([MasterDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+			CREATE NONCLUSTERED INDEX [ixSlaveDateIndex_temp_extremumGroups] ON #ExtremumGroups
+			([SlaveDateIndex]  ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+			CREATE NONCLUSTERED INDEX [ixStartDateIndex_temp_extremumGroups] ON #ExtremumGroups
+			([StartDateIndex] ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+			CREATE NONCLUSTERED INDEX [ixEndDateIndex_temp_extremumGroups] ON #ExtremumGroups
+			([EndDateIndex]  ASC) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+
+		END
+
+	END
+
+
+	-- Select initial data:
+	-- * trendlines for analysis (with [IsLeftOpen] = 1).
+	-- * quotes for the given AssetId and TimeframeId
+	BEGIN
+
+		INSERT INTO #Trendlines
+		SELECT 
+			t.[TrendlineId], t.[BaseExtremumGroupId], t.[BaseDateIndex], t.[BaseLevel], t.[CounterExtremumGroupId], t.[CounterDateIndex], 
+			t.[CounterLevel], t.[Angle], t.[StartDateIndex], t.[EndDateIndex], t.[IsOpenFromLeft], t.[IsOpenFromRight], t.[CandlesDistance],
+			NULL AS [BreakIndex],
+			NULL AS [PrevBreakIndex],
+			NULL AS [HitIndex],
+			NULL AS [PrevHitIndex],
+			eg.[IsPeak] AS [LookForPeaks],
+			t.[CounterDateIndex] AS [AnalysisStartPoint]
+		FROM 
+			(SELECT * FROM [dbo].[trendlines] WHERE [AssetId] = @assetId AND [TimeframeId] = @timeframeId) t
+			LEFT JOIN (SELECT * FROM [dbo].[extremumGroups] WHERE [AssetId] = @assetId AND [TimeframeId] = @timeframeId) eg
+			ON t.[CounterExtremumGroupId] = eg.[ExtremumGroupId]
+		WHERE
+			t.[IsOpenFromRight] = 1;
+		
+		INSERT INTO #Quotes_AssetTimeframe
+		SELECT 
+			[DateIndex], [Open], [Low], [High], [Close]
+		FROM
+			[dbo].[quotes]
+		WHERE
+			[AssetId] = @assetId AND 
+			[TimeframeId] = @timeframeId AND 
+			[DateIndex] >= (SELECT MIN([CounterDateIndex]) FROM #Trendlines);
+
+	END
+
+
+	-- Append [PrevBreakIndex], [PrevHitIndex] and [AnalysisStartPoint] for right-side-open trendlines.
+	BEGIN
+
+		SELECT 
+			t.[TrendlineId],
+			tr.[BaseIsHit],
+			tr.[BaseDateIndex],
+			tr.[CounterIsHit],
+			tr.[CounterDateIndex],
+			tr.[IsPeak],
+			number = ROW_NUMBER() OVER(PARTITION BY tr.[TrendlineId] ORDER BY tr.[TrendlineId] ASC, tr.[CounterDateIndex] DESC)
+		INTO
+			#TempRanges
+		FROM
+			#Trendlines t 
+			LEFT JOIN [dbo].[trendRanges] tr ON t.[TrendlineId] = tr.[TrendlineId];
+
+		UPDATE t
+		SET
+			[BreakIndex] = NULL,
+			[PrevBreakIndex] = IIF(tr.[CounterIsHit] = 1, NULL, tr.[CounterDateIndex]),
+			[HitIndex] = NULL,
+			[PrevHitIndex] = IIF(tr.[CounterIsHit] = 1, tr.[CounterDateIndex], tr.[BaseDateIndex]),
+			[LookForPeaks] = IIF(tr.[CounterIsHit] = 1, tr.[IsPeak], tr.[IsPeak] * (-1)),
+			[AnalysisStartPoint] = tr.[CounterDateIndex] + 1
+		FROM
+			#Trendlines t
+			LEFT JOIN (SELECT * FROM #TempRanges WHERE number = 1) tr
+			ON tr.[TrendlineId] = t.[TrendlineId];
+		
+		DROP TABLE #TempRanges;
+
+		SELECT 'Right-Side-Trendlines', * FROM #Trendlines;
+
+	END
+
+	
+	-- Proper analysis process.
+	BEGIN
+		
+		DECLARE @trendlineStartOffset AS INT = 0;
+		DECLARE @maxDeviationFromTrendline AS FLOAT = 0.001;
+		DECLARE @minDistanceFromExtremumToBreak AS INT = 5;
+		DECLARE @maxCheckRange AS INT = 10; -- as multiplier of distance between extrema.
+		DECLARE @remainingTrendlines AS INT = (SELECT COUNT(*) FROM #Trendlines);
+
+		WHILE @remainingTrendlines > 0
+		BEGIN
+			
+			-- [1] Find first breaks to the right of the current point.
+			BEGIN
+
+				-- [1.1] Get proper set of quotes required for analysis and insert them into Quotes_Iteration table.
+				BEGIN
+
+					-- [1.1.1] Calculate minimal and maximal required quotation.
+					SELECT
+						MIN(a.[startQuote]) AS [Min],
+						MAX(a.[endQuote]) AS [Max]
+					INTO
+						#BorderPoints
+					FROM
+						(SELECT 
+							t.[AnalysisStartPoint] AS [startQuote],
+							t.[AnalysisStartPoint] + (@maxCheckRange * t.[CandlesDistance]) AS [endQuote]
+						FROM
+							#Trendlines t) a;
+					
+					DECLARE @minQuoteIndex AS INT = (SELECT [Min] FROM #BorderPoints);
+					DECLARE @maxQuoteIndex AS INT = (SELECT [Max] FROM #BorderPoints);
+
+
+					-- [1.1.2] Load proper set of quotes based on [min] and [max] value obtained above.
+					DELETE FROM #Quotes_Iteration;
+					INSERT INTO #Quotes_Iteration
+					SELECT * 
+					FROM #Quotes_AssetTimeframe
+					WHERE [DateIndex] BETWEEN @minQuoteIndex AND @maxQuoteIndex;
+					
+					-- [1.1.3] Clean up
+					DROP TABLE #BorderPoints;
+
+				END
+
+				-- [1.2] Create matching table between trendlines and quotations.
+				BEGIN
+
+					SELECT
+						t.[TrendlineId],
+						q.[DateIndex],
+						q.[Close] * t.[LookForPeaks] AS [ModifiedClose],
+						q.[Open] * t.[LookForPeaks] AS [ModifiedOpen],
+						(t.[baseLevel] + (q.[DateIndex] - t.[BaseDateIndex]) * t.[Angle]) * t.[LookForPeaks] AS [ModifiedTrendlineLevel],
+						t.[LookForPeaks]
+					INTO
+						#TrendlineQuotePairs
+					FROM
+						#Trendlines t
+						LEFT JOIN #Quotes_Iteration q
+						ON q.[DateIndex] BETWEEN t.[AnalysisStartPoint] AND (t.[AnalysisStartPoint] + (@maxCheckRange * t.[CandlesDistance]));
+					
+				END
+
+				-- [1.3] Filter only data with Close and Open prices above Resistance line or below Support Line.
+				BEGIN
+
+					SELECT
+						t.[TrendlineId], 
+						t.[DateIndex], 
+						t.[LookForPeaks]
+					INTO
+						#FilteredTrendlineQuotePairs
+					FROM
+						#TrendlineQuotePairs t
+					WHERE
+						t.[ModifiedTrendlineLevel] < t.[ModifiedClose] AND t.[ModifiedTrendlineLevel] < t.[ModifiedOpen]					
+					
+				END
+
+				-- [1.4] Select the first break for each analyzed trendline.
+				BEGIN
+
+					SELECT
+						ft.[TrendlineId], 
+						ft.[LookForPeaks],
+						MIN(ft.[DateIndex]) AS [DateIndex]
+					INTO 
+						#TrendlinesFirstBreaks
+					FROM
+						#FilteredTrendlineQuotePairs ft
+					GROUP BY
+						ft.[TrendlineId], ft.[LookForPeaks];
+
+				END
+
+				-- [1.5] Insert information obtained above to the proper tables for the next iteration of analysis.
+				BEGIN
+					
+					-- [Trend breaks]
+					INSERT INTO #TrendBreaks([TrendlineId], [DateIndex], [BreakFromAbove])
+					SELECT tfb.[TrendlineId], tfb.[DateIndex], tfb.[LookForPeaks]
+					FROM #TrendlinesFirstBreaks tfb;
+
+					-- [Trendlines]
+					UPDATE t
+					SET [BreakIndex] = tfb.[DateIndex]
+					FROM 
+						#Trendlines t
+						LEFT JOIN #TrendlinesFirstBreaks tfb
+						ON t.[TrendlineId] = tfb.[TrendlineId];
+
+				END
+
+				-- [1.6] Clean up.
+				BEGIN
+					DROP TABLE #TrendlineQuotePairs;
+					DROP TABLE #FilteredTrendlineQuotePairs;
+					DROP TABLE #TrendlinesFirstBreaks;
+				END
+
+			END
+
+
+			-- [2] Find all trend hits between 
+			BEGIN
+
+				-- [2.1] Select extremum groups required for this analysis.
+				BEGIN
+
+					-- [2.1.1] Calculate minimal and maximal required quotation.
+					SELECT
+						MIN(a.[startDateIndex]) AS [Min],
+						MAX(a.[endDateIndex]) AS [Max]
+					INTO
+						#ExtremumGroupsBorderPoints
+					FROM
+						(SELECT 
+							t.[AnalysisStartPoint] AS [startDateIndex],
+							t.[AnalysisStartPoint] + (@maxCheckRange * t.[CandlesDistance]) AS [endDateIndex]
+						FROM 
+							#Trendlines t) a;
+					
+					DECLARE @minDateIndex AS INT = (SELECT [Min] FROM #ExtremumGroupsBorderPoints);
+					DECLARE @maxDateIndex AS INT = (SELECT [Max] FROM #ExtremumGroupsBorderPoints);
+
+
+					-- [2.1.2] Load proper set of extremum group based on [min] and [max] value obtained above.
+					DELETE FROM #ExtremumGroups;
+					INSERT INTO #ExtremumGroups
+					SELECT * 
+					FROM [dbo].[extremumGroups]
+					WHERE 
+						[AssetId] = @assetId AND
+						[TimeframeId] = @timeframeId AND
+						[StartDateIndex] >= @minQuoteIndex AND 
+						[EndDateIndex] <= @maxQuoteIndex;
+
+
+					-- [2.1.3] Drop temporary tables.
+					DROP TABLE #ExtremumGroupsBorderPoints;
+					
+				END
+				
+				-- [2.2] Find borders for matching for each separate trendline (depending on breaks found before).
+				BEGIN
+
+					SELECT
+						t.*,
+						t.[AnalysisStartPoint] AS [MatchingLeftBorder],
+						IIF(t.[BreakIndex] IS NULL, t.[AnalysisStartPoint] + (@maxCheckRange * t.[CandlesDistance]), t.[BreakIndex] - @minDistanceFromExtremumToBreak) AS [MatchingRightBorder]
+					INTO 
+						#TrendlinesHitsSearchBorders
+					FROM
+						#Trendlines t;
+
+				END
+
+				-- [2.3] Create table with all possible matches Trendline-ExtremumGroup.
+				BEGIN
+					
+					SELECT
+						t.[TrendlineId],
+						t.[LookForPeaks],
+						(t.[BaseLevel] + (eg.[SlaveDateIndex] - t.[BaseDateIndex]) * t.[Angle]) AS [TrendlineLevel],
+						eg.[ExtremumGroupId],
+						eg.[StartDateIndex] AS [ExtremumStartIndex],
+						eg.[ExtremumPriceLevel] AS [ExtremumPrice]
+					INTO
+						#TrendlineExtremumPossibleMatches
+					FROM
+						#TrendlinesHitsSearchBorders t
+						LEFT JOIN #ExtremumGroups eg
+						ON  eg.[IsPeak] = t.[LookForPeaks] AND 
+							eg.[StartDateIndex] BETWEEN t.[MatchingLeftBorder] AND t.[MatchingRightBorder];
+
+					SELECT 
+						t.[TrendlineId],
+						t.[ExtremumGroupId],
+						t.[ExtremumStartIndex] AS [ExtremumStartIndex],
+						t.[LookForPeaks],
+						t.[ExtremumPrice] * t.[LookForPeaks] AS [ModifiedPrice],
+						t.[TrendlineLevel] * t.[LookForPeaks] AS [ModifiedTrendlineLevel],
+						IIF(t.[TrendlineLevel] > 0, 1, -1) AS [TrendlineAboveZero],
+						(t.[TrendlineLevel] - t.[ExtremumPrice]) / t.[TrendlineLevel] AS [PriceTrendlineDistance]
+					INTO
+						#TrendlineMatchesWithModifiedPrices
+					FROM
+						#TrendlineExtremumPossibleMatches t;
+
+				END
+
+				-- [2.4] Filter out prices that are not close enough to matched trendline and insert rest of records into TrendHits temporary table.
+				BEGIN
+
+					INSERT INTO #TrendHits([TrendlineId], [ExtremumGroupId], [DateIndex])
+					SELECT
+						t.[TrendlineId],
+						t.[ExtremumGroupId],
+						t.[ExtremumStartIndex]
+					FROM
+						#TrendlineMatchesWithModifiedPrices t
+					WHERE
+						t.[LookForPeaks] * t.[PriceTrendlineDistance] * t.[TrendlineAboveZero]  < @maxDeviationFromTrendline;
+
+				END
+
+				-- [2.5] Remove duplicates from temporary #TrendHits table.
+				BEGIN
+
+					WITH CTE AS(
+					   SELECT [TrendlineId], [ExtremumGroupId], RN = ROW_NUMBER()
+					   OVER(PARTITION BY [TrendlineId], [ExtremumGroupId] ORDER BY [TrendlineId], [ExtremumGroupId])
+					   FROM #TrendHits
+					)
+					DELETE FROM CTE WHERE RN > 1					
+
+				END
+
+				-- [2.6] Append info about trend hits found to temporary #Trendlines table.
+				BEGIN
+
+					-- [2.6.1] Create temporary table with the earliest trend hit for each trendline.
+					SELECT
+						th.[TrendlineId],
+						MAX(th.[DateIndex]) AS [LastHit]
+					INTO 
+						#LatestTrendHits
+					FROM
+						#TrendHits th
+					GROUP BY
+						th.[TrendlineId];
+
+					-- [2.6.2] Update TrendHit pointers.
+					UPDATE t
+					SET 
+						[HitIndex] = h.[LastHit]
+					FROM
+						#Trendlines t
+						LEFT JOIN #LatestTrendHits h
+						ON t.[TrendlineId] = h.[TrendlineId]
+					WHERE
+						t.[IsOpenFromRight] = 1 AND
+						h.[LastHit] >= t.[AnalysisStartPoint];
+
+					-- [2.6.3] Clean up
+					DROP TABLE #EarliestTrendHits;	
+
+				END
+
+				-- [2.7] Remove temporary tables.
+				BEGIN
+					DROP TABLE #TrendlinesHitsSearchBorders
+					DROP TABLE #TrendlineExtremumPossibleMatches;
+					DROP TABLE #TrendlineMatchesWithModifiedPrices;
+				END
+
+			END
+
+
+
+
+			-- [3] Prepare data for next iteration based on breaks and hits found.
+			BEGIN
+
+				-- [3.1] Move all trendlines without break nor hit to ClosedTrendlines table.
+				BEGIN
+
+					-- [3.1.1] Select all trendlines without break nor hit.
+					SELECT *
+					INTO #TrendlinesWithoutEvent
+					FROM #Trendlines t
+					WHERE 
+						(t.[BreakIndex] IS NULL AND t.[HitIndex] IS NULL) OR
+						(t.[BreakIndex] IS NOT NULL AND t.[PrevBreakIndex] IS NOT NULL AND t.[HitIndex] IS NULL) OR
+						(t.[BreakIndex] IS NOT NULL AND t.[HitIndex] IS NULL AND t.[PrevHitIndex] IS NULL);
+
+					-- [3.1.2] Update their [StartDateIndex] property.
+					UPDATE #TrendlinesWithoutEvent
+					SET 
+						[IsOpenFromLeft] = 0,
+						[StartDateIndex] = COALESCE([PrevHitIndex], [AnalysisStartPoint]) - @trendlineStartOffset;
+
+					-- [3.1.3] Insert those records into [ClosedTrendlines] table.
+					INSERT INTO #ClosedTrendlines
+					SELECT * FROM #TrendlinesWithoutEvent;
+
+					-- [3.1.4] Remove them from table with open trendlines.
+					DELETE 
+					FROM #Trendlines
+					WHERE 
+						([BreakIndex] IS NULL AND [HitIndex] IS NULL) OR
+						([BreakIndex] IS NOT NULL AND [PrevBreakIndex] IS NOT NULL AND [HitIndex] IS NULL) OR
+						([BreakIndex] IS NOT NULL AND [HitIndex] IS NULL AND [PrevHitIndex] IS NULL);
+
+					-- [3.1.5] Drop temporary table.
+					DROP TABLE #TrendlinesWithoutEvent;
+
+				END
+
+				-- [3.2] Update status of all remaining records in #Trendlines table.
+				BEGIN
+
+					UPDATE
+						#Trendlines
+					SET 
+						[LookForPeaks] = [LookForPeaks] * IIF([BreakIndex] IS NULL, 1, -1),
+						[AnalysisStartPoint] = COALESCE(IIF([BreakIndex] IS NOT NULL, [BreakIndex] - 1, [HitIndex] - 1), 0),
+						[PrevBreakIndex] = IIF([BreakIndex] IS NULL, [PrevBreakIndex], [BreakIndex]),
+						[BreakIndex] = NULL,
+						[PrevHitIndex] = IIF([HitIndex] IS NULL, [PrevHitIndex], [HitIndex]),
+						[HitIndex] = NULL;
+
+				END
+
+			END
+
+			SET @remainingTrendlines = (SELECT COUNT(*) FROM #Trendlines);
+
+		END
+
+	END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	-- Drop temporary tables.
+	BEGIN
+
+		DROP TABLE #TrendBreaks;
+		DROP TABLE #TrendHits;
+		DROP TABLE #TrendRanges;
+		DROP TABLE #Trendlines;
+		DROP TABLE #ClosedTrendlines;
+		DROP TABLE #Quotes_AssetTimeframe;
+		DROP TABLE #Quotes_Iteration;
+		DROP TABLE #ExtremumGroups;
+
+	END
+
+END
+GO
+
+
 
 
 CREATE PROC [dbo].[processTrendlines] @assetId AS INT, @timeframeId AS INT
@@ -1358,6 +2127,7 @@ BEGIN
 	
 	EXEC [dbo].[findNewTrendlines] @assetId = @assetId, @timeframeId = @timeframeId;
 	EXEC [dbo].[analyzeTrendlinesLeftSide] @assetId = @assetId, @timeframeId = @timeframeId;
+	EXEC [dbo].[analyzeTrendlinesRightSide] @assetId = @assetId, @timeframeId = @timeframeId;
 
 	--Update timestamp.
 	BEGIN
