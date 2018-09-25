@@ -275,7 +275,6 @@
     <Content Include="Content\images\xcf\POL.xcf" />
     <Content Include="Content\images\xcf\valid.xcf" />
     <Content Include="Scripts\analysis\AnalysisController.js" />
-    <Content Include="Scripts\charts\TimescaleLine.js" />
     <Content Include="Scripts\charts\DateTimeLine.js" />
     <Content Include="Scripts\charts\ValuePanel.js" />
     <Content Include="Scripts\charts\SvgPanel.js" />

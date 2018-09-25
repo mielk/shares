@@ -46,7 +46,6 @@ namespace Stock.Web
                         "~/Scripts/charts/Chart.js",
                         "~/Scripts/charts/ChartsContainer.js",
                         "~/Scripts/charts/ChartController.js",
-                        "~/Scripts/charts/TimescaleLine.js",
                         "~/Scripts/charts/SvgPanel.js"));
 
             bundles.Add(new ScriptBundle("~/bundles/analysis").Include(

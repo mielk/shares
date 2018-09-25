@@ -48,7 +48,6 @@
         self.chart = new Chart(self, { type: STOCK.INDICATORS.PRICE });
         //self.valuePanel = new ChartValuePanel(self);
         //self.datetimeLine = new DateTimeLine(self);
-        //self.timescaleLine = new TimescaleLine(self);
     }
 
     function assignEvents() {

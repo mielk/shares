@@ -9,17 +9,18 @@ USE [fx];
 BEGIN TRANSACTION
 
 EXEC [dbo].[test_addQuoteFromRawH1] @counter = 10
-EXEC [dbo].[processExtrema] @assetId = 1, @timeframeId = 4;
-EXEC [dbo].[processTrendlines] @assetId = 1, @timeframeId = 4;
+EXEC [dbo].[processAdx] @assetId = 1, @timeframeId = 4;
+--EXEC [dbo].[processExtrema] @assetId = 1, @timeframeId = 4;
+--EXEC [dbo].[processTrendlines] @assetId = 1, @timeframeId = 4;
 
 SELECT 'Timestamps after', * FROM [dbo].[timestamps];
 --SELECT * FROM [dbo].[quotes] WHERE [TimeframeId] = 4;
-SELECT [ExtremumId], [DateIndex], IIF([ExtremumTypeId] < 3, 'Peak', 'Trough') AS [Peak/Trough], IIF([ExtremumTypeId] % 2 = 0, 'By Extremum', 'By OC'), [Value] FROM [dbo].[extrema] ORDER BY [DateIndex] ASC;
+--SELECT [ExtremumId], [DateIndex], IIF([ExtremumTypeId] < 3, 'Peak', 'Trough') AS [Peak/Trough], IIF([ExtremumTypeId] % 2 = 0, 'By Extremum', 'By OC'), [Value] FROM [dbo].[extrema] ORDER BY [DateIndex] ASC;
 --SELECT * FROM [dbo].[ExtremumGroups];
 --SELECT * FROM [dbo].[trendlines];
 --SELECT * FROM [dbo].[trendBreaks];
 --SELECT * FROM [dbo].[trendHits];
-SELECT * FROM [dbo].[trendRanges];
+--SELECT * FROM [dbo].[trendRanges];
 
 --SELECT
 --	t.[TrendlineId],
@@ -33,7 +34,7 @@ SELECT * FROM [dbo].[trendRanges];
 --	b.[Counter] * h.[Counter] DESC,
 --	h.[Counter] DESC;
 
---select * from [dbo].[quotes];
+select * from [adx];
 
 
 COMMIT TRANSACTION;

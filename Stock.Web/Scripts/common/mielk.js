@@ -1081,6 +1081,47 @@
     })();
 
 
+    var svg = (function () {
+        var ns = 'http://www.w3.org/2000/svg';
+
+        function createSvg() {
+            return document.createElementNS(ns, 'svg');
+        }
+
+        function createPath(d) {
+            var path = document.createElementNS(ns, 'path');
+            path.setAttribute('d', d);
+            return path;
+        }
+
+        function createRectangle(width, height, fill) {
+            var rect = document.createElementNS(ns, 'rect');
+            rect.width.baseVal.value = width;
+            rect.height.baseVal.value = height;
+            rect.style.fill = fill;
+            return rect;
+        }
+
+        function createCircle(cx, cy, radius, fill, stroke) {
+            var circle = document.createElementNS(ns, 'circle');
+            circle.setAttribute('cx', cx);
+            circle.setAttribute('cy', cy);
+            circle.setAttribute('r', radius);
+            circle.style.fill = fill;
+            circle.style.stroke = stroke;
+            return circle;
+        }
+
+        return {
+            createSvg: createSvg,
+            createRectangle: createRectangle,
+            createPath: createPath,
+            createCircle: createCircle
+        };
+
+    })();
+
+
     /*
      * Wrapper for functions defined above.
      */
@@ -1103,7 +1144,8 @@
         arrays: arrays,
         numbers: numbers,
         text: text,
-        dates: dates
+        dates: dates,
+        svg: svg
     };
 
 

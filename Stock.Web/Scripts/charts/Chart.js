@@ -22,24 +22,29 @@ function Chart(parentContainer, params) {
     var infoDiv = document.getElementById(infoDivId);
     var svgDiv = document.getElementById(svgDiv);
 
-    //UI classes.
-    var svg = new SvgPanel({
-        parent: self,
-        key: self.key,
-        container: svgDiv,
-        type: self.type
-    });
+    //Data.
+    self.dataInfo = null;
+    self.data = null;
+    self.countItems = function () {
+        if (data) {
+            return data.quotations.length;
+        }
+    };
+    self.getItemsRange = function () {
+        var info = self.dataInfo;
+        if (info) {
+            return info.endIndex - info.startIndex;
+        }
+    }
 
-    var timescale = new TimescaleLine({
-        parent: self,
-        key: self.key,
-        timelineFrameId: 'timeline-frame',
-        timelinePointerContainerId: 'timeline-pointer-container',
-        timelinePointerBorderId: 'timeline-pointer-border',
-        timelinePointerInsideId: 'timeline-pointer-inside',
-        timelinePointerLeftExpanderId: 'timeline-pointer-left-expander',
-        timelinePointerRightExpanderId: 'timeline-pointer-right-expander'
-    });
+    //SVG panels.
+    var svgs = [];
+    self.activeSvg = null;
+
+    self.setActiveSvg = function (svg) {
+        self.activeSvg = svg;
+        svg.show();
+    };
 
 
 
@@ -53,44 +58,55 @@ function Chart(parentContainer, params) {
                 dataLoaded(e.params);
             }
         });
-
-        svg.bind({
-            postRender: function (e) {
-                runPostRenderActions(e.params);
-            }
-        });
-
-        timescale.bind({
-            postResize: function (e) {
-                self.trigger({
-                    type: 'postTimelineResize',
-                    params: e.params
-                });
-            }
-        });
-
     })();
 
     function dataInfoLoaded(params) {
-        self.trigger({
-            type: 'dataInfoLoaded',
-            params: { data: params }
-        });
+        self.dataInfo = params;
     }
 
     function dataLoaded(params) {
-        self.trigger({
-            type: 'dataLoaded',
-            params: { data: params.data }
-        });
+        self.data = params.data;
+        createSvgPanels();
     }
 
-    function runPostRenderActions(params) {
-        self.trigger({
-            type: 'postRender',
-            params: params
-        });
+    function createSvgPanels() {
+        var step = STOCK.CONFIG.candle.svgLevelsZoom;
+        var width = STOCK.CONFIG.candle.maxWidth;
+        var minWidth = STOCK.CONFIG.candle.minWidth;
+        var defaultWidth = STOCK.CONFIG.candle.defaultWidth;
+        var index = 1;
+
+        while (width > minWidth) {
+            var svg = new SvgPanel({
+                parent: self,
+                key: self.key + '_' + index,
+                container: svgDiv,
+                type: self.type,
+                candleWidth: width,
+                index: index
+            });
+            svg.hide();
+            svgs[index] = svg;
+
+            index++;
+            width = width / step;
+            if (width < defaultWidth) {
+                if (self.activeSvg == null){
+                    svg.render();
+                    self.setActiveSvg(svg);
+                }
+            }
+
+        }
+
     }
+
+    //function runPostRenderActions(params) {
+    //    self.trigger({
+    //        type: 'postRender',
+    //        params: params
+    //    });
+    //}
 
 
 
@@ -214,6 +230,7 @@ function Chart(parentContainer, params) {
     //}
 
 }
+
 Chart.prototype.bind = function (e) {
     $(this).bind(e);
 }

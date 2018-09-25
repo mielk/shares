@@ -1708,8 +1708,6 @@ BEGIN
 		
 		DROP TABLE #TempRanges;
 
-		SELECT 'Right-Side-Trendlines', * FROM #Trendlines;
-
 	END
 
 	
@@ -1957,7 +1955,7 @@ BEGIN
 				-- [2.6] Append info about trend hits found to temporary #Trendlines table.
 				BEGIN
 
-					-- [2.6.1] Create temporary table with the earliest trend hit for each trendline.
+					-- [2.6.1] Create temporary table with the latest trend hit for each trendline.
 					SELECT
 						th.[TrendlineId],
 						MAX(th.[DateIndex]) AS [LastHit]
@@ -1981,7 +1979,7 @@ BEGIN
 						h.[LastHit] >= t.[AnalysisStartPoint];
 
 					-- [2.6.3] Clean up
-					DROP TABLE #EarliestTrendHits;	
+					DROP TABLE #LatestTrendHits;	
 
 				END
 
@@ -1993,8 +1991,6 @@ BEGIN
 				END
 
 			END
-
-
 
 
 			-- [3] Prepare data for next iteration based on breaks and hits found.
@@ -2015,8 +2011,8 @@ BEGIN
 					-- [3.1.2] Update their [StartDateIndex] property.
 					UPDATE #TrendlinesWithoutEvent
 					SET 
-						[IsOpenFromLeft] = 0,
-						[StartDateIndex] = COALESCE([PrevHitIndex], [AnalysisStartPoint]) - @trendlineStartOffset;
+						[IsOpenFromRight] = 0,
+						[EndDateIndex] = COALESCE([PrevHitIndex], [AnalysisStartPoint]) + @trendlineStartOffset;
 
 					-- [3.1.3] Insert those records into [ClosedTrendlines] table.
 					INSERT INTO #ClosedTrendlines
@@ -2042,7 +2038,7 @@ BEGIN
 						#Trendlines
 					SET 
 						[LookForPeaks] = [LookForPeaks] * IIF([BreakIndex] IS NULL, 1, -1),
-						[AnalysisStartPoint] = COALESCE(IIF([BreakIndex] IS NOT NULL, [BreakIndex] - 1, [HitIndex] - 1), 0),
+						[AnalysisStartPoint] = COALESCE(IIF([BreakIndex] IS NOT NULL, [BreakIndex] + 1, [HitIndex] + 1), 0),
 						[PrevBreakIndex] = IIF([BreakIndex] IS NULL, [PrevBreakIndex], [BreakIndex]),
 						[BreakIndex] = NULL,
 						[PrevHitIndex] = IIF([HitIndex] IS NULL, [PrevHitIndex], [HitIndex]),
@@ -2068,7 +2064,325 @@ BEGIN
 
 
 
+	
+	-- Feed production DB tables with data obtained above.
+	BEGIN
+		
+		-- [1] Update data about validated trendlines into production tables.
+		BEGIN
+			
+			-- [1.0] Create temporary table with trendlines qualified for further analysis.
+			-- This step is redundant here. Only trendlines with some peaks already could reach this point,
+			-- otherwise they would be excluded in Left-Side analysis.
+			BEGIN
 
+				-- [1.0.1] Create table with data about validated trendlines.
+				SELECT 
+					*
+				INTO
+					#ValidatedTrendlines
+				FROM
+					#ClosedTrendlines ct;
+
+				-- [1.0.2] Create table containing IDs of all trendlines without a single hit to the left side.
+				SELECT 
+					ct.[TrendlineId]
+				INTO
+					#InvalidatedTrendlines
+				FROM
+					#ClosedTrendlines ct
+				WHERE
+					ct.[StartDateIndex] <> ct.[StartDateIndex];
+
+			END
+
+			-- [1.1] Move data of trend hits into the production TrendHits table.
+			BEGIN
+				
+				-- [1.1.1] Remove info about trend breaks for invalidated trendlines.
+				DELETE
+				FROM 
+					#TrendHits
+				WHERE 
+					[TrendlineId] IN (SELECT * FROM #InvalidatedTrendlines);
+
+				-- [1.1.2] Remove records with trend hits after trendline start.
+				DELETE th
+				FROM
+					#TrendHits th
+					LEFT JOIN #ClosedTrendlines ct
+					ON th.[TrendlineId] = ct.[TrendlineId]
+				WHERE
+					th.[DateIndex] > ct.[EndDateIndex];
+
+				-- [1.1.3] Insert records for hits at Counter Extremum Group date index.
+				-- Redundant in right-side analysis if was already added in Left-Side.
+					
+				-- [1.1.4] Remove duplicates from #TrendHits table.
+				WITH CTE AS(
+					SELECT [TrendlineId], [ExtremumGroupId], RN = ROW_NUMBER()
+					OVER(PARTITION BY [TrendlineId], [ExtremumGroupId] ORDER BY [TrendlineId], [ExtremumGroupId])
+					FROM #TrendHits
+				)
+				DELETE FROM CTE WHERE RN > 1
+
+				-- [1.1.5] Create temporary table to store IDs given by DB engine.
+				CREATE TABLE #TempTrendHitsForIdentityMatching(
+					[TrendHitId] [int] NOT NULL,
+					[TrendlineId] [int] NOT NULL,
+					[ExtremumGroupId] [int] NOT NULL
+				);
+
+				-- [1.1.6] Insert data into DB table.
+				INSERT INTO [dbo].[trendHits]([TrendlineId], [ExtremumGroupId])
+				OUTPUT Inserted.[TrendHitId], Inserted.[TrendlineId], Inserted.[ExtremumGroupId]
+				INTO #TempTrendHitsForIdentityMatching
+				SELECT [TrendlineId], [ExtremumGroupId]
+				FROM #TrendHits;
+
+				-- [1.1.7] Append IDs given by the DB engine to the records in the temporary table.
+				UPDATE th
+				SET 
+					[ProductionId] = h.[TrendHitId]
+				FROM
+					#TrendHits th
+					LEFT JOIN #TempTrendHitsForIdentityMatching h
+					ON  th.[TrendlineId] = h.[TrendlineId] AND
+						th.[ExtremumGroupId] = h.[ExtremumGroupId];
+
+				-- [1.1.8] Drop temporary table.
+				DROP TABLE #TempTrendHitsForIdentityMatching;
+
+			END
+
+			-- [1.2] Move data of trend breaks into the production TrendBreaks table.
+			BEGIN
+				
+				-- [1.2.1] Remove info about trend breaks for invalidated trendlines.
+				DELETE
+				FROM 
+					#TrendBreaks
+				WHERE 
+					[TrendlineId] IN (SELECT * FROM #InvalidatedTrendlines);
+
+				-- [1.2.2] Remove records with trend breaks after trendline end.
+				DELETE tb
+				FROM
+					#TrendBreaks tb
+					LEFT JOIN #ClosedTrendlines ct
+					ON tb.[TrendlineId] = ct.[TrendlineId]
+				WHERE
+					tb.[DateIndex] > ct.[EndDateIndex];
+
+				-- [1.2.3] Create temporary table to store IDs given by DB engine.
+				CREATE TABLE #TempTrendBreaksForIdentityMatching(
+					[TrendBreakId] [int] NOT NULL,
+					[TrendlineId] [int] NOT NULL,
+					[DateIndex] [int] NOT NULL
+				);
+
+				-- [1.2.4] Insert remaining trendlines into TrendBreaks table.
+				INSERT INTO [dbo].[TrendBreaks]([TrendlineId], [DateIndex], [BreakFromAbove])
+				OUTPUT Inserted.[TrendBreakId], Inserted.[TrendlineId], Inserted.[DateIndex]
+				INTO #TempTrendBreaksForIdentityMatching
+				SELECT
+					tb.[TrendlineId],
+					tb.[DateIndex],
+					tb.[BreakFromAbove]
+				FROM
+					#TrendBreaks tb;
+
+				-- [1.2.5] Append IDs given by the DB engine to the records in the temporary table.
+				UPDATE tb
+				SET 
+					[ProductionId] = b.[TrendBreakId]
+				FROM
+					#TrendBreaks tb
+					LEFT JOIN #TempTrendBreaksForIdentityMatching b
+					ON  tb.[TrendlineId] = b.[TrendlineId] AND
+						tb.[DateIndex] = b.[DateIndex];
+
+				-- [1.2.6] Drop temporary table.
+				DROP TABLE #TempTrendBreaksForIdentityMatching;
+
+			END
+
+			-- [1.3] Create and insert records about trend ranges.
+			BEGIN
+
+				-- [1.3.1] Create temporary table containing all breaks and hits from temporary tables.
+				SELECT
+					*, 
+					[number] = ROW_NUMBER() OVER (ORDER BY [TrendlineId], [DateIndex])
+				INTO
+					#CombinedBreaksAndHits
+				FROM
+					(SELECT [TrendlineId], [ProductionId], [DateIndex], 0 AS [IsHit]
+					FROM #TrendBreaks
+					UNION ALL
+					SELECT [TrendlineId], [ProductionId], [DateIndex], 1 AS [IsHit]
+					FROM #TrendHits) a;
+
+				-- [1.3.2] Create trend range border pairs and insert them into #TrendRanges temporary table.
+				INSERT INTO #TrendRanges([TrendlineId], [BaseId], [BaseIsHit], [BaseDateIndex], [CounterId], [CounterIsHit], [CounterDateIndex])
+				SELECT 
+					cb1.[TrendlineId], cb1.[ProductionId], cb1.[IsHit], cb1.[DateIndex], cb2.[ProductionId], cb2.[IsHit], cb2.[DateIndex]
+				FROM 
+					#CombinedBreaksAndHits cb1
+					INNER JOIN #CombinedBreaksAndHits cb2
+					ON  cb1.[TrendlineId] = cb2.[TrendlineId] AND
+						cb1.[number] = cb2.[number] - 1;
+
+				-- [1.3.3] Append info if the given trend range is top or bottom.
+				UPDATE tr
+				SET
+					[IsPeak] = eg.[IsPeak]
+				FROM
+					#TrendRanges tr
+					LEFT JOIN #TrendHits th ON (tr.[BaseIsHit] = 1 AND tr.[BaseId] = th.[ProductionId]) OR (tr.[CounterIsHit] = 1 AND tr.[CounterId] = th.[ProductionId])
+					LEFT JOIN [dbo].[extremumGroups] eg ON th.[ExtremumGroupId] = eg.[ExtremumGroupId];
+
+				-- [1.3.4] Call function evaluating trend ranges.
+				BEGIN
+					
+					DECLARE @TrendRangeBasicData AS [dbo].[TrendRangeBasicData];
+					INSERT INTO @TrendRangeBasicData
+					SELECT
+						tr.[TrendRangeId],
+						--tr.[TrendlineId],
+						t.[BaseDateIndex] AS [TrendlineStartDateIndex],
+						t.[BaseLevel] AS [TrendlineStartLevel],
+						t.[Angle] As [TrendlineAngle],
+						IIF(tr.[BaseIsHit] = 1, eg.[EndDateIndex] + 1, tr.[BaseDateIndex]) AS [StartIndex],
+						IIF(tr.[CounterIsHit] = 1, eg2.[StartDateIndex] - 1, tr.[CounterDateIndex]) AS [EndIndex],
+						tr.[IsPeak]
+					FROM
+						#TrendRanges tr
+						LEFT JOIN #TrendHits th ON tr.[BaseId] = th.[ProductionId]
+						LEFT JOIN [dbo].[extremumGroups] eg ON th.[ExtremumGroupId] = eg.[ExtremumGroupId]
+						LEFT JOIN #TrendHits th2 ON tr.[CounterId] = th2.[ProductionId]
+						LEFT JOIN [dbo].[extremumGroups] eg2 ON th2.[ExtremumGroupId] = eg2.[ExtremumGroupId]
+						LEFT JOIN [dbo].[trendlines] t ON tr.[TrendlineId] = t.[TrendlineId];
+
+
+					-- [1.3.4.1] Update variation data.
+					UPDATE tr
+					SET
+						[TotalCandles] = v.[TotalCandles],
+						[AverageVariation] = v.[TotalVariation] / v.[TotalCandles],
+						[ExtremumVariation] = v.[ExtremumVariation],
+						[OpenCloseVariation] = v.[OCVariation]
+					FROM
+						#TrendRanges tr
+						LEFT JOIN [dbo].[GetTrendRangesVariations](@assetId, @timeframeId, @TrendRangeBasicData) v ON tr.[TrendRangeId] = v.[TrendRangeId]
+
+					-- [1.3.4.2] Update cross data.
+					UPDATE tr
+					SET
+						[ExtremumPriceCrossPenaltyPoints] = v.[ExtremumPriceCrossPenaltyPoints],
+						[ExtremumPriceCrossCounter] = v.[ExtremumPriceCrossCounter],
+						[OCPriceCrossPenaltyPoints] = v.[OCPriceCrossPenaltyPoints],
+						[OCPriceCrossCounter] = v.[OCPriceCrossCounter]
+					FROM
+						#TrendRanges tr
+						LEFT JOIN [dbo].[GetTrendRangesCrossDetails](@assetId, @timeframeId, @TrendRangeBasicData) v ON tr.[TrendRangeId] = v.[TrendRangeId]
+							
+
+					--[TrendRangeBasicData]
+
+					--Select quotations necessary for evaluating trend ranges.
+
+					--SET @minQuoteIndex = (SELECT MIN([StartIndex]) FROM #TrendRangesLimits);
+					--SET @maxQuoteIndex = (SELECT MAX([EndIndex]) FROM #TrendRangesLimits);
+
+					--DELETE FROM #Quotes_Iteration;
+
+					--INSERT INTO #Quotes_Iteration
+					--SELECT
+					--	*
+					--FROM
+					--	#Quotes_AssetTimeframe qat
+					--WHERE
+					--	[DateIndex] BETWEEN @minQuoteIndex AND @maxQuoteIndex;
+
+				END
+
+
+
+
+				-- [1.3.x] Move ranges to the production table.
+				INSERT INTO [dbo].[trendRanges]([TrendlineId], [BaseId], [BaseIsHit], [BaseDateIndex], [CounterId], [CounterIsHit], [CounterDateIndex], [IsPeak],
+												[ExtremumPriceCrossPenaltyPoints], [ExtremumPriceCrossCounter], [OCPriceCrossPenaltyPoints], [OCPriceCrossCounter],
+												[TotalCandles], [AverageVariation], [ExtremumVariation], [OpenCloseVariation], [BaseHitValue], [CounterHitValue])
+				SELECT
+					[TrendlineId], 
+					[BaseId], 
+					[BaseIsHit], 
+					[BaseDateIndex], 
+					[CounterId], 
+					[CounterIsHit], 
+					[CounterDateIndex], 
+					[IsPeak],
+					[ExtremumPriceCrossPenaltyPoints], 
+					[ExtremumPriceCrossCounter], 
+					[OCPriceCrossPenaltyPoints], 
+					[OCPriceCrossCounter],
+					[TotalCandles], 
+					[AverageVariation], 
+					[ExtremumVariation], 
+					[OpenCloseVariation], 
+					[BaseHitValue], 
+					[CounterHitValue]
+				FROM
+					#TrendRanges;
+
+				-- [1.3.y] Clean up
+				BEGIN
+					DROP TABLE #CombinedBreaksAndHits;
+				END
+
+			END
+
+			-- [1.4] Update trendlines with any hit found.
+			UPDATE t
+			SET
+				[IsOpenFromRight] = 0,
+				[EndDateIndex] = ct.[EndDateIndex]
+			FROM
+				[dbo].[trendlines] t
+				LEFT JOIN (SELECT * FROM #ClosedTrendlines WHERE [EndDateIndex] >= [CounterDateIndex]) ct
+				ON t.[TrendlineId] = ct.[TrendlineId]
+			WHERE
+				ct.[TrendlineId] IS NOT NULL;
+
+		END
+
+		-- [2] Remove trendlines without a single hit.
+		BEGIN
+
+			-- [2.1] Remove trendlines with IDs listed above from production table.
+			BEGIN
+				
+				DELETE t
+				FROM
+					[dbo].[trendlines] t
+					LEFT JOIN #InvalidatedTrendlines it
+					ON t.[TrendlineId] = it.[TrendlineId]
+				WHERE
+					it.[TrendlineId] IS NOT NULL;
+
+			END
+
+		END
+
+		-- [3] Clean up
+		BEGIN
+			DROP TABLE #InvalidatedTrendlines;
+			DROP TABLE #ValidatedTrendlines;
+		END
+
+	
+	END
 
 
 

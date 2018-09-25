@@ -18,8 +18,6 @@ Date.prototype.isHoliday = function () {
 
     'use strict';
 
-
-
     var timeframes = {
         M5: {
             id: 1, name: '5 minutes', symbol: 'M5', period: 5, selectable: true,
@@ -227,18 +225,22 @@ Date.prototype.isHoliday = function () {
             margin: 0.1
         },
         candle: {
-            width: 8,
-            maxWidth: 24,
+            svgLevelsZoom: 1.04,
+            defaultWidth: 8,
+            maxWidth: 50,
             minWidth: 1,
             modifyWidth: function (width) {
                 this.width = Math.min(Math.max(width, this.minWidth), this.maxWidth);
             },
-            space: 0.45,
+            space: 0.4,
             color: {
-                ascending: '#2BC945', //'white',
-                descending: '#D55228'
-            }
-            
+                ascendingBody: '#6BA583', //'white',
+                ascendingLine: '#225437',
+                descendingBody: '#D75442',
+                descendingLine: '#5B1A13',
+                shadow: '#000000' //'#737375'
+            },
+            strokeWidth: 1
         },
 
         macd: {
@@ -258,11 +260,11 @@ Date.prototype.isHoliday = function () {
             width: 100
         }
         , svgPanel: {
-            height: 2000,
+            height: 400,
             width: 25000
         }
         , peaks: {
-            distance: 36
+            distance: 35
         }
         , trendlines: {
             color: 'black'

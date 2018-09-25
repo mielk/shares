@@ -7,110 +7,142 @@
     self.SvgPanel = true;
     self.parent = params.parent;
     self.type = params.type;
-    self.key = params.key + '_svg';
+    self.key = params.key;
+    self.index = params.index;
+    self.candleWidth = params.candleWidth;
+    self.isRendered = false;
 
-    //Bind events.
-    self.parent.bind({
-        dataLoaded: function (e) {
-            dataLoaded(e.params);
-        },
-        dataInfoLoaded: function (e) {
-            dataInfoLoaded(e.params);
-        },
-        postTimelineResize: function (e) {
-            runPostTimelineResizeAction(e.params);
-        }
-    });
-
-
-    //Loading data functions.
-    function dataInfoLoaded(params) {
+    self.render = function() {
         var r = self.renderer;
-        r.setDataInfo(params.data);
+        r.setDataInfo(self.parent.dataInfo);
+        r.setData(self.parent.data)
+        r.renderQuotations();
+        r.renderExtrema();
+        self.isRendered = true;
+
+        //    r.render();
+        //    self.trigger({
+        //        type: 'postRender',
+        //        params: getPostRenderProperties()
+        //    });
+
     }
 
-    function dataLoaded(params) {
-        var r = self.renderer;
-        r.setData(params.data);
-        r.render();
-        self.trigger({
-            type: 'postRender',
-            params: getPostRenderProperties()
-        });
-    }
+    //function getPostRenderProperties() {
+    //    var dataInfo = self.renderer.data.getDataInfo();
+    //    var position = self.layout.getPosition();
+    //    var result = {
+    //        maxValue: dataInfo.max,
+    //        minValue: dataInfo.min,
+    //        viewHeight: position.viewHeight,
+    //        viewWidth: position.viewWidth,
+    //        top: position.top,
+    //        left: position.left,
+    //        svgWidth: position.svgWidth,
+    //        svgHeight: position.svgHeight,
+    //        svgBaseWidth: self.baseSize.width,
+    //        svgBaseHeight: self.baseSize.height
+    //    };
+    //    return result;
+    //}
 
-    function getPostRenderProperties() {
-        var dataInfo = self.renderer.data.getDataInfo();
-        var position = self.layout.getPosition();
-        var result = {
-            maxValue: dataInfo.max,
-            minValue: dataInfo.min,
-            viewHeight: position.viewHeight,
-            viewWidth: position.viewWidth,
-            top: position.top,
-            left: position.left,
-            svgWidth: position.svgWidth,
-            svgHeight: position.svgHeight,
-            svgBaseWidth: self.baseSize.width,
-            svgBaseHeight: self.baseSize.height
-        };
-        return result;
-    }
-
-    function runPostTimelineResizeAction(params) {
-        if (params.resized) {
-            self.renderer.sizer.resizeHorizontally(params);
-        } else if (params.relocated) {
-            self.renderer.sizer.moveHorizontally(params);
-        }
-    }
+    //function runPostTimelineResizeAction(params) {
+    //    if (params.resized) {
+    //        self.renderer.sizer.resizeHorizontally(params);
+    //    } else if (params.relocated) {
+    //        self.renderer.sizer.moveHorizontally(params);
+    //    }
+    //}
 
 
     //[UI]
     self.baseSize = {
-        width: STOCK.CONFIG.svgPanel.width,
-        height: STOCK.CONFIG.svgPanel.height
+        width: Math.floor(self.candleWidth * self.parent.getItemsRange()),
+        height: Math.floor(STOCK.CONFIG.svgPanel.height)
     };
+
     self.ui = (function () {
-
         var parentContainer = params.container;
+        var candlesKey = self.key + '_candles';
+        var trendlinesKey = self.key + '_trendlines';
+        var extremaKey = self.key + '_extrema';
+        var svgCandles = null;
+        var svgExtrema = null;
 
-        //Append SVG container.
-        var svgContainer = $('<div/>', {
+        //Candles container.
+        var svgsContainer = $('<div/>', {
             'class': 'chart-svg-panel',
-            id: self.key
+            id: candlesKey
         }).css({
-            'height': self.baseSize.height + 'px',
+            'height': (self.baseSize.height + 100) + 'px',
             'width': self.baseSize.width + 'px',
             'left': 0,
-            'top': 0
-        }).appendTo(parentContainer);
-
-        var svg = Raphael(self.key);
-        svg.setViewBox(0, 0, self.baseSize.width, self.baseSize.height, true);
-        svg.canvas.setAttribute('preserveAspectRatio', 'none');
+            'top': 0,
+            'visibility': 'hidden'
+        }).appendTo(parentContainer)[0];
 
 
+
+        //var svgCandles = Raphael(candlesKey);
+        //svgCandles.setViewBox(0, 0, self.baseSize.width, self.baseSize.height, true);
+        //svgCandles.canvas.setAttribute('preserveAspectRatio', 'none');
+
+        //var svgTrendlines = Raphael(trendlinesKey);
+        //svgTrendlines.setViewBox(0, 0, self.baseSize.width, self.baseSize.height, true);
+        //svgTrendlines.canvas.setAttribute('preserveAspectRatio', 'none');
+
+        //Extrema container.
+
+
+
+        function insertSvgQuotations() {
+            var svg = mielk.svg.createSvg();
+            var height = $(svgsContainer).height() - 100;
+            
+            svg.setAttribute('viewBox', '0 0 ' + self.baseSize.width + ' ' + height);
+            svg.setAttribute('preserveAspectRatio', 'none meet');
+            svg.style.top = '50px';
+            svg.style.height = height + 'px';
+
+            svgsContainer.appendChild(svg);
+            return svg;
+
+        }
+
+        function insertSvgExtrema() {
+            var svg = mielk.svg.createSvg();
+            var width = $(svgsContainer).width();
+            var height = $(svgsContainer).height();
+
+            svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+            svg.setAttribute('preserveAspectRatio', 'none meet');
+            svg.style.top = 0;
+            svg.style.height = height + 'px';
+
+            svgsContainer.appendChild(svg);
+            return svg;
+
+        }
 
         function resize(e) {
             var resized = false;
             if (e.height) {
-                $(svgContainer).height(e.height);
+                $(svgsContainer).height(e.height);
                 resized = true;
             }
             if (e.width) {
-                $(svgContainer).width(e.width);
+                $(svgsContainer).width(e.width);
                 resized = true;
             }
             if (e.top) {
-                $(svgContainer).css({ top: e.top + 'px' });
+                $(svgsContainer).css({ top: e.top + 'px' });
             }
             if (e.left) {
-                $(svgContainer).css({ left: e.left + 'px' });
+                $(svgsContainer).css({ left: e.left + 'px' });
             }
 
             if (resized) {
-                self.renderer.pathCalculator.updateSizeParams();
+                self.renderer.updateSizeParams();
             }
 
             self.trigger({
@@ -122,43 +154,55 @@
             });
         }
 
+        function show() {
+            $(svgsContainer).css('visibility', 'visible').css('display', 'block');
+        }
+
+        function hide() {
+            $(svgsContainer).css('visibility', 'hidden').css('display', 'none');
+        }
+
         return {
             getContainer: function () {
                 return parentContainer;
             },
-            getSvgContainer: function () {
-                return svgContainer;
+            getSvgsContainer: function () {
+                return svgsContainer;
             },
-            getSize: function () {
-                return size;
+            getCandlesSvg: function () {
+                if (svgCandles === null) {
+                    svgCandles = insertSvgQuotations();
+                }
+                return svgCandles;
             },
-            getWidth: function () {
-                return size.width;
+            getTrendlinesSvg: function () {
+                return svgTrendlines;
             },
-            getHeight: function () {
-                return size.height;
+            getExtremaSvg: function () {
+                if (svgExtrema === null) {
+                    svgExtrema = insertSvgExtrema();
+                }
+                return svgExtrema;
             },
-            getSvg: function () {
-                return svg;
-            },
-            resize: resize
+            resize: resize,
+            show: show,
+            hide: hide
         };
 
     })();
-    self.renderer = self.type.svgRenderer({
-        parent: self,
-        svg: self.ui.getSvg()
-    });
 
+    self.renderer = self.type.svgRenderer({
+        parent: self
+    });
 
     //Layout service.
     self.layout = function () {
 
         var parentDiv = self.ui.getContainer();
-        var svgDiv = self.ui.getSvgContainer();
+        var candlesSvg = self.ui.getCandlesSvg();
 
         function getPosition() {
-            var position = $(svgDiv).position();
+            var position = $(candlesSvg).position();
             var width = $(parentDiv).width();
             var height = $(parentDiv).height();
             var right = position.left + width;
@@ -168,8 +212,8 @@
                 top: position.top,
                 right: right,
                 bottom: bottom,
-                svgWidth: $(svgDiv).width(),
-                svgHeight: $(svgDiv).height(),
+                svgWidth: $(candlesSvg).width(),
+                svgHeight: $(candlesSvg).height(),
                 viewLeftX: -position.left,
                 viewRightX: -position.left + width,
                 viewWidth: width,
@@ -177,21 +221,43 @@
             };
         };
 
-        function getSvgSize() {
+        function getCandlesSvgSize() {
             return {
-                width: $(svgDiv).width(),
-                height: $(svgDiv).height()
+                width: $(candlesSvg).width(),
+                height: $(candlesSvg).height()
             }
+        }
+
+        function getExtremaSvgOffset() {
+            var extremaSvg = self.ui.getExtremaSvg();
+            var candlesSvg = self.ui.getCandlesSvg();
+
+            if (extremaSvg && candlesSvg) {
+                var extremaHeight = $(extremaSvg).height();
+                var candlesHeight = $(candlesSvg).height();
+                return extremaHeight - candlesHeight;
+            }
+
         }
 
         return {
             getPosition: getPosition,
-            getSvgSize: getSvgSize
+            getCandlesSvgSize: getCandlesSvgSize,
+            getExtremaSvgOffset: getExtremaSvgOffset
         };
 
     }();
 
+    self.show = function () {
+        self.ui.show();
+    };
+
+    self.hide = function () {
+        self.ui.hide();
+    };
+
 }
+
 SvgPanel.prototype.bind = function (e) {
     $(self).bind(e);
 }
@@ -206,12 +272,89 @@ function AbstractSvgRenderer(params) {
     var self = this;
     self.AbstractSvgRenderer = true;
     self.parent = params.parent;
-    self.svg = params.svg;
     self.drawObjects = [];
 
+    //Data manager.
+    self.dataInfo = {};
+    self.quotations = [];
+    self.trendlines = [];
+    self.extrema = [];
+
     self.params = {
-        created: true
+        created: true,
+        candleWidth: self.parent.candleWidth,
+        spaceShare: STOCK.CONFIG.candle.space
     };
+
+    self.updateSizeParams = function () {
+        var candlesSvgSize = self.parent.layout.getCandlesSvgSize();
+        self.params.extremaSvgOffset = self.parent.layout.getExtremaSvgOffset();
+        self.params.oneUnitHeight = candlesSvgSize.height / self.dataInfo.levelDifference;
+        self.params.candlePadding = self.params.candleWidth * self.params.spaceShare / 2;
+        self.params.bodyWidth = self.params.candleWidth * (1 - self.params.spaceShare);
+    };
+
+
+    //Setters
+    self.setDataInfo = function (dataInfo) {
+        self.dataInfo = dataInfo;
+        self.updateSizeParams();
+    }
+    self.setData = function (data) {
+        self.quotations = data.quotations;
+        self.trendlines = data.trendlines;
+        self.extrema = (function () {
+            var result = [];
+            data.quotations.forEach(function (item) {
+                if (item.price.PeakByClose) {
+                    result.push(item);
+                } else if (item.price.PeakByHigh) {
+                    result.push(item);
+                } else if (item.price.TroughByClose) {
+                    result.push(item);
+                } else if (item.price.TroughByLow) {
+                    result.push(item);
+                }
+            });
+
+            return result;
+
+        })();
+    }
+
+
+    self.data = (function () {
+        function getPartDataInfo(first, last) {
+            var firstIndex = Math.max(first, 0);
+            var lastIndex = Math.min(last, self.quotations.length - 1);
+            var firstItem = self.quotations[firstIndex];
+            var lastItem = self.quotations[lastIndex];
+            var max = firstItem.quotation.High;
+            var min = firstItem.quotation.Low;
+            for (var i = firstIndex + 1; i <= lastIndex; i++) {
+                var item = self.quotations[i];
+                if (item.quotation.High > max) max = item.quotation.High;
+                if (item.quotation.Low < min) min = item.quotation.Low;
+            }
+
+            return {
+                startDate: firstItem.Date,
+                startIndex: firstItem.DateIndex,
+                endDate: lastItem.Date,
+                endIndex: lastItem.DateIndex,
+                counter: (lastIndex - firstIndex + 1),
+                max: max,
+                min: min,
+                levelDifference: max - min
+            };
+
+        };
+
+        return {
+            getPartDataInfo: getPartDataInfo
+        };
+
+    })();
 
 
     //Services.
@@ -219,31 +362,31 @@ function AbstractSvgRenderer(params) {
 
         function adjustVertically() {
             var layout = self.parent.layout.getPosition();
-            var itemsRange = self.pathCalculator.getItemsRange(layout.viewLeftX, layout.viewRightX);
+            var itemsRange = self.quotationsPathMaker.getItemsRange(layout.viewLeftX, layout.viewRightX);
             var dataInfo = self.data.getPartDataInfo(itemsRange.firstIndex, itemsRange.lastIndex);
-            var verticalAdjustments = self.pathCalculator.calculateVerticalAdjustments(dataInfo, layout.viewHeight);
+            var verticalAdjustments = self.quotationsPathMaker.calculateVerticalAdjustments(dataInfo, layout.viewHeight);
             self.parent.ui.resize({ height: verticalAdjustments.height, top: verticalAdjustments.top });
         }
 
-        function resizeHorizontally(params) {
-            var layout = self.parent.layout.getPosition();
-            var width = layout.viewWidth / params.relativeWidth;
-            var left = params.relativeLeft * layout.svgWidth * (-1);
-            self.parent.ui.resize({ left: left, width: width });
-            adjustVertically();
-        }
+        //function resizeHorizontally(params) {
+        //    var layout = self.parent.layout.getPosition();
+        //    var width = layout.viewWidth / params.relativeWidth;
+        //    var left = params.relativeLeft * layout.svgWidth * (-1);
+        //    self.parent.ui.resize({ left: left, width: width });
+        //    adjustVertically();
+        //}
 
-        function moveHorizontally(params) {
-            var layout = self.parent.layout.getPosition();
-            var left = params.relativeLeft * layout.svgWidth * (-1);
-            self.parent.ui.resize({ left: left });
-            adjustVertically();
-        }
+        //function moveHorizontally(params) {
+        //    var layout = self.parent.layout.getPosition();
+        //    var left = params.relativeLeft * layout.svgWidth * (-1);
+        //    self.parent.ui.resize({ left: left });
+        //    adjustVertically();
+        //}
 
         return {
-            adjustVertically: adjustVertically,
-            resizeHorizontally: resizeHorizontally,
-            moveHorizontally: moveHorizontally
+              adjustVertically: adjustVertically
+            //, resizeHorizontally: resizeHorizontally
+            //, moveHorizontally: moveHorizontally
         };
 
     }();
@@ -251,32 +394,74 @@ function AbstractSvgRenderer(params) {
 
     //API.
     self.render = function () {
-        var paths = self.pathCalculator.calculate();
-        self.svg.clear();
-        paths.forEach(function (item) {
-            if (item.isCirclesSet) {
-                item.sets.forEach(function (obj) {
-                    var circle = self.svg.circle(obj.x, obj.y, obj.radius);
-                    circle.attr({
-                        'stroke': obj.stroke,
-                        'stroke-width': 1,
-                        'fill': obj.fill
-                    });
-                });
-            } else if (item.path) {
-                self.svg.path(item.path).attr(item.attr);
-            }
-        });
-        self.sizer.adjustVertically();
+        self.renderQuotations();
+        self.renderTrendlines();
+        self.renderExtrema();
     };
 
-    self.setDataInfo = function (e) {
-        self.data.setDataInfo(e);
-    }
+    self.renderQuotations = function () {
+        var mode = 0;   //0 - paths | 1 - rectangles
+        var svg = self.parent.ui.getCandlesSvg();
+        var strokeWidth = STOCK.CONFIG.candle.strokeWidth;
 
-    self.setData = function (e) {
-        self.data.setData(e);
-    }
+        if (mode === 0) {
+            var paths = self.quotationsPathMaker.getPaths(self.quotations);
+            paths.forEach(function (item) {
+                var path = mielk.svg.createPath(item.path);
+                path.style.stroke = item.attr.stroke;
+                path.style.strokeWidth = item.attr.strokeWidth + 'px';
+                path.style.fill = item.attr.fill;
+                path.style.vectorEffect = 'non-scaling-stroke';
+                path.style.shapeRendering = 'crispEdges'
+                svg.appendChild(path);
+            });
+        } else if (mode === 1){
+            //var rectangles = self.quotationsPathMaker.getPaths(quotations);
+            //rectangles.forEach(function (item) {
+            //    var rectangle = document.createElementNS("http://www.w3.org/2000/svg", 'rect');
+            //    rectangle.setAttribute('x', item.x);
+            //    rectangle.setAttribute('y', item.y);
+            //    rectangle.setAttribute('height', item.height);
+            //    rectangle.setAttribute('width', item.width);
+            //    rectangle.style.stroke = item.stroke;
+            //    rectangle.style.strokeWidth = strokeWidth + 'px';
+            //    rectangle.style.fill = item.fill;
+            //    rectangle.style.vectorEffect = 'non-scaling-stroke';
+            //    rectangle.style.shapeRendering = 'crispEdges'
+            //    svg.appendChild(rectangle);
+            //    //svg.path(item.path).attr(item.attr);
+            //});
+        }
+
+        self.sizer.adjustVertically();
+
+    };
+
+
+    self.renderTrendlines = function () {
+    };
+
+
+    self.renderExtrema = function () {
+        var svg = self.parent.ui.getExtremaSvg();
+        var strokeWidth = STOCK.CONFIG.candle.strokeWidth;
+        var circles = self.extremaPathMaker.getCircles(self.extrema);
+        circles.forEach(function (item) {
+            var circle = mielk.svg.createCircle(item.x, item.y, item.radius, item.fill, item.stroke);
+            circle.style.strokeWidth = item.strokeWidth + 'px';
+            circle.style.vectorEffect = 'non-scaling-stroke';
+            circle.style.shapeRendering = 'crispEdges'
+            svg.appendChild(circle);
+        });
+
+
+        //var rect = mielk.svg.createRectangle(100, 50, "blue");
+        //var circle = mielk.svg.createCircle(10, 10, 20, 'blue', 'black');
+        //svg.appendChild(rect);
+        //svg.appendChild(circle);
+        var x = 1;
+
+    };
 
 }
 
@@ -293,191 +478,272 @@ function PriceSvgRenderer(params) {
     self.params.minAllowed = 0;
     self.params.maxAllowed = null;
 
-    //Data manager.
-    self.data = (function () {
-        var dataInfo = {};
-        var quotations = [];
-        var trendlines = [];
+    self.positioner = (function () {
 
-
-        function setData(params) {
-            quotations = params.quotations;
-            trendlines = params.trendlines;
+        //Helper methods.
+        function getX(value) {
+            var candlesFromFirst = value - self.dataInfo.startIndex;
+            return value * self.params.candleWidth + self.params.candlePadding;
         }
 
-        function setDataInfo(data) {
-            dataInfo = data;
+        function getY(value) {
+            var pointsDistance = self.dataInfo.max - value;
+            return pointsDistance * self.params.oneUnitHeight;
         }
 
-        function setQuotations(data) {
-            quotations = $quotations;
-            //self.renderer.rerenderTrendlines
+        function getItemForX(x) {
+            return Math.min(Math.floor(x / self.params.candleWidth), self.dataInfo.counter - 1);
         }
-
-        function setTrendlines(data) {
-            trendlines = $trendlines;
-            //self.renderer.rerenderTrendlines
-        }
-
-
-
-        function getDataInfo() {
-            return dataInfo;
-        }
-
-        function getQuotations() {
-            return quotations;
-        }
-
-        function getTrendlines() {
-            return trendlines;
-        }
-
-        function getPartDataInfo(first, last) {
-            var firstIndex = Math.max(first, 0);
-            var lastIndex = Math.min(last, quotations.length - 1);
-            var firstItem = quotations[firstIndex];
-            var lastItem = quotations[lastIndex];
-            var max = firstItem.quotation.High;
-            var min = firstItem.quotation.Low;
-            for (var i = firstIndex + 1; i <= lastIndex; i++) {
-                var item = quotations[i];
-                if (item.quotation.High > max) max = item.quotation.High;
-                if (item.quotation.Low < min) min = item.quotation.Low;
-            }
-
-            return {
-                startDate: firstItem.Date,
-                startIndex: firstItem.DateIndex,
-                endDate: lastItem.Date,
-                endIndex: lastItem.DateIndex,
-                counter: (lastIndex - firstIndex + 1),
-                max: max,
-                min: min,
-                levelDifference: max - min
-            };
-
-        }
-
 
         return {
-            setQuotations: setQuotations,
-            setTrendlines: setTrendlines,
-            setData: setData,
-            setDataInfo: setDataInfo,
-            getQuotations: getQuotations,
-            getTrendlines: getTrendlines,
-            getDataInfo: getDataInfo,
-            getPartDataInfo: getPartDataInfo
+            getX: getX,
+            getY: getY,
+            getItemForX: getItemForX
         };
 
     })();
 
-    self.pathCalculator = (function () {
-        var dataInfo = {};
-        var quotations = [];
-        var trendlines = [];
-        var params = {};
-        //SVG paths.
-        var ascendingPaths = [];
-        var descendingPaths = [];
-        var trendlinePaths = [];
-        var extremaCircles = [];
+    self.quotationsPathMaker = (function () {
 
 
-        function calculate() {
-            dataInfo = self.data.getDataInfo();
-            quotations = self.data.getQuotations();
-            trendlines = self.data.getTrendlines();
-            updateSizeParams();
+        //Paths
+        function getPaths(quotations) {
+            var ascendingPaths = [];
+            var descendingPaths = [];
+            var shadowPaths = [];
 
-            prepareQuotationsSvgPaths();
-            prepareTrendlinesSvgPaths();
-            prepareExtremaPaths();
-
-            return getCombinedPaths();
-
-        }
-
-        function prepareQuotationsSvgPaths() {
             quotations.forEach(function (item) {
-                var pathInfo = calculateQuotationPath(item.quotation);
+                var pathInfo = generateQuotationPaths(item.quotation);
                 var arr = pathInfo.isAscending ? ascendingPaths : descendingPaths;
                 arr.push(pathInfo.path);
+                shadowPaths.push(pathInfo.shadowPath);
             });
+
+            return getCombinedPaths(ascendingPaths, descendingPaths, shadowPaths);
         }
 
-        function prepareTrendlinesSvgPaths() {
-            trendlines.forEach(function (item) {
-                var pathInfo = calculateTrendlinePath(item);
-                trendlinePaths.push(pathInfo.path);
-            });
-        }
-
-        function prepareExtremaPaths() {
-            quotations.forEach(function (item) {
-                var price = item.price;
-                if (price) {
-                    var pathInfo = calculateExtremaPaths(item);
-                    if (pathInfo) {
-                        extremaCircles.push(pathInfo);
-                    }
-                }
-            });
-        }
-
-        function updateSizeParams() {
-            var svgSize = self.parent.layout.getSvgSize();
-            params.singleItemWidth = svgSize.width / dataInfo.counter;
-            params.oneHeight = svgSize.height / dataInfo.levelDifference;
-            params.candlePadding = params.singleItemWidth * STOCK.CONFIG.candle.space / 2;
-            params.bodyWidth = params.singleItemWidth - params.candlePadding;
-        }
-
-        function calculateQuotationPath(item) {
-            var isAscending = (item.Close > item.Open);
-            var bodyTop = getY(isAscending ? item.Close : item.Open);
-            var bodyBottom = getY(isAscending ? item.Open : item.Close);
-            var shadeTop = getY(item.High);
-            var shadeBottom = getY(item.Low);
-            var left = getX(item.DateIndex);
-            var right = left + params.bodyWidth;
-            var middle = left + (params.bodyWidth / 2);
+        function generateQuotationPaths(quotation) {
+            var isAscending = (quotation.Close > quotation.Open);
+            var bodyTop = self.positioner.getY(isAscending ? quotation.Close : quotation.Open);
+            var bodyBottom = self.positioner.getY(isAscending ? quotation.Open : quotation.Close);
+            var shadeTop = self.positioner.getY(quotation.High);
+            var shadeBottom = self.positioner.getY(quotation.Low);
+            var left = self.positioner.getX(quotation.DateIndex);
+            var right = left + self.params.bodyWidth;
+            var middle = left + (self.params.bodyWidth / 2);
 
             var path = 'M' + left + ',' + bodyBottom + 'L' + left + ',' + bodyTop + 'L' +
-                       right + ',' + bodyTop + 'L' + right + ',' + bodyBottom + 'Z' +
-                       'M' + middle + ',' + shadeTop + 'L' + middle + ',' + bodyTop + 'Z' +
+                       right + ',' + bodyTop + 'L' + right + ',' + bodyBottom + 'Z';
+            var shadowPath = 'M' + middle + ',' + shadeTop + 'L' + middle + ',' + bodyTop + 'Z' +
                        'M' + middle + ',' + shadeBottom + 'L' + middle + ',' + bodyBottom + 'Z';
 
             return {
                 isAscending: isAscending,
-                path: path
+                path: path,
+                shadowPath: shadowPath
             };
 
         }
 
-        function calculateTrendlinePath(item) {
-            var startIndex = item.StartIndex - 3;
-            var endIndex = (item.EndIndex > 0 ? item.EndIndex : quotations.length - 1) + 3;
-            var startLevel = (startIndex - item.BaseStartIndex) * item.Slope + item.BaseLevel;
-            var endLevel = (endIndex - item.BaseStartIndex) * item.Slope + item.BaseLevel;
+        function getCombinedPaths(ascending, descending, shadows) {
+            var result = [];
+            result.push({
+                path: ascending.join(''),
+                attr: {
+                    'id': 'ascending-candles-path',
+                    'stroke': STOCK.CONFIG.candle.color.ascendingLine,
+                    'strokeWidth': STOCK.CONFIG.candle.strokeWidth,
+                    'fill': STOCK.CONFIG.candle.color.ascendingBody
+                }
+            });
+            result.push({
+                path: descending.join(''),
+                attr: {
+                    'id': 'descending-candles-path',
+                    'stroke': STOCK.CONFIG.candle.color.descendingLine,
+                    'strokeWidth': STOCK.CONFIG.candle.strokeWidth,
+                    'fill': STOCK.CONFIG.candle.color.descendingBody
+                }
+            });
+            result.push({
+                path: shadows.join(''),
+                attr: {
+                    'id': 'shadows-path',
+                    'stroke': STOCK.CONFIG.candle.color.shadow,
+                    'strokeWidth': STOCK.CONFIG.candle.strokeWidth,
+                    'fill': STOCK.CONFIG.candle.color.shadow
+                }
+            });
 
-            var startX = getX(startIndex);
-            var startY = getY(startLevel);
-            var endX = getX(endIndex);
-            var endY = getY(endLevel);
+            return result;
 
-            var path = 'M' + startX + ',' + startY + 'L' + endX + ',' + endY;
+        }
+
+
+        //Rectangles
+        function getRectangles(quotations) {
+            var rectangles = [];
+            quotations.forEach(function (item) {
+                var result = generateQuotationRectangles(item.quotation);
+                rectangles.push(result.body);
+                rectangles.push(result.topShadow);
+                rectangles.push(result.bottomShadow);
+            });
+        }
+
+        function generateQuotationRectangles(quotation) {
+            var isAscending = (quotation.Close > quotation.Open);
+            var bodyTop = self.positioner.getY(isAscending ? quotation.Close : quotation.Open);
+            var bodyBottom = self.positioner.getY(isAscending ? quotation.Open : quotation.Close);
+            var shadeTop = self.positioner.getY(quotation.High);
+            var shadeBottom = self.positioner.getY(quotation.Low);
+            var left = self.positioner.getX(quotation.DateIndex);
+            var right = left + self.params.bodyWidth;
+            var middle = left + (self.params.bodyWidth / 2);
+
+            var path = 'M' + left + ',' + bodyBottom + 'L' + left + ',' + bodyTop + 'L' +
+                       right + ',' + bodyTop + 'L' + right + ',' + bodyBottom + 'Z';
+            var shadowPath = 'M' + middle + ',' + shadeTop + 'L' + middle + ',' + bodyTop + 'Z' +
+                       'M' + middle + ',' + shadeBottom + 'L' + middle + ',' + bodyBottom + 'Z';
+
             return {
-                type: 'trendline',
-                path: path
+                isAscending: isAscending,
+                path: path,
+                shadowPath: shadowPath
             };
+
+
+            //return {
+            //    body: {
+            //        fill: (isAscending ? STOCK.CONFIG.candle.color.ascendingBody : STOCK.CONFIG.candle.color.descendingBody),
+            //        stroke: (isAscending ? STOCK.CONFIG.candle.color.ascendingLine : STOCK.CONFIG.candle.color.descendingLine),
+            //        height: (bodyBottom - bodyTop),
+            //        width: (right - left),
+            //        y: bodyTop,
+            //        x: left
+            //    },
+            //    topShadow: {
+            //        fill: (STOCK.CONFIG.candle.color.shadow),
+            //        stroke: (STOCK.CONFIG.candle.color.shadow),
+            //        height: (bodyTop - shadeTop),
+            //        width: '1',
+            //        y: shadeTop,
+            //        x: middle
+            //    },
+            //    bottomShadow: {
+            //        fill: (STOCK.CONFIG.candle.color.shadow),
+            //        stroke: (STOCK.CONFIG.candle.color.shadow),
+            //        height: (shadeBottom - bodyBottom),
+            //        width: '1',
+            //        y: bodyBottom,
+            //        x: middle
+            //    }
+            //};
 
         }
 
-        function calculateExtremaPaths(item) {
+
+
+        //Reverse engineering.
+        function getItemsRange(left, right) {
+            var firstItem = self.positioner.getItemForX(left);
+            var lastItem = self.positioner.getItemForX(right);
+            return {
+                firstIndex: firstItem,
+                lastIndex: lastItem
+            }
+        }
+
+        function calculateVerticalAdjustments(partDataInfo, visibleHeight) {
+            var modifiedMin = partDataInfo.min * 0.97;
+            var modifiedMax = partDataInfo.max * 1.03;
+            var levelDifference = Math.abs(modifiedMin - modifiedMax);
+            var coefficient = self.dataInfo.levelDifference / levelDifference;
+
+            var newHeight = Math.ceil(visibleHeight * coefficient);
+            var newTop = Math.ceil((self.dataInfo.max - modifiedMax) * (newHeight / self.dataInfo.levelDifference));
+
+            return {
+                height: newHeight,
+                top: Math.floor(-newTop)
+            };
+        }
+
+
+        return {
+              getPaths: getPaths
+            , getRectangles: getRectangles
+            , getItemsRange: getItemsRange
+            , calculateVerticalAdjustments: calculateVerticalAdjustments
+        };
+
+
+    })();
+
+    self.trendlinesPathMaker = (function () {
+
+        //var trendlinePaths = [];
+        //var trendlines = [];
+
+
+        //function prepareTrendlinesSvgPaths() {
+        //    trendlines.forEach(function (item) {
+        //        var pathInfo = calculateTrendlinePath(item);
+        //        trendlinePaths.push(pathInfo.path);
+        //    });
+        //}
+
+        //function calculateTrendlinePath(item) {
+        //    var startIndex = item.StartIndex - 3;
+        //    var endIndex = (item.EndIndex > 0 ? item.EndIndex : quotations.length - 1) + 3;
+        //    var startLevel = (startIndex - item.BaseStartIndex) * item.Slope + item.BaseLevel;
+        //    var endLevel = (endIndex - item.BaseStartIndex) * item.Slope + item.BaseLevel;
+
+        //    var startX = getX(startIndex);
+        //    var startY = getY(startLevel);
+        //    var endX = getX(endIndex);
+        //    var endY = getY(endLevel);
+
+        //    var path = 'M' + startX + ',' + startY + 'L' + endX + ',' + endY;
+        //    return {
+        //        type: 'trendline',
+        //        path: path
+        //    };
+
+        //}
+
+        //result.push({
+        //    path: trendlinePaths.join(''),
+        //    attr: {
+        //        'stroke': 'black',
+        //        'stroke-width': 2,
+        //        'fill': STOCK.CONFIG.trendlines.color
+        //    }
+        //});
+
+
+
+    })();
+
+    self.extremaPathMaker = (function () {
+        var extremaCircles = [];
+        var distance = STOCK.CONFIG.peaks.distance;
+
+        function getCircles(extrema) {
+            extremaCircles = [];
+            prepareExtremaSvgPaths(extrema);
+            return extremaCircles;
+        }
+
+        function prepareExtremaSvgPaths(extrema) {
+            extrema.forEach(function (item) {
+                var circle = calculateExtremumCircle(item);
+                extremaCircles.push(circle);
+            });
+        }
+
+        function calculateExtremumCircle(item) {
             var price = item.price;
-            var distance = STOCK.CONFIG.peaks.distance;
             var value = 0;
             var isMin = null;
 
@@ -491,123 +757,46 @@ function PriceSvgRenderer(params) {
                 return null;
             }
 
-            var scale = Math.min(1, value / 50);
-            var greyscale = 255 * (1 - scale);
-            var x = getX(item.DateIndex) + (params.bodyWidth / 2);
-            var y = isMin ? getY(item.quotation.Low) + distance : getY(item.quotation.High) - distance;
+            var scale = Math.min(1, (100 - value) / 50);
+            var greyscale = Math.ceil(255 * (1 - scale));
+            var x = self.positioner.getX(item.DateIndex) + (self.params.bodyWidth / 2);
+            var y = isMin ?
+                        self.positioner.getY(item.quotation.Low) + distance + self.params.extremaSvgOffset / 2 :
+                        self.positioner.getY(item.quotation.High) - distance + self.params.extremaSvgOffset / 2;
 
             return {
                 item: item,
                 x: x,
                 y: y,
-                radius: Math.min(2 * (value - 50) * (params.bodyWidth / 100) + (params.bodyWidth / 10), params.bodyWidth),
+                radius: Math.max(Math.ceil(value - 50, 0)),
                 stroke: 'rgb(' + greyscale + ',' + greyscale + ',' + greyscale + ')',
                 fill: 'rgba(' + (isMin ? '255, 0' : '0, 255') + ', 0, ' + scale + ')'
             };
 
-
         }
 
 
 
-        //Add peak/through indicators.
-        function addExtremumLabel(extrema, isMin) {
-            var dist = STOCK.CONFIG.peaks.distance;
-            var extremum = isMin ?
-                Math.max(item.troughByClose ? item.troughByClose.Value : 0, item.troughByLow ? item.troughByLow.Value : 0) :
-                Math.max(item.peakByClose ? item.peakByClose.Value : 0, item.peakByHigh ? item.peakByHigh.Value : 0);
-            if (!extremum) return;
+        ////Add peak/through indicators.
+        //function addExtremumLabel(extrema, isMin) {
+        //    var dist = STOCK.CONFIG.peaks.distance;
+        //    var extremum = isMin ?
+        //        Math.max(item.troughByClose ? item.troughByClose.Value : 0, item.troughByLow ? item.troughByLow.Value : 0) :
+        //        Math.max(item.peakByClose ? item.peakByClose.Value : 0, item.peakByHigh ? item.peakByHigh.Value : 0);
+        //    if (!extremum) return;
+
+        //    return true;
+
+        //}
 
 
-
-            return true;
-
-        }
-
-
-
-        //Helper methods.
-        function getX(value) {
-            var candlesFromFirst = value - dataInfo.startIndex;
-            return candlesFromFirst * params.singleItemWidth + params.candlePadding;
-        }
-
-        function getY(value) {
-            var pointsDistance = dataInfo.max - value;
-            return pointsDistance * params.oneHeight;
-        }
-
-        function getItemForX(x) {
-            return Math.min(Math.floor(x / params.singleItemWidth), dataInfo.counter - 1);
-        }
-
-        function getCombinedPaths() {
-            var result = [];
-            result.push({
-                path: ascendingPaths.join(''),
-                attr: {
-                    'stroke': 'black',
-                    'stroke-width': 1,
-                    'fill': STOCK.CONFIG.candle.color.ascending
-                }
-            });
-            result.push({
-                path: descendingPaths.join(''),
-                attr: {
-                    'stroke': 'black',
-                    'stroke-width': 1,
-                    'fill': STOCK.CONFIG.candle.color.descending
-                }
-            });
-            result.push({
-                path: trendlinePaths.join(''),
-                attr: {
-                    'stroke': 'black',
-                    'stroke-width': 1,
-                    'fill': STOCK.CONFIG.trendlines.color
-                }
-            });
-            result.push({
-                isCirclesSet: true,
-                sets: extremaCircles
-            });
-
-            return result;
-
-        }
-
-
-        //Reverse engineering.
-        function getItemsRange(left, right) {
-            var firstItem = getItemForX(left);
-            var lastItem = getItemForX(right);
-            return {
-                firstIndex: firstItem,
-                lastIndex: lastItem
-            }
-        }
-
-        function calculateVerticalAdjustments(partDataInfo, visibleHeight) {
-            var modifiedMin = partDataInfo.min * 0.97;
-            var modifiedMax = partDataInfo.max * 1.03;
-            var levelDifference = Math.abs(modifiedMin - modifiedMax);
-            var coefficient = dataInfo.levelDifference / levelDifference;
-
-            var newHeight = Math.ceil(visibleHeight * coefficient);
-            var newTop = (dataInfo.max - modifiedMax) * (newHeight / dataInfo.levelDifference);
-
-            return {
-                height: newHeight,
-                top: Math.floor(-newTop)
-            };
-        }
-
+        //result.push({
+        //    isCirclesSet: true,
+        //    sets: extremaCircles
+        //});
 
         return {
-            calculate: calculate,
-            updateSizeParams: updateSizeParams,
-            getItemsRange: getItemsRange,
-            calculateVerticalAdjustments: calculateVerticalAdjustments
+            getCircles: getCircles
         };
 
     })();

@@ -225,7 +225,7 @@
     }
 
     function run() {
-        var properties = { assetId: company.id, timeframeId: 4 }; //timeframe.id };
+        var properties = { assetId: company.id, timeframeId: 6 }; //timeframe.id };
         triggerLoadDataInfo(properties);
         triggerLoadData(properties);
     }
