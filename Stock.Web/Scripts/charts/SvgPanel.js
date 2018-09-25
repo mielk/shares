@@ -400,11 +400,11 @@ function AbstractSvgRenderer(params) {
     };
 
     self.renderQuotations = function () {
-        var mode = 0;   //0 - paths | 1 - rectangles
+        var mode = 1;   //0 - paths | 1 - rectangles
         var svg = self.parent.ui.getCandlesSvg();
-        var strokeWidth = STOCK.CONFIG.candle.strokeWidth;
 
         if (mode === 0) {
+            var strokeWidth = STOCK.CONFIG.candle.strokeWidth;
             var paths = self.quotationsPathMaker.getPaths(self.quotations);
             paths.forEach(function (item) {
                 var path = mielk.svg.createPath(item.path);
@@ -416,31 +416,23 @@ function AbstractSvgRenderer(params) {
                 svg.appendChild(path);
             });
         } else if (mode === 1){
-            //var rectangles = self.quotationsPathMaker.getPaths(quotations);
-            //rectangles.forEach(function (item) {
-            //    var rectangle = document.createElementNS("http://www.w3.org/2000/svg", 'rect');
-            //    rectangle.setAttribute('x', item.x);
-            //    rectangle.setAttribute('y', item.y);
-            //    rectangle.setAttribute('height', item.height);
-            //    rectangle.setAttribute('width', item.width);
-            //    rectangle.style.stroke = item.stroke;
-            //    rectangle.style.strokeWidth = strokeWidth + 'px';
-            //    rectangle.style.fill = item.fill;
-            //    rectangle.style.vectorEffect = 'non-scaling-stroke';
-            //    rectangle.style.shapeRendering = 'crispEdges'
-            //    svg.appendChild(rectangle);
-            //    //svg.path(item.path).attr(item.attr);
-            //});
+            var rectangles = self.quotationsPathMaker.getRectangles(self.quotations);
+            rectangles.forEach(function (item) {
+                var rectangle = mielk.svg.createRectangle(item.width, item.height, item.x, item.y, item. fill)
+                rectangle.style.stroke = item.stroke;
+                rectangle.style.strokeWidth = item.strokeWidth + 'px';
+                rectangle.style.vectorEffect = 'non-scaling-stroke';
+                rectangle.style.shapeRendering = 'crispEdges'
+                svg.appendChild(rectangle);
+            });
         }
 
         self.sizer.adjustVertically();
 
     };
 
-
     self.renderTrendlines = function () {
     };
-
 
     self.renderExtrema = function () {
         var svg = self.parent.ui.getExtremaSvg();
@@ -453,14 +445,6 @@ function AbstractSvgRenderer(params) {
             circle.style.shapeRendering = 'crispEdges'
             svg.appendChild(circle);
         });
-
-
-        //var rect = mielk.svg.createRectangle(100, 50, "blue");
-        //var circle = mielk.svg.createCircle(10, 10, 20, 'blue', 'black');
-        //svg.appendChild(rect);
-        //svg.appendChild(circle);
-        var x = 1;
-
     };
 
 }
@@ -505,6 +489,28 @@ function PriceSvgRenderer(params) {
 
     self.quotationsPathMaker = (function () {
 
+        function getQuotationCoordinate(quotation) {
+            var isAscending = (quotation.Close > quotation.Open);
+            var bodyTop = self.positioner.getY(isAscending ? quotation.Close : quotation.Open);
+            var bodyBottom = self.positioner.getY(isAscending ? quotation.Open : quotation.Close);
+            var shadeTop = self.positioner.getY(quotation.High);
+            var shadeBottom = self.positioner.getY(quotation.Low);
+            var left = self.positioner.getX(quotation.DateIndex);
+            var right = left + self.params.bodyWidth;
+            var middle = left + (self.params.bodyWidth / 2);
+
+            return {
+                isAscending: isAscending,
+                bodyTop: bodyTop,
+                bodyBottom: bodyBottom,
+                shadeTop: shadeTop,
+                shadeBottom: shadeBottom,
+                left: left,
+                right: right,
+                middle: middle
+            }
+
+        }
 
         //Paths
         function getPaths(quotations) {
@@ -523,22 +529,27 @@ function PriceSvgRenderer(params) {
         }
 
         function generateQuotationPaths(quotation) {
-            var isAscending = (quotation.Close > quotation.Open);
-            var bodyTop = self.positioner.getY(isAscending ? quotation.Close : quotation.Open);
-            var bodyBottom = self.positioner.getY(isAscending ? quotation.Open : quotation.Close);
-            var shadeTop = self.positioner.getY(quotation.High);
-            var shadeBottom = self.positioner.getY(quotation.Low);
-            var left = self.positioner.getX(quotation.DateIndex);
-            var right = left + self.params.bodyWidth;
-            var middle = left + (self.params.bodyWidth / 2);
+            var c = getQuotationCoordinate(quotation);
+            var left = Math.round(c.left);
+            var right = Math.round(c.right);
+            var middle = Math.round(c.middle);
+            var bodyTop = Math.round(c.bodyTop);
+            var bodyBottom = Math.round(c.bodyBottom);
+            var shadeTop = Math.round(c.shadeTop);
+            var shadeBottom = Math.round(c.shadeBottom);
 
             var path = 'M' + left + ',' + bodyBottom + 'L' + left + ',' + bodyTop + 'L' +
                        right + ',' + bodyTop + 'L' + right + ',' + bodyBottom + 'Z';
             var shadowPath = 'M' + middle + ',' + shadeTop + 'L' + middle + ',' + bodyTop + 'Z' +
                        'M' + middle + ',' + shadeBottom + 'L' + middle + ',' + bodyBottom + 'Z';
 
+            //var path = 'M' + c.left + ',' + c.bodyBottom + 'L' + c.left + ',' + c.bodyTop + 'L' +
+            //           c.right + ',' + c.bodyTop + 'L' + c.right + ',' + c.bodyBottom + 'Z';
+            //var shadowPath = 'M' + c.middle + ',' + c.shadeTop + 'L' + c.middle + ',' + c.bodyTop + 'Z' +
+            //           'M' + c.middle + ',' + c.shadeBottom + 'L' + c.middle + ',' + c.bodyBottom + 'Z';
+
             return {
-                isAscending: isAscending,
+                isAscending: c.isAscending,
                 path: path,
                 shadowPath: shadowPath
             };
@@ -585,60 +596,47 @@ function PriceSvgRenderer(params) {
             var rectangles = [];
             quotations.forEach(function (item) {
                 var result = generateQuotationRectangles(item.quotation);
-                rectangles.push(result.body);
                 rectangles.push(result.topShadow);
                 rectangles.push(result.bottomShadow);
+                rectangles.push(result.body);
             });
+            return rectangles;
         }
 
         function generateQuotationRectangles(quotation) {
-            var isAscending = (quotation.Close > quotation.Open);
-            var bodyTop = self.positioner.getY(isAscending ? quotation.Close : quotation.Open);
-            var bodyBottom = self.positioner.getY(isAscending ? quotation.Open : quotation.Close);
-            var shadeTop = self.positioner.getY(quotation.High);
-            var shadeBottom = self.positioner.getY(quotation.Low);
-            var left = self.positioner.getX(quotation.DateIndex);
-            var right = left + self.params.bodyWidth;
-            var middle = left + (self.params.bodyWidth / 2);
-
-            var path = 'M' + left + ',' + bodyBottom + 'L' + left + ',' + bodyTop + 'L' +
-                       right + ',' + bodyTop + 'L' + right + ',' + bodyBottom + 'Z';
-            var shadowPath = 'M' + middle + ',' + shadeTop + 'L' + middle + ',' + bodyTop + 'Z' +
-                       'M' + middle + ',' + shadeBottom + 'L' + middle + ',' + bodyBottom + 'Z';
+            var c = getQuotationCoordinate(quotation);
+            var width = Math.round(c.right - c.left);
+            var candleX = Math.round(c.left);
 
             return {
-                isAscending: isAscending,
-                path: path,
-                shadowPath: shadowPath
+                body: {
+                    fill: (c.isAscending ? STOCK.CONFIG.candle.color.ascendingBody : STOCK.CONFIG.candle.color.descendingBody),
+                    stroke: (c.isAscending ? STOCK.CONFIG.candle.color.ascendingLine : STOCK.CONFIG.candle.color.descendingLine),
+                    strokeWidth: width < (STOCK.CONFIG.candle.strokeWidth * 2 + 1) ? 0 : STOCK.CONFIG.candle.strokeWidth,
+                    height: Math.round(c.bodyBottom - c.bodyTop),
+                    width: width + 1,
+                    y: Math.round(c.bodyTop) + 0.5,
+                    x: candleX + 0.5
+                },
+                topShadow: {
+                    fill: (STOCK.CONFIG.candle.color.shadow),
+                    stroke: (STOCK.CONFIG.candle.color.shadow),
+                    strokeWidth: 0,
+                    height: Math.ceil(c.bodyTop - c.shadeTop),
+                    width: STOCK.CONFIG.candle.strokeWidth,
+                    y: Math.round(c.shadeTop),
+                    x: candleX + (width + 1) / 2
+                },
+                bottomShadow: {
+                    fill: (STOCK.CONFIG.candle.color.shadow),
+                    stroke: (STOCK.CONFIG.candle.color.shadow),
+                    strokeWidth: 0,
+                    height: Math.ceil(c.shadeBottom - c.bodyBottom),
+                    width: STOCK.CONFIG.candle.strokeWidth,
+                    y: Math.round(c.bodyBottom),
+                    x: candleX + (width + 1) / 2
+                }
             };
-
-
-            //return {
-            //    body: {
-            //        fill: (isAscending ? STOCK.CONFIG.candle.color.ascendingBody : STOCK.CONFIG.candle.color.descendingBody),
-            //        stroke: (isAscending ? STOCK.CONFIG.candle.color.ascendingLine : STOCK.CONFIG.candle.color.descendingLine),
-            //        height: (bodyBottom - bodyTop),
-            //        width: (right - left),
-            //        y: bodyTop,
-            //        x: left
-            //    },
-            //    topShadow: {
-            //        fill: (STOCK.CONFIG.candle.color.shadow),
-            //        stroke: (STOCK.CONFIG.candle.color.shadow),
-            //        height: (bodyTop - shadeTop),
-            //        width: '1',
-            //        y: shadeTop,
-            //        x: middle
-            //    },
-            //    bottomShadow: {
-            //        fill: (STOCK.CONFIG.candle.color.shadow),
-            //        stroke: (STOCK.CONFIG.candle.color.shadow),
-            //        height: (shadeBottom - bodyBottom),
-            //        width: '1',
-            //        y: bodyBottom,
-            //        x: middle
-            //    }
-            //};
 
         }
 
@@ -774,26 +772,6 @@ function PriceSvgRenderer(params) {
             };
 
         }
-
-
-
-        ////Add peak/through indicators.
-        //function addExtremumLabel(extrema, isMin) {
-        //    var dist = STOCK.CONFIG.peaks.distance;
-        //    var extremum = isMin ?
-        //        Math.max(item.troughByClose ? item.troughByClose.Value : 0, item.troughByLow ? item.troughByLow.Value : 0) :
-        //        Math.max(item.peakByClose ? item.peakByClose.Value : 0, item.peakByHigh ? item.peakByHigh.Value : 0);
-        //    if (!extremum) return;
-
-        //    return true;
-
-        //}
-
-
-        //result.push({
-        //    isCirclesSet: true,
-        //    sets: extremaCircles
-        //});
 
         return {
             getCircles: getCircles

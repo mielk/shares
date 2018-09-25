@@ -238,7 +238,7 @@ Date.prototype.isHoliday = function () {
                 ascendingLine: '#225437',
                 descendingBody: '#D75442',
                 descendingLine: '#5B1A13',
-                shadow: '#000000' //'#737375'
+                shadow: '#737375'
             },
             strokeWidth: 1
         },
@@ -269,7 +269,6 @@ Date.prototype.isHoliday = function () {
         , trendlines: {
             color: 'black'
         }
-
         , modify: function (param, value) {
 
         }

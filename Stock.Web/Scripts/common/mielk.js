@@ -1094,10 +1094,12 @@
             return path;
         }
 
-        function createRectangle(width, height, fill) {
+        function createRectangle(width, height, x, y, fill) {
             var rect = document.createElementNS(ns, 'rect');
             rect.width.baseVal.value = width;
             rect.height.baseVal.value = height;
+            rect.x.baseVal.value = x;
+            rect.y.baseVal.value = y;
             rect.style.fill = fill;
             return rect;
         }
