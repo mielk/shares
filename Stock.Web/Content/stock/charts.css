@@ -217,11 +217,14 @@ svg {
     left: 0;
     top: 0;
     height: 100%;
-    opacity: 0;
 }
 
 .date-label {
     position: absolute;
+    top: 11px;
+    color: #999999;
+    font-family: 'Century Gothic';
+    font-size: 12px;
 }
 
 .date-vertical-lines-container {
@@ -229,7 +232,6 @@ svg {
     left: 0;
     top: 0;
     height: 100%;
-    opacity: 0;
 }
 
 .date-vertical-line {
@@ -237,7 +239,16 @@ svg {
     top: 0;
     height: 100%;
     width: 1px;
-    background: #CCCCCC;
+    background: #E6E6E6;
+    border: none;
+}
+
+.date-label-ticker {
+    position: absolute;
+    top: 0;
+    height: 10px;
+    width: 1px;
+    background: #999999;
     border: none;
 }
 

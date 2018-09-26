@@ -77,6 +77,32 @@ Date.prototype.isHoliday = function () {
                     d = this.next(d);
                 }
                 return d;
+            },
+            getPeriodLabelChange: function (prevDate, currentDate) {
+                var periodChanged;
+                var periodLabel;
+
+                if (prevDate) {
+                    var prevMonth = prevDate.getMonth();
+                    var currentMonth = currentDate.getMonth();
+                    if (prevMonth != currentMonth) {
+                        if (currentMonth % 2 == 0) {
+                            periodChanged = true;
+                            if (currentMonth == 0) {
+                                periodLabel = currentDate.getFullYear();
+                            } else {
+                                periodLabel = mielk.dates.getMonthName(currentDate, true);
+                            }
+                        }
+                    }
+                } else {
+                    periodChanged = false;
+                }
+
+                return {
+                    periodChanged: periodChanged,
+                    periodLabel: periodLabel
+                }
             }
         },
         W1: {

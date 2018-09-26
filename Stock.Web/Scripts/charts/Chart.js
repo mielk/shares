@@ -8,6 +8,7 @@ function Chart(parentContainer, params) {
     var self = this;
     self.Chart = true;
     self.type = params.type;
+    self.timeframe = params.timeframe;
     self.key = 'chart_' + params.type.name;
 
     //Properties.
@@ -109,6 +110,7 @@ function Chart(parentContainer, params) {
                 parent: self,
                 key: self.key + '_' + index,
                 type: self.type,
+                timeframe: self.timeframe,
                 candleWidth: width,
                 index: index
             });

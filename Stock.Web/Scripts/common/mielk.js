@@ -1048,7 +1048,7 @@
         }
 
         function addDays(baseDate, days) {
-            var date = baseDate;
+            var date = new Date(baseDate);
             date.setDate(date.getDate() + days);
             return date;
         }
@@ -1065,6 +1065,13 @@
             return date;
         }
 
+        function getMonthName(date, short) {
+            var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            var shortMonthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            var monthNumber = date.getMonth();
+            return (short ? shortMonthNames : monthNames)[monthNumber];
+        }
+
         return {
             toString: toString,
             fromString: fromString,
@@ -1075,7 +1082,8 @@
             addHours: addHours,
             addDays: addDays,
             addWeeks: addWeeks,
-            addMonths: addMonths
+            addMonths: addMonths,
+            getMonthName: getMonthName
         };
         
     })();

@@ -45,7 +45,7 @@
 
     function load() {
         self.parentContainer = document.getElementById(params.chartContainerId);
-        self.chart = new Chart(self, { type: STOCK.INDICATORS.PRICE });
+        self.chart = new Chart(self, { type: STOCK.INDICATORS.PRICE, timeframe: self.timeframe });
         //self.valuePanel = new ChartValuePanel(self);
         //self.datetimeLine = new DateTimeLine(self);
     }

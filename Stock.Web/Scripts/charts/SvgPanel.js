@@ -7,6 +7,7 @@
     self.SvgPanel = true;
     self.parent = params.parent;
     self.type = params.type;
+    self.timeframe = params.timeframe;
     self.key = params.key;
     self.index = params.index;
     self.candleWidth = params.candleWidth;
@@ -847,14 +848,61 @@ function DatesRenderer(params) {
         self.quotations = data.quotations;
 
         var visiblesOnScreen = self.parent.layout.getTotalCandlesVisibleCounter();
-        var month;
-        var year;
+        var prevDate = null;
+        var left = 0;
 
+
+        //Loaded quotations.
         self.quotations.forEach(function (item) {
-            var date = item.Date;
+            var date = mielk.dates.fromCSharpDateTime(item.Date);
+            var period = self.parent.timeframe.getPeriodLabelChange(prevDate, date);
+            if (period.periodChanged) {
+                self.addPeriodSeparator(item.x, period.periodLabel);
+            }
+            left = item.x;
+            prevDate = date;
         });
 
+
+        //Future dates.
+        for (var i = 0; i < visiblesOnScreen; i++) {
+            left = Math.ceil(left + self.parent.candleWidth);
+            var date = self.parent.timeframe.next(prevDate);
+            var period = self.parent.timeframe.getPeriodLabelChange(prevDate, date);
+            if (period.periodChanged) {
+                self.addPeriodSeparator(left, period.periodLabel);
+            }
+            prevDate = date;
+        }
+
+
+        //Resize labels container.
+        $(self.labelsContainer).css('width', (left + 1) + 'px');
+
+
     };
+
+    self.addPeriodSeparator = function (x, label) {
+        var verticalLine = $('<div/>', {
+            'class': 'date-vertical-line'
+        }).css({
+            'left': x + 'px'
+        }).appendTo(self.verticalLinesContainer)[0];
+
+        var ticker = $('<div/>', {
+            'class': 'date-label-ticker'
+        }).css({
+            'left': x + 'px'
+        }).appendTo(self.labelsContainer)[0];
+
+        var label = $('<div/>', {
+            'class': 'date-label',
+            'html': label
+        }).appendTo(self.labelsContainer)[0];
+        var width = $(label).width();
+        $(label).css('left', (x - width / 2) + 'px');
+
+    }
 
 }
 
