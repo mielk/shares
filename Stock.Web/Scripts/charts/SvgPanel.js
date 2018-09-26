@@ -11,20 +11,19 @@
     self.index = params.index;
     self.candleWidth = params.candleWidth;
     self.isRendered = false;
+    self.data = self.parent.data;
 
     self.render = function() {
-        var r = self.renderer;
-        r.setDataInfo(self.parent.dataInfo);
-        r.setData(self.parent.data)
-        r.renderQuotations();
-        r.renderExtrema();
-        self.isRendered = true;
+        var chr = self.chartRenderer;
+        chr.setDataInfo(self.parent.dataInfo);
+        chr.setData(self.data)
+        chr.renderQuotations();
+        chr.renderExtrema();
 
-        //    r.render();
-        //    self.trigger({
-        //        type: 'postRender',
-        //        params: getPostRenderProperties()
-        //    });
+        var dr = self.datesRenderer;
+        dr.render(self.data);
+
+        self.isRendered = true;
 
     }
 
@@ -62,17 +61,21 @@
     };
 
     self.ui = (function () {
-        var parentContainer = params.container;
-        var candlesKey = self.key + '_candles';
-        var trendlinesKey = self.key + '_trendlines';
-        var extremaKey = self.key + '_extrema';
+        var chartContainer = self.parent.ui.getChartContainer();
+        var parentContainer = self.parent.ui.getSvgContainer();
         var svgCandles = null;
         var svgExtrema = null;
+        var svgTrendlines = null;
+        //[Dates]
+        var datesContainer = self.parent.ui.getDatesContainer();
+        var datesLabelsContainer = null;
+        var datesVerticalSeparatorsContainer = null;
+
 
         //Candles container.
         var svgsContainer = $('<div/>', {
             'class': 'chart-svg-panel',
-            id: candlesKey
+            id: self.key + '-svgs-container'
         }).css({
             'height': (self.baseSize.height + 100) + 'px',
             'width': self.baseSize.width + 'px',
@@ -83,22 +86,11 @@
 
 
 
-        //var svgCandles = Raphael(candlesKey);
-        //svgCandles.setViewBox(0, 0, self.baseSize.width, self.baseSize.height, true);
-        //svgCandles.canvas.setAttribute('preserveAspectRatio', 'none');
-
-        //var svgTrendlines = Raphael(trendlinesKey);
-        //svgTrendlines.setViewBox(0, 0, self.baseSize.width, self.baseSize.height, true);
-        //svgTrendlines.canvas.setAttribute('preserveAspectRatio', 'none');
-
-        //Extrema container.
-
-
-
         function insertSvgQuotations() {
             var svg = mielk.svg.createSvg();
             var height = $(svgsContainer).height() - 100;
             
+            svg.setAttribute('id', self.key + '-candles');
             svg.setAttribute('viewBox', '0 0 ' + self.baseSize.width + ' ' + height);
             svg.setAttribute('preserveAspectRatio', 'none meet');
             svg.style.top = '50px';
@@ -114,6 +106,7 @@
             var width = $(svgsContainer).width();
             var height = $(svgsContainer).height();
 
+            svg.setAttribute('id', self.key + '-extrema');
             svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
             svg.setAttribute('preserveAspectRatio', 'none meet');
             svg.style.top = 0;
@@ -122,6 +115,44 @@
             svgsContainer.appendChild(svg);
             return svg;
 
+        }
+
+        function insertSvgTrendlines() {
+            var svg = mielk.svg.createSvg();
+            var width = $(svgsContainer).width();
+            var height = $(svgsContainer).height();
+
+            svg.setAttribute('id', self.key + '-trendlines');
+            svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+            svg.setAttribute('preserveAspectRatio', 'none meet');
+            svg.style.top = 0;
+            svg.style.height = height + 'px';
+
+            svgsContainer.appendChild(svg);
+            return svg;
+
+        }
+
+
+        //[Dates]
+        function insertDatesLabelsContainer() {
+            var div = $('<div/>', {
+                'class': 'date-labels-container',
+                id: self.key + '-date-labels-container'
+            }).css({
+                'visibility': 'visible'
+            }).appendTo(datesContainer)[0];
+            return div;
+        }
+
+        function insertDatesVerticalSeparatorsContainer() {
+            var div = $('<div/>', {
+                'class': 'date-vertical-lines-container',
+                id: self.key + '-date-vertical-lines-container'
+            }).css({
+                'visibility': 'visible'
+            }).appendTo(chartContainer)[0];
+            return div;
         }
 
         function resize(e) {
@@ -142,7 +173,7 @@
             }
 
             if (resized) {
-                self.renderer.updateSizeParams();
+                self.chartRenderer.updateSizeParams();
             }
 
             self.trigger({
@@ -176,6 +207,9 @@
                 return svgCandles;
             },
             getTrendlinesSvg: function () {
+                if (svgTrendlines === null) {
+                    svgTrendlines = insertSvgTrendlines();
+                }
                 return svgTrendlines;
             },
             getExtremaSvg: function () {
@@ -184,6 +218,18 @@
                 }
                 return svgExtrema;
             },
+            getDatesLabelsContainer: function () {
+                if (datesLabelsContainer === null) {
+                    datesLabelsContainer = insertDatesLabelsContainer();
+                }
+                return datesLabelsContainer;
+            },
+            getDatesVerticalSeparatorContainer: function () {
+                if (datesVerticalSeparatorsContainer === null) {
+                    datesVerticalSeparatorsContainer = insertDatesVerticalSeparatorsContainer();
+                }
+                return datesVerticalSeparatorsContainer;
+            },
             resize: resize,
             show: show,
             hide: hide
@@ -191,7 +237,11 @@
 
     })();
 
-    self.renderer = self.type.svgRenderer({
+    self.chartRenderer = self.type.svgRenderer({
+        parent: self
+    });
+
+    self.datesRenderer = new DatesRenderer({
         parent: self
     });
 
@@ -240,10 +290,17 @@
 
         }
 
+        function getTotalCandlesVisibleCounter() {
+            var candleWidth = self.candleWidth;
+            var visibleWidth = $(parentDiv).width();
+            return Math.ceil(visibleWidth / candleWidth);
+        }
+
         return {
             getPosition: getPosition,
             getCandlesSvgSize: getCandlesSvgSize,
-            getExtremaSvgOffset: getExtremaSvgOffset
+            getExtremaSvgOffset: getExtremaSvgOffset,
+            getTotalCandlesVisibleCounter: getTotalCandlesVisibleCounter
         };
 
     }();
@@ -272,7 +329,6 @@ function AbstractSvgRenderer(params) {
     var self = this;
     self.AbstractSvgRenderer = true;
     self.parent = params.parent;
-    self.drawObjects = [];
 
     //Data manager.
     self.dataInfo = {};
@@ -595,46 +651,37 @@ function PriceSvgRenderer(params) {
         function getRectangles(quotations) {
             var rectangles = [];
             quotations.forEach(function (item) {
-                var result = generateQuotationRectangles(item.quotation);
-                rectangles.push(result.topShadow);
-                rectangles.push(result.bottomShadow);
+                var result = generateQuotationRectangles(item);
+                rectangles.push(result.shadow);
                 rectangles.push(result.body);
             });
             return rectangles;
         }
 
-        function generateQuotationRectangles(quotation) {
+        function generateQuotationRectangles(item) {
+            var quotation = item.quotation;
             var c = getQuotationCoordinate(quotation);
-            var width = Math.round(c.right - c.left);
-            var candleX = Math.round(c.left);
+            item.width = Math.round(c.right - c.left);
+            item.x = Math.round(c.left);
 
             return {
                 body: {
                     fill: (c.isAscending ? STOCK.CONFIG.candle.color.ascendingBody : STOCK.CONFIG.candle.color.descendingBody),
                     stroke: (c.isAscending ? STOCK.CONFIG.candle.color.ascendingLine : STOCK.CONFIG.candle.color.descendingLine),
-                    strokeWidth: width < (STOCK.CONFIG.candle.strokeWidth * 2 + 1) ? 0 : STOCK.CONFIG.candle.strokeWidth,
+                    strokeWidth: item.width < (STOCK.CONFIG.candle.strokeWidth * 2 + 1) ? 0 : STOCK.CONFIG.candle.strokeWidth,
                     height: Math.round(c.bodyBottom - c.bodyTop),
-                    width: width + 1,
+                    width: item.width + 1,
                     y: Math.round(c.bodyTop) + 0.5,
-                    x: candleX + 0.5
+                    x: item.x + 0.5
                 },
-                topShadow: {
+                shadow: {
                     fill: (STOCK.CONFIG.candle.color.shadow),
                     stroke: (STOCK.CONFIG.candle.color.shadow),
                     strokeWidth: 0,
-                    height: Math.ceil(c.bodyTop - c.shadeTop),
+                    height: Math.ceil(c.shadeBottom - c.shadeTop),
                     width: STOCK.CONFIG.candle.strokeWidth,
                     y: Math.round(c.shadeTop),
-                    x: candleX + (width + 1) / 2
-                },
-                bottomShadow: {
-                    fill: (STOCK.CONFIG.candle.color.shadow),
-                    stroke: (STOCK.CONFIG.candle.color.shadow),
-                    strokeWidth: 0,
-                    height: Math.ceil(c.shadeBottom - c.bodyBottom),
-                    width: STOCK.CONFIG.candle.strokeWidth,
-                    y: Math.round(c.bodyBottom),
-                    x: candleX + (width + 1) / 2
+                    x: item.x + (item.width + 1) / 2
                 }
             };
 
@@ -784,7 +831,32 @@ mielk.objects.extend(AbstractSvgRenderer, PriceSvgRenderer);
 
 
 
+function DatesRenderer(params) {
 
+    'use strict';
+
+    var self = this;
+    self.DatesRenderer = true;
+    self.parent = params.parent;
+    self.labelsContainer = self.parent.ui.getDatesLabelsContainer();
+    self.verticalLinesContainer = self.parent.ui.getDatesVerticalSeparatorContainer();
+
+    self.render = function (data) {
+
+        //Assign values to inner variables.
+        self.quotations = data.quotations;
+
+        var visiblesOnScreen = self.parent.layout.getTotalCandlesVisibleCounter();
+        var month;
+        var year;
+
+        self.quotations.forEach(function (item) {
+            var date = item.Date;
+        });
+
+    };
+
+}
 
 
 

@@ -15,12 +15,40 @@ function Chart(parentContainer, params) {
     var controller = parent.getController();
 
     //UI components.
-    var chartDivId = 'actual-chart-container';
-    var infoDivId = 'quote-info-panel';
-    var svgDiv = 'chart-svg-panel-container';
-    var chartDiv = document.getElementById(chartDivId);
-    var infoDiv = document.getElementById(infoDivId);
-    var svgDiv = document.getElementById(svgDiv);
+    self.ui = (function () {
+        var chartDivId = 'actual-chart-container';
+        var infoDivId = 'quote-info-panel';
+        var svgDivId = 'chart-svg-panel-container';
+        var datesDivId = 'date-line';
+        var chartContainer = document.getElementById(chartDivId);
+        var infoContainer = document.getElementById(infoDivId);
+        var svgContainer = document.getElementById(svgDivId);
+        var datesContainer = document.getElementById(datesDivId);
+
+        function getChartContainer() {
+            return chartContainer;
+        }
+
+        function getSvgContainer() {
+            return svgContainer;
+        }
+
+        function getInfoContainer() {
+            return infoContainer;
+        }
+
+        function getDatesContainer() {
+            return datesContainer;
+        }
+
+        return {
+            getChartContainer: getChartContainer,
+            getSvgContainer: getSvgContainer,
+            getInfoContainer: getInfoContainer,
+            getDatesContainer: getDatesContainer
+        };
+
+    })();
 
     //Data.
     self.dataInfo = null;
@@ -80,7 +108,6 @@ function Chart(parentContainer, params) {
             var svg = new SvgPanel({
                 parent: self,
                 key: self.key + '_' + index,
-                container: svgDiv,
                 type: self.type,
                 candleWidth: width,
                 index: index
@@ -100,6 +127,8 @@ function Chart(parentContainer, params) {
         }
 
     }
+
+
 
     //function runPostRenderActions(params) {
     //    self.trigger({
