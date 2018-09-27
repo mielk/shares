@@ -275,6 +275,8 @@
     <Content Include="Content\images\xcf\POL.xcf" />
     <Content Include="Content\images\xcf\valid.xcf" />
     <Content Include="Scripts\analysis\AnalysisController.js" />
+    <Content Include="Scripts\charts\ChartZoomController.js" />
+    <Content Include="Scripts\charts\Chart.js" />
     <Content Include="Scripts\charts\DateTimeLine.js" />
     <Content Include="Scripts\charts\ValuePanel.js" />
     <Content Include="Scripts\charts\SvgPanel.js" />
@@ -300,7 +302,7 @@
     <Content Include="Scripts\charts\ChartsContainer.js" />
     <Content Include="Scripts\charts\ChartController.js" />
     <Content Include="Scripts\common\ResizableDiv.js" />
-    <Content Include="Scripts\charts\Chart.js" />
+    <Content Include="Scripts\charts\Chart2.js" />
     <Content Include="Scripts\common\external\css-element-queries\ElementQueries.js" />
     <Content Include="Scripts\common\external\css-element-queries\ResizeSensor.js" />
     <Content Include="Scripts\STOCK2\Company.js" />

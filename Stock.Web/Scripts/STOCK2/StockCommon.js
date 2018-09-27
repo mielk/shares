@@ -172,6 +172,7 @@ Date.prototype.isHoliday = function () {
             initialHeight: 600,
             minValue: 0,
             maxValue: null,
+            valueRangePadding: 0.1,
             color: 'blue'
         },
         MACD: {
@@ -190,6 +191,7 @@ Date.prototype.isHoliday = function () {
             negativeAllowed: true,
             minValue: null,
             maxValue: null,
+            valueRangePadding: 0.1,
             color: 'yellow'
         },
         ADX: {
@@ -208,6 +210,7 @@ Date.prototype.isHoliday = function () {
             negativeAllowed: false,
             minValue: 0,
             maxValue: 100,
+            valueRangePadding: null,
             color: 'brown'
         },
         getItem: function (value) {
@@ -283,7 +286,9 @@ Date.prototype.isHoliday = function () {
             height: 50
         }
         , valueScale: {
-            width: 100
+            width: 100,
+            minLabelsDistance: 20,
+            maxLabelsDistance: 50
         }
         , svgPanel: {
             height: 400,

@@ -45,6 +45,7 @@ namespace Stock.Web
                         "~/Scripts/common/external/Raphael.js",
                         "~/Scripts/charts/Chart.js",
                         "~/Scripts/charts/ChartsContainer.js",
+                        "~/Scripts/charts/ChartZoomController.js",
                         "~/Scripts/charts/ChartController.js",
                         "~/Scripts/charts/SvgPanel.js"));
 

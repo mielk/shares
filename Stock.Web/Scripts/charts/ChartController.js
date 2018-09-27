@@ -2,20 +2,127 @@
     var self = this;
     self.ChartController = true;
 
-    //State
-    var company = params.initialCompany || STOCK.COMPANIES.getCompany(1);
-    var timeframe = params.initialTimeframe || STOCK.TIMEFRAMES.defaultValue();
-    var showPeaks = params.showPeaks || true;
-    var showTrendlines = params.showTrendlines || true;
-    var indicators = {
-        PRICE: params.showPriceChart || true, //true,
-        MACD: params.showMACDChart || false, //true,
-        ADX: params.showADXChart || false //true
-    };
+    //Properties
+    self.params = (function(){
+        var company = params.initialCompany || STOCK.COMPANIES.getCompany(1);
+        var timeframe =  params.initialTimeframe || STOCK.TIMEFRAMES.defaultValue();
+        var showPeaks = params.showPeaks || true;
+        var showTrendlines = params.showTrendlines || true;
+        var indicators = {
+            PRICE: params.showPriceChart || true, //true,
+            MACD: params.showMACDChart || false, //true,
+            ADX: params.showADXChart || false //true
+        };
+
+
+        //Setters
+        function setCompany(id) {
+            company = STOCK.COMPANIES.getCompany(id);
+            self.trigger({
+                type: 'changeCompany',
+                timeframe: timeframe,
+                company: company
+            });
+        }
+
+        function setTimeframe(id) {
+            timeframe = STOCK.TIMEFRAMES.getItem(id);
+            self.trigger({
+                type: 'changeTimeframe',
+                timeframe: timeframe,
+                company: company
+            });
+        }
+
+        function setShowPeaks(value) {
+            if (showPeaks != value) {
+                showPeaks = value;
+                self.trigger({
+                    type: 'showPeaks',
+                    value: showPeaks
+                });
+            }
+        }
+
+        function setShowTrendlines(value) {
+            if (showTrendlines != value) {
+                showTrendlines = value;
+                self.trigger({
+                    type: 'showTrendlines',
+                    value: showTrendlines
+                });
+            }
+        }
+
+        function setShowADX(value) {
+            if (indicators.ADX != value) {
+                indicators.ADX = value;
+                self.trigger({
+                    type: 'showADX',
+                    value: indicators.ADX
+                });
+            }
+        }
+
+        function setShowMACD(value) {
+            if (indicators.MACD != value) {
+                indicators.MACD = value;
+                self.trigger({
+                    type: 'showMACD',
+                    value: indicators.MACD
+                });
+            }
+        }
+
+
+        //Getters
+        function getCompany() {
+            return company;
+        }
+
+        function getTimeframe() {
+            return timeframe;
+        }
+
+        function getShowPeaks() {
+            return showPeaks;
+        }
+
+        function getShowTrendlines() {
+            return showTrendlines;
+        }
+
+        function getShowADX() {
+            return indicators.ADX;
+        }
+
+        function getShowMACD() {
+            return indicators.MACD;
+        }
+
+
+
+        return {
+            setCompany: setCompany,
+            setTimeframe: setTimeframe,
+            setShowPeaks: setShowPeaks,
+            setShowTrendlines: setShowTrendlines,
+            setShowADX: setShowADX,
+            setShowMACD: setShowMACD,
+            getCompany: getCompany,
+            getTimeframe: getTimeframe,
+            getShowPeaks: getShowPeaks,
+            getShowTrendlines: getShowTrendlines,
+            getShowADX: getShowADX,
+            getShowMACD: getShowMACD
+        }
+
+
+    })();
 
 
     //Panels.
-    var optionPanel = (function (params) {
+    self.optionPanel = (function (params) {
 
         var controls = {}
 
@@ -79,10 +186,10 @@
         }
 
         function updateView() {
-            $(controls.showPeaksCheckbox).prop('checked', showPeaks);
-            $(controls.showTrendlinesCheckbox).prop('checked', showTrendlines);
-            $(controls.showMACDCheckbox).prop('checked', indicators.MACD);
-            $(controls.showADXCheckbox).prop('checked', indicators.ADX);
+            $(controls.showPeaksCheckbox).prop('checked', self.params.getShowPeaks);
+            $(controls.showTrendlinesCheckbox).prop('checked', self.params.getShowTrendlines);
+            $(controls.showMACDCheckbox).prop('checked', self.params.getShowMACD);
+            $(controls.showADXCheckbox).prop('checked', self.params.getShowADX);
         }
 
         function assignEvents() {
@@ -142,145 +249,238 @@
         };
 
     })(params);
-    var chartContainer = null;
+
+
+    //Children.
+    self.children = (function () {
+        var chartZoomControllers = [];
+        var activeChartZoomController = null;
+
+
+        //Setters
+        function setActiveChartZoomController(item) {
+            activeChartZoomController = item;
+            self.trigger({
+                type: 'zoom',
+                activeChartZoomController: item
+            });
+        };
+
+        function addZoomController(index, item) {
+            chartZoomControllers[index] = item;
+        }
+
+
+        //Getters
+        function getAllControllers() {
+            return chartZoomControllers.slice(0);
+        }
+
+        function getActiveChartZoomController() {
+            return activeChartZoomController;
+        }
+
+        function getChartZoomController(index) {
+            return chartZoomControllers[index];
+        }
+
+
+        return {
+            setActiveChartZoomController: setActiveChartZoomController,
+            addZoomController: addZoomController,
+            getActiveChartZoomController: getActiveChartZoomController,
+            getChartZoomController: getChartZoomController,
+            getAllControllers: getAllControllers
+        };
+
+    })();
+
 
     //Data.
-    var dataInfo = { };
+    self.data = (function () {
+        var dataSetInfo;
+        var data;
+        var valueRanges;
 
 
-    //Changing properties.
-    function changeCompany(id) {
-        company = STOCK.COMPANIES.getCompany(id);
-        self.trigger({
-            type: 'changeCompany',
-            timeframe: timeframe,
-            company: company
-        });
-    }
-
-    function changeTimeframe(id) {
-        timeframe = STOCK.TIMEFRAMES.getItem(id);
-        self.trigger({
-            type: 'changeTimeframe',
-            timeframe: timeframe,
-            company: company
-        });
-    }
-
-    function changeShowPeaksSetting(_value) {
-        if (showPeaks != _value) {
-            showPeaks = _value;
-            self.trigger({
-                type: 'showPeaks',
-                value: showPeaks
-            });
+        //Loaders
+        function loadDataSetInfo(resultFromDb) {
+            dataSetInfo = adjustDataInfo(resultFromDb.info);
+            feedChildrenObjects(feedChildWithDataSetInfo);
         }
-    }
 
-    function changeShowTrendlinesSetting(_value) {
-        if (showTrendlines != _value) {
-            showTrendlines = _value;
-            self.trigger({
-                type: 'showTrendlines',
-                value: showTrendlines
-            });
+        function loadData(resultFromDb) {
+            setData(resultFromDb.quotations);
+            feedChildrenObjects(feedChildWithData);
         }
-    }
 
-    function changeShowADXSetting(_value) {
-        if (indicators.ADX != _value) {
-            indicators.ADX = _value;
-            self.trigger({
-                type: 'showADX',
-                value: indicators.ADX
-            });
+
+        //Setters
+        function setDataSetInfo(value) {
+            dataSetInfo = value;
         }
-    }
 
-    function changeShowMACDSetting(_value) {
-        if (indicators.MACD != _value) {
-            indicators.MACD = _value;
-            self.trigger({
-                type: 'showMACD',
-                value: indicators.MACD
-            });
+        function setData(value) {
+            data = value;
+            calculateValueRanges();
         }
-    }
+
+        function calculateValueRanges() {
+            var extremumValues = {
+                price: { min: null, max: null },
+                adx: { min: null, max: null },
+                macd: { min: null, max: null }
+            };
+
+            data.forEach(function (item) {
+
+                //Quotations.
+                if (extremumValues.price.min === null || extremumValues.price.min > item.quotation.Low) {
+                    extremumValues.price.min = item.quotation.Low;
+                }
+                if (extremumValues.price.max === null || extremumValues.price.max < item.quotation.High) {
+                    extremumValues.price.max = item.quotation.High;
+                }
+
+                //ADX.
+
+                //MACD.
+
+            });
+
+            valueRanges = extremumValues;
+
+        }
 
 
+        //Getters
+        function getDataSetInfo() {
+            return dataInfo;
+        };
+
+        function getData() {
+            return data;
+        }
 
 
+        //Triggers
+        function triggerLoadDataSetInfo(properties) {
+            mielk.db.fetch(
+                'Data',
+                'GetDataSetsInfo',
+                properties,
+                {
+                    async: false,
+                    callback: function (res) { loadDataSetInfo(res); },
+                    err: function (msg) { alert(msg.status + ' | ' + msg.statusText); }
+                }
+            );
+        }
 
-    function initialize() {
-        chartContainer = new ChartsContainer({
-            controller: self,
-            chartContainerId: params.chartsContainerId,
-            company: company,
-            timeframe: timeframe,
-            showPeaks: showPeaks,
-            showTrendlines: showTrendlines,
-            showADX: indicators.ADX,
-            showMACD: indicators.MACD
-        });
-    }
+        function triggerLoadData(properties) {
+            mielk.db.fetch(
+                'Data',
+                'GetDataSets',
+                properties,
+                {
+                    async: true,
+                    callback: function (res) { loadData(res); },
+                    err: function (msg) { alert(msg.status + ' | ' + msg.statusText); }
+                }
+            );
+        }
 
-    function run() {
-        var properties = { assetId: company.id, timeframeId: 6 }; //timeframe.id };
-        triggerLoadDataInfo(properties);
-        triggerLoadData(properties);
-    }
 
-    function triggerLoadDataInfo(properties) {
-        mielk.db.fetch(
-            'Data',
-            'GetDataSetsInfo',
-            properties,
-            {
-                async: false,
-                callback: function(res){ loadDataInfo(res); },
-                err: function (msg) { alert(msg.status + ' | ' + msg.statusText); }
+        //Modifiers.
+        function adjustDataInfo(arr) {
+            return {
+                counter: arr.Counter,
+                endDate: mielk.dates.fromCSharpDateTime(arr.EndDate),
+                endIndex: arr.EndIndex,
+                startDate: mielk.dates.fromCSharpDateTime(arr.StartDate),
+                startIndex: arr.StartIndex
             }
-        );
-    }
+        }
 
-    function triggerLoadData(properties) {
-        mielk.db.fetch(
-            'Data',
-            'GetDataSets',
-            properties,
-            {
-                async: true,
-                callback: function (res) { loadData(res); },
-                err: function (msg) { alert(msg.status + ' | ' + msg.statusText); }
-            }
-        );
-    }
 
-    function loadDataInfo(resultFromDb) {
-        dataInfo = resultFromDb.info;
-        self.trigger({
-            type: 'dataInfoLoaded',
-            params: dataInfo
-        });
-    }
+        //Other methods.
+        function feedChildrenObjects(fn) {
+            var activeChild = self.children.getActiveChartZoomController();
+            var allChildren = self.children.getAllControllers();
 
-    function loadData(resultFromDb) {
-        data = resultFromDb;
-        self.trigger({
-            type: 'dataLoaded',
-            params: { data: data }
-        });
-    }
+            fn(activeChild);
+            allChildren.forEach(function (item) {
+                if (item !== activeChild) {
+                    fn(item);
+                }
+            });
+
+        }
+
+        function feedChildWithDataSetInfo(item) {
+            item.data.setDataSetInfo(dataSetInfo);
+        }
+
+        function feedChildWithData(item) {
+            item.data.setItems(data);
+            item.data.setValueRanges(valueRanges);
+        }
 
 
 
-    //Public API.
-    self.run = run;
-    self.getDataInfo = function () {
-        return dataInfo;
+        return {
+            loadDataSetInfo: loadDataSetInfo,
+            loadData: loadData,
+            setDataSetInfo: setDataSetInfo,
+            setData: setData,
+            getDataSetInfo: getDataSetInfo,
+            getData: getData,
+            triggerLoadDataSetInfo: triggerLoadDataSetInfo,
+            triggerLoadData: triggerLoadData
+        };
+
+    })();
+
+
+    //Run.
+    self.run = function () {
+        var properties = { assetId: self.params.getCompany().id, timeframeId: self.params.getTimeframe().id };
+        self.data.triggerLoadDataSetInfo(properties);
+        self.data.triggerLoadData(properties);
     };
 
-    initialize();
+
+    //Initializing.
+    (function initialize() {
+        var step = STOCK.CONFIG.candle.svgLevelsZoom;
+        var maxWidth = STOCK.CONFIG.candle.maxWidth;
+        var minWidth = STOCK.CONFIG.candle.minWidth;
+        var width = maxWidth;
+        var index = 1;
+
+        while (width > minWidth) {
+            var chartZoomController = new ChartZoomController(self, {
+                index: index,
+                timeframe: self.params.getTimeframe(),
+                itemWidth: width
+            });
+            self.children.addZoomController(index++, chartZoomController);
+            width = width / step;
+        }
+
+        (function setInitialActiveChartZoomController() {
+            var defaultWidth = STOCK.CONFIG.candle.defaultWidth;
+            self.children.getAllControllers().forEach(function (item) {
+                if (self.children.getActiveChartZoomController() === null) {
+                    if (item.params.getItemWidth() < defaultWidth) {
+                        self.children.setActiveChartZoomController(item);
+                    }
+                }
+            });
+        })();
+
+    })();
+
 
 }
 ChartController.prototype.bind = function (e) {
@@ -289,98 +489,3 @@ ChartController.prototype.bind = function (e) {
 ChartController.prototype.trigger = function (e) {
     $(self).trigger(e);
 }
-
-
-//mielk.db.fetch(
-//    'Data',
-//    'GetDataSetsInfo',
-//    properties,
-//    {
-//        async: false,
-//        callback: function (res) {
-
-//            if (res == null) {
-//                res = {
-//                    firstDate: mielk.dates.fromString('2005-01-04')
-//                    , lastDate: mielk.dates.fromString('2017-12-08')
-//                    , minLevel: 14.75
-//                    , maxLevel: 456.5
-//                    , counter: 3342
-//                };
-//            }
-
-//            var arr = { firstDate: res.firstDate, lastDate: res.lastDate, minLevel: res.minLevel * 1, maxLevel: res.maxLevel * 1, counter: res.counter * 1 };
-
-//            firstDate = arr.firstDate; //mielk.dates.fromCSharpDateTime(arr.firstDate);
-//            lastDate = arr.lastDate; //mielk.dates.fromCSharpDateTime(arr.lastDate);
-//            minLevel = arr.minLevel;
-//            maxLevel = arr.maxLevel;
-
-
-//            actualQuotationsCounter = arr.counter;
-
-//            //Create object for quotations (with slot for each date
-//            //between [firstDate] and [lastDate].
-//            createQuotationsSets();
-//            realQuotationsCounter = Object.keys(quotations).length;
-
-//            //Flag this data set as having properties already loaded.
-//            propertiesLoaded = true;
-
-//            //Create [properties] object to be returns.
-//            properties = {
-//                firstDate: firstDate,       //The date of the first quotation
-//                lastDate: lastDate,         //The date of the last quotation
-//                minLevel: minLevel,         //The minimum level of the price
-//                maxLevel: maxLevel,         //The maximum level of the price
-//                actualQuotationsCounter: actualQuotationsCounter,   //The number of quotations in the database
-//                realQuotationsCounter: realQuotationsCounter        //The expected number of quotations
-//            };
-
-//            //If function has been passed as a parameter, call it.
-//            if (mielk.objects.isFunction(fn)) {
-//                fn(properties);
-//            }
-
-//        },
-//        err: function (msg) {
-//            alert(msg.status + ' | ' + msg.statusText);
-//        }
-//    }
-//);
-
-
-
-//mielk.db.fetch(
-//    'Data',
-//    'GetDataSets',
-//    params,
-//    {
-//        async: true,
-//        callback: function (res) {
-
-//            var _quotations = res.quotations;
-//            var _trendlines = res.trendlines;
-
-
-//            //Populate quotations collection.
-//            assignQuotations(_quotations);
-
-//            //If function has been passed as a parameter, call it.
-//            if (mielk.objects.isFunction(fn)) {
-//                fn({
-//                    initial: !initialized,
-//                    obj: quotations,
-//                    arr: quotationsArray,
-//                    trendlines: _trendlines,
-//                    complete: (startIndex === 0)
-//                });
-//            }
-
-//            if (startIndex > 0) {
-//                fetchQuotations(fn, { initialized: true, endIndex: startIndex - 1 });
-//            }
-
-//        }
-//    }
-//);

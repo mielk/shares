@@ -13,10 +13,11 @@
     self.candleWidth = params.candleWidth;
     self.isRendered = false;
     self.data = self.parent.data;
+    self.dataInfo = self.parent.dataInfo;
 
     self.render = function() {
         var chr = self.chartRenderer;
-        chr.setDataInfo(self.parent.dataInfo);
+        chr.setDataInfo(self.dataInfo);
         chr.setData(self.data)
         chr.renderQuotations();
         chr.renderExtrema();
@@ -64,28 +65,46 @@
     self.ui = (function () {
         var chartContainer = self.parent.ui.getChartContainer();
         var parentContainer = self.parent.ui.getSvgContainer();
+        var datesContainer = self.parent.ui.getDatesContainer();
+        var valuesContainer = self.parent.ui.getValuesContainer();
+
+        var svgsContainer = null;
         var svgCandles = null;
         var svgExtrema = null;
         var svgTrendlines = null;
+
         //[Dates]
-        var datesContainer = self.parent.ui.getDatesContainer();
-        var datesLabelsContainer = null;
-        var datesVerticalSeparatorsContainer = null;
+        var dateLabelsContainer = null;
+        var gridLinesContainer = null;
+
+        //[Values]
+        var valueLabelsContainer = null;
 
 
         //Candles container.
-        var svgsContainer = $('<div/>', {
-            'class': 'chart-svg-panel',
-            id: self.key + '-svgs-container'
-        }).css({
-            'height': (self.baseSize.height + 100) + 'px',
-            'width': self.baseSize.width + 'px',
-            'left': 0,
-            'top': 0,
-            'visibility': 'hidden'
-        }).appendTo(parentContainer)[0];
 
 
+
+        function insertSvgsContainer() {
+            var div = $('<div/>', {
+                'class': 'chart-svg-panel',
+                id: self.key + '-svgs-container'
+            }).css({
+                'height': (self.baseSize.height + 100) + 'px',
+                'width': self.baseSize.width + 'px',
+                'left': 0,
+                'top': 0,
+                'visibility': 'hidden'
+            }).appendTo(parentContainer)[0];
+            return div;
+        }
+
+        function getSvgsContainer(){
+            if (svgsContainer === null){
+                svgsContainer = insertSvgsContainer();
+            }
+            return svgsContainer;
+        }
 
         function insertSvgQuotations() {
             var svg = mielk.svg.createSvg();
@@ -97,7 +116,7 @@
             svg.style.top = '50px';
             svg.style.height = height + 'px';
 
-            svgsContainer.appendChild(svg);
+            getSvgsContainer().appendChild(svg);
             return svg;
 
         }
@@ -113,7 +132,7 @@
             svg.style.top = 0;
             svg.style.height = height + 'px';
 
-            svgsContainer.appendChild(svg);
+            getSvgsContainer().appendChild(svg);
             return svg;
 
         }
@@ -129,14 +148,14 @@
             svg.style.top = 0;
             svg.style.height = height + 'px';
 
-            svgsContainer.appendChild(svg);
+            getSvgsContainer().appendChild(svg);
             return svg;
 
         }
 
 
         //[Dates]
-        function insertDatesLabelsContainer() {
+        function insertDateLabelsContainer() {
             var div = $('<div/>', {
                 'class': 'date-labels-container',
                 id: self.key + '-date-labels-container'
@@ -146,15 +165,29 @@
             return div;
         }
 
-        function insertDatesVerticalSeparatorsContainer() {
+        function insertGridLinesContainer() {
             var div = $('<div/>', {
-                'class': 'date-vertical-lines-container',
-                id: self.key + '-date-vertical-lines-container'
+                'class': 'grid-lines-container',
+                id: self.key + '-grid-lines-container'
             }).css({
                 'visibility': 'visible'
             }).appendTo(chartContainer)[0];
             return div;
         }
+
+
+
+        //[Values]
+        function insertValueLabelsContainer() {
+            var div = $('<div/>', {
+                'class': 'value-labels-container',
+                id: self.key + '-value-labels-container'
+            }).css({
+                'visibility': 'visible'
+            }).appendTo(valuesContainer)[0];
+            return div;
+        }
+
 
         function resize(e) {
             var resized = false;
@@ -198,9 +231,7 @@
             getContainer: function () {
                 return parentContainer;
             },
-            getSvgsContainer: function () {
-                return svgsContainer;
-            },
+            getSvgsContainer: getSvgsContainer,
             getCandlesSvg: function () {
                 if (svgCandles === null) {
                     svgCandles = insertSvgQuotations();
@@ -219,17 +250,23 @@
                 }
                 return svgExtrema;
             },
-            getDatesLabelsContainer: function () {
-                if (datesLabelsContainer === null) {
-                    datesLabelsContainer = insertDatesLabelsContainer();
+            getDateLabelsContainer: function () {
+                if (dateLabelsContainer === null) {
+                    dateLabelsContainer = insertDateLabelsContainer();
                 }
-                return datesLabelsContainer;
+                return dateLabelsContainer;
             },
-            getDatesVerticalSeparatorContainer: function () {
-                if (datesVerticalSeparatorsContainer === null) {
-                    datesVerticalSeparatorsContainer = insertDatesVerticalSeparatorsContainer();
+            getGridLinesContainer: function () {
+                if (gridLinesContainer === null) {
+                    gridLinesContainer = insertGridLinesContainer();
                 }
-                return datesVerticalSeparatorsContainer;
+                return gridLinesContainer;
+            },
+            getValueLabelsContainer: function () {
+                if (valueLabelsContainer === null) {
+                    valueLabelsContainer = insertValueLabelsContainer();
+                }
+                return valueLabelsContainer;
             },
             resize: resize,
             show: show,
@@ -250,10 +287,18 @@
     self.layout = function () {
 
         var parentDiv = self.ui.getContainer();
-        var candlesSvg = self.ui.getCandlesSvg();
+        var candlesSvg = null;
+
+        function getCandlesSvg() {
+            if (candlesSvg === null) {
+                candlesSvg = self.ui.getCandlesSvg();
+            }
+            return candlesSvg;
+        }
 
         function getPosition() {
-            var position = $(candlesSvg).position();
+            var svg = getCandlesSvg();
+            var position = $(svg).position();
             var width = $(parentDiv).width();
             var height = $(parentDiv).height();
             var right = position.left + width;
@@ -263,8 +308,8 @@
                 top: position.top,
                 right: right,
                 bottom: bottom,
-                svgWidth: $(candlesSvg).width(),
-                svgHeight: $(candlesSvg).height(),
+                svgWidth: $(svg).width(),
+                svgHeight: $(svg).height(),
                 viewLeftX: -position.left,
                 viewRightX: -position.left + width,
                 viewWidth: width,
@@ -273,15 +318,16 @@
         };
 
         function getCandlesSvgSize() {
+            var svg = getCandlesSvg();
             return {
-                width: $(candlesSvg).width(),
-                height: $(candlesSvg).height()
+                width: $(svg).width(),
+                height: $(svg).height()
             }
         }
 
         function getExtremaSvgOffset() {
             var extremaSvg = self.ui.getExtremaSvg();
-            var candlesSvg = self.ui.getCandlesSvg();
+            var candlesSvg = getCandlesSvg();
 
             if (extremaSvg && candlesSvg) {
                 var extremaHeight = $(extremaSvg).height();
@@ -839,10 +885,15 @@ function DatesRenderer(params) {
     var self = this;
     self.DatesRenderer = true;
     self.parent = params.parent;
-    self.labelsContainer = self.parent.ui.getDatesLabelsContainer();
-    self.verticalLinesContainer = self.parent.ui.getDatesVerticalSeparatorContainer();
+
+    self.assignContainersVariables = function () {
+        self.labelsContainer = self.parent.ui.getDateLabelsContainer();
+        self.gridLinesContainer = self.parent.ui.getGridLinesContainer();
+    }
 
     self.render = function (data) {
+
+        self.assignContainersVariables();
 
         //Assign values to inner variables.
         self.quotations = data.quotations;
@@ -887,7 +938,7 @@ function DatesRenderer(params) {
             'class': 'date-vertical-line'
         }).css({
             'left': x + 'px'
-        }).appendTo(self.verticalLinesContainer)[0];
+        }).appendTo(self.gridLinesContainer)[0];
 
         var ticker = $('<div/>', {
             'class': 'date-label-ticker'
@@ -908,7 +959,9 @@ function DatesRenderer(params) {
 
 
 
+function ValuesRenderer(params) {
 
+}
 
 
 
