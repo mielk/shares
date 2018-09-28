@@ -54,7 +54,7 @@
             }
         }
 
-        function setShowADX(value) {
+        function setShowAdx(value) {
             if (indicators.ADX != value) {
                 indicators.ADX = value;
                 self.trigger({
@@ -64,7 +64,7 @@
             }
         }
 
-        function setShowMACD(value) {
+        function setShowMacd(value) {
             if (indicators.MACD != value) {
                 indicators.MACD = value;
                 self.trigger({
@@ -92,11 +92,11 @@
             return showTrendlines;
         }
 
-        function getShowADX() {
+        function getShowAdx() {
             return indicators.ADX;
         }
 
-        function getShowMACD() {
+        function getShowMacd() {
             return indicators.MACD;
         }
 
@@ -107,14 +107,14 @@
             setTimeframe: setTimeframe,
             setShowPeaks: setShowPeaks,
             setShowTrendlines: setShowTrendlines,
-            setShowADX: setShowADX,
-            setShowMACD: setShowMACD,
+            setShowAdx: setShowAdx,
+            setShowMacd: setShowMacd,
             getCompany: getCompany,
             getTimeframe: getTimeframe,
             getShowPeaks: getShowPeaks,
             getShowTrendlines: getShowTrendlines,
-            getShowADX: getShowADX,
-            getShowMACD: getShowMACD
+            getShowAdx: getShowAdx,
+            getShowMacd: getShowMacd
         }
 
 
@@ -254,7 +254,7 @@
     //Children.
     self.children = (function () {
         var chartZoomControllers = [];
-        var activeChartZoomController = null;
+        var activeChartZoomController;
 
 
         //Setters
@@ -280,6 +280,10 @@
             return activeChartZoomController;
         }
 
+        function noActiveChart() {
+            return activeChartZoomController === undefined;
+        }
+
         function getChartZoomController(index) {
             return chartZoomControllers[index];
         }
@@ -290,6 +294,7 @@
             addZoomController: addZoomController,
             getActiveChartZoomController: getActiveChartZoomController,
             getChartZoomController: getChartZoomController,
+            noActiveChart: noActiveChart,
             getAllControllers: getAllControllers
         };
 
@@ -371,8 +376,12 @@
                 properties,
                 {
                     async: false,
-                    callback: function (res) { loadDataSetInfo(res); },
-                    err: function (msg) { alert(msg.status + ' | ' + msg.statusText); }
+                    callback: function (res) {
+                        loadDataSetInfo(res);
+                    },
+                    err: function (msg) {
+                        alert(msg.status + ' | ' + msg.statusText);
+                    }
                 }
             );
         }
@@ -409,11 +418,11 @@
             var allChildren = self.children.getAllControllers();
 
             fn(activeChild);
-            allChildren.forEach(function (item) {
-                if (item !== activeChild) {
-                    fn(item);
-                }
-            });
+            //allChildren.forEach(function (item) {
+            //    if (item !== activeChild) {
+            //        fn(item);
+            //    }
+            //});
 
         }
 
@@ -471,7 +480,7 @@
         (function setInitialActiveChartZoomController() {
             var defaultWidth = STOCK.CONFIG.candle.defaultWidth;
             self.children.getAllControllers().forEach(function (item) {
-                if (self.children.getActiveChartZoomController() === null) {
+                if (self.children.noActiveChart()) {
                     if (item.params.getItemWidth() < defaultWidth) {
                         self.children.setActiveChartZoomController(item);
                     }

@@ -8,6 +8,7 @@ function ChartZoomController(parent, params) {
     var self = this;
     self.ChartZoomController = true;
     self.parent = parent;
+    self.isInitialized = false;
 
 
     self.params = (function () {
@@ -88,6 +89,7 @@ function ChartZoomController(parent, params) {
             createItemsArray(value);
             addSpareItems();
             self.layout.appendXCoordinates(items);
+            self.dates.renderDatesLine();
         }
 
         function createItemsArray(value) {
@@ -103,6 +105,7 @@ function ChartZoomController(parent, params) {
 
         function setValueRanges(value) {
             valueRanges = value;
+            self.charts.insertCharts();
         }
 
         function setTrendlines(chartType, value) {
@@ -163,15 +166,32 @@ function ChartZoomController(parent, params) {
 
 
     self.ui = (function () {
-        var chartsContainer = document.getElementById('charts-container');
-        var datesContainer = document.getElementById('date-line-content');
+        var parentContainer = document.getElementById('charts-container');
+        var chartsContainer;
 
 
+        //[Inserting components]
+        function insertChartsContainer() {
+            chartsContainer = $('<div/>', {
+                'class': 'chart-zoom-meta-container'
+            }).appendTo(parentContainer)[0];
+        }
+
+
+        //[Getters]
         function getVisibleWidth() {
+            if (chartsContainer === undefined) insertChartsContainer();
             return $(chartsContainer).width();
         }
 
+        function getChartsContainer() {
+            if (chartsContainer === undefined) insertChartsContainer();
+            return chartsContainer;
+        }
+
+
         return {
+            getChartsContainer: getChartsContainer,
             getVisibleWidth: getVisibleWidth
         }
 
@@ -219,6 +239,122 @@ function ChartZoomController(parent, params) {
         }
 
     })();
+
+
+    self.dates = (function () {
+        var datesContainer = document.getElementById('date-line-content');
+        var verticalGridLinesContainer;
+        var labelsContainer;
+
+
+        function renderDatesLine() {
+            var items = self.data.getItems();
+            var timeframe = self.params.getTimeframe();
+            var prevDate = null;
+            var left = 0;
+
+            if (labelsContainer === undefined) insertLabelsContainer();
+            if (verticalGridLinesContainer === undefined) insertVerticalGridLinesContainer();
+
+            items.forEach(function (item) {
+                var date = item.date;
+                var period = timeframe.getPeriodLabelChange(prevDate, date);
+                if (period.periodChanged) {
+                    addPeriodSeparator(item.coordinates.left, period.periodLabel);
+                }
+                left = item.coordinates.left;
+                prevDate = date;
+            });
+
+            //Resize labels container.
+            $(labelsContainer).css('width', (left + 1) + 'px');
+            $(verticalGridLinesContainer).css('width', (left + 1) + 'px');
+
+        }
+
+        //[Acctual render functions]
+        function insertLabelsContainer() {
+            labelsContainer = $('<div/>', {
+                'class': 'date-labels-container',
+                'id': 'date-labels-container'
+            }).appendTo(datesContainer)[0];
+        }
+
+        function insertVerticalGridLinesContainer() {
+            verticalGridLinesContainer = $('<div/>', {
+                'class': 'vertical-grid-lines',
+                'id': 'vertical-grid-lines'
+            }).appendTo(self.ui.getChartsContainer())[0];
+        }
+
+        function addPeriodSeparator(x, label) {
+            var verticalLine = $('<div/>', {
+                'class': 'date-vertical-line'
+            }).css({
+                'left': x + 'px'
+            }).appendTo(verticalGridLinesContainer)[0];
+
+            var ticker = $('<div/>', {
+                'class': 'date-label-ticker'
+            }).css({
+                'left': x + 'px'
+            }).appendTo(labelsContainer)[0];
+
+            var label = $('<div/>', {
+                'class': 'date-label',
+                'html': label
+            }).appendTo(labelsContainer)[0];
+            var width = $(label).width();
+            $(label).css('left', (x - width / 2) + 'px');
+
+        }
+
+
+
+        return {
+            renderDatesLine: renderDatesLine
+        }
+
+    })();
+
+
+    self.charts = (function () {
+        var valuesChart;
+        var adxChart;
+        var macdChart;
+
+        function insertCharts() {
+            insertValuesChart();
+            insertAdxChart();
+            insertMacdChart();
+        }
+
+        function insertValuesChart() {
+            valuesChart = new Chart(self, {
+                type: STOCK.INDICATORS.PRICE,
+                timeframe: self.params.getTimeframe()
+            });
+            valuesChart.ui.render();
+        }
+
+        function insertAdxChart() {
+            if (self.parent.params.getShowAdx()) {
+                var x = 1 / 0;
+            }
+        }
+
+        function insertMacdChart() {
+            if (self.parent.params.getShowMacd()) {
+                var x = 1 / 0;
+            }
+        }
+
+        return {
+            insertCharts: insertCharts
+        }
+
+    })();
+
 
 }
 

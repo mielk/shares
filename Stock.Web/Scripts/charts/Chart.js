@@ -5,13 +5,50 @@
     //[Meta].
     var self = this;
     self.Chart = true;
-    self.type = params.type;
-    self.timeframe = params.timeframe;
-    self.key = 'chart_' + params.type.name;
+    self.parent = parent;
 
-    //Properties.
-    var parent = parentContainer;
-    var controller = parent.getController();
+
+    self.params = (function () {
+        var type = params.type;
+        var timeframe = params.timeframe;
+
+
+        //Setters
+        /* Other properties should not be changed after being set during object initialization */
+
+
+        //Getters
+        function getType() {
+            return type;
+        }
+
+        function getTimeframe() {
+            return timeframe;
+        }
+
+
+        return {
+            getType: getType,
+            getTimeframe: getTimeframe
+        }
+
+    })();
+
+
+    self.ui = (function () {
+        var parentContainer = self.parent.ui.getChartsContainer();
+
+        function render() {
+            var x = 1;
+        }
+
+        return {
+            render: render
+        }
+
+    })();
+
+
 
 }
 
