@@ -126,7 +126,7 @@
     box-sizing: border-box;
     height: 100%;
     left: 0;
-    right: 100px;
+    right: 60px;
     border-right: 1px solid #999999;
     overflow: hidden;
 }
@@ -185,7 +185,7 @@
     float: right;
     box-sizing: border-box;
     right: 0px;
-    width: 100px;
+    width: 60px;
     top: 0;
     height: 100%;
     overflow: hidden;
@@ -200,7 +200,7 @@
 
 .value-label {
     position: absolute;
-    left: 11px;
+    left: 6px;
     color: #999999;
     font-family: 'Century Gothic';
     font-size: 12px;
@@ -209,13 +209,34 @@
 .value-label-ticker {
     position: absolute;
     left: 0;
-    width: 10px;
+    width: 4px;
     height: 1px;
     background: #999999;
     border: none;
 }
 
+.crosshair-horizontal-line {
+    position: absolute;
+    box-sizing: border-box;
+    height: 1px;
+    width: 100%;
+    border: none;
+    border-top: 1px dashed #B7B7B7;
+}
 
+.current-value-label {
+    position: absolute;
+    height: 21px;
+    width: 100%;
+    background-color: #4C525E;
+    color: white;
+    line-height: 11px;
+    font-size: 11px;
+    font-family: 'Century Gothic';
+    text-align: center;
+    padding: 5px 0;
+    z-index: 5;
+}
 
 
 
@@ -238,7 +259,7 @@
     top: 0;
     bottom: 0;
     left: 0;
-    right: 100px;
+    right: 60px;
     background-color: #FFFFFF;
     border-right: 0.5px solid #999999;
     overflow: hidden;
@@ -253,7 +274,7 @@
 
 .date-label {
     position: absolute;
-    top: 11px;
+    top: 8px;
     color: #999999;
     font-family: 'Century Gothic';
     font-size: 12px;
@@ -262,7 +283,7 @@
 .date-label-ticker {
     position: absolute;
     top: 0;
-    height: 10px;
+    height: 4px;
     width: 1px;
     background: #999999;
     border: none;
@@ -279,15 +300,15 @@
 
 .current-data-label {
     position: absolute;
-    height: 21px;
+    height: 32px;
     width: 72px;
     background-color: #4C525E;
     color: white;
-    line-height: 11px;
+    line-height: 13px;
     font-size: 11px;
     font-family: 'Century Gothic';
     text-align: center;
-    padding: 5px 0;
+    padding: 3px 0;
     z-index: 5;
 }
 

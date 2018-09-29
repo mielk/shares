@@ -317,7 +317,7 @@
         var type = self.params.getType();
         var svgBoxHeight = self.ui.getSvgBoxHeight();
         var itemsSvgOffset = self.ui.getSvgItemsBoxTopOffset();
-        var oneUnitHeight;
+        var unitHeight;
         var visibleRange = {};
         
 
@@ -338,7 +338,7 @@
             renderItems();
             renderPricesExtrema();
             renderPriceTrendlines();
-            renderValuesAndHorizontalGridLines();
+            self.valuesPanel.renderValuesAndHorizontalGridLines(unitHeight);
         }
 
         function renderItems() {
@@ -349,7 +349,7 @@
 
             function getY(value) {
                 var pointsDistance = valuesRange.max - value;
-                return pointsDistance * oneUnitHeight;
+                return pointsDistance * unitHeight;
             }
 
             (function adjustSvgHeight() {
@@ -361,7 +361,7 @@
 
             (function calculateUnitHeight() {
                 var levelsDistance = valuesRange.max - valuesRange.min;
-                oneUnitHeight = svgBoxHeight / levelsDistance;
+                unitHeight = svgBoxHeight / levelsDistance;
             })();
 
             (function appendVerticalCoordinates() {
@@ -520,7 +520,33 @@
         function renderPriceTrendlines() {
         }
 
-        function renderValuesAndHorizontalGridLines() {
+
+        //[ADX]
+        function renderAdx() {
+        }
+
+
+        //[MACD]
+        function renderMacd() {
+
+        }
+
+
+
+        return {
+            render: render
+        }
+
+    })();
+
+
+    self.valuesPanel = (function(){
+        var horizontalLinesContainer = self.ui.getHorizontalGridLinesContainer();
+        var valueLabelsContainer = self.ui.getValueLabelsContainer();
+        var crossHair;
+        var currentValueLabel;
+
+        function renderValuesAndHorizontalGridLines(unitHeight) {
             var valuesRange = self.data.getValuesRange();
             var visibleRange = self.ui.getVisibleRange();
 
@@ -571,14 +597,12 @@
             }
             
             (function insertHtmlComponents() {
-                var horizontalLinesContainer = self.ui.getHorizontalGridLinesContainer();
-                var valueLabelsContainer = self.ui.getValueLabelsContainer();
                 var arr = generateDisplayedValuesArray();
                 var topValue = arr[arr.length - 1];
                 var y;
 
                 for (var i = arr.length - 1; i >= 0; i--) {
-                    y = (topValue - arr[i]) * oneUnitHeight;
+                    y = (topValue - arr[i]) * unitHeight;
 
                     var horizontalLine = $('<div/>', {
                         'class': 'value-horizontal-line'
@@ -602,7 +626,7 @@
 
                 }
 
-                var top = (visibleRange.max - topValue) * oneUnitHeight;
+                var top = (visibleRange.max - topValue) * unitHeight;
                 $(horizontalLinesContainer).css({
                     height: y + 'px',
                     top: top + 'px'
@@ -615,23 +639,51 @@
 
             })();
 
+            (function insertCrossHair() {
+                crossHair = $('<div/>', {
+                    'class': 'crosshair-horizontal-line'
+                }).appendTo(horizontalLinesContainer)[0];
+            })();
+
+            (function insertCurrentDateLabel() {
+                currentValueLabel = $('<div/>', {
+                    'class': 'current-value-label'
+                }).css({
+                    visibility: 'hidden'
+                }).appendTo(valueLabelsContainer)[0];
+            })();
+
         }
 
+        function updateCurrentValueIndicators(y, value){
+            var top = y - $(horizontalLinesContainer).offset().top;
+            var labelTop = Math.max(0, top - $(currentValueLabel).height() / 2);
+            var caption = value.toFixed(4);
 
-        //[ADX]
-        function renderAdx() {
+            $(crossHair).css({
+                top: top + 'px',
+                visibility: 'visible'
+            });
+            $(currentValueLabel).html(caption).css({
+                visibility: 'visible',
+                top: labelTop + 'px'
+            });
         }
 
-
-        //[MACD]
-        function renderMacd() {
-
+        function hideCurrentValueIndicators() {
+            $(crossHair).css({
+                visibility: 'hidden'
+            });
+            $(currentValueLabel).css({
+                visibility: 'hidden'
+            });
         }
-
 
 
         return {
-            render: render
+            renderValuesAndHorizontalGridLines: renderValuesAndHorizontalGridLines,
+            updateCurrentValueIndicators: updateCurrentValueIndicators,
+            hideCurrentValueIndicators: hideCurrentValueIndicators
         }
 
     })();
@@ -697,11 +749,13 @@
 
         function showInfo(e) {
             var res = findCoordinates(e);
-            self.parent.dates.moveCursor(e.pageX, res.item.date, res.item.index);
+            self.parent.dates.updateCurrentDateIndicators(e.pageX, res.item.date, res.item.index);
+            self.valuesPanel.updateCurrentValueIndicators(e.pageY, res.value);
         }
 
         function handleLeavingChartPanel() {
-            self.parent.dates.hideCursor();
+            self.parent.dates.hideCurrentDateIndicators();
+            self.valuesPanel.hideCurrentValueIndicators();
         }
 
         (function insertEventsLayer() {

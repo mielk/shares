@@ -341,22 +341,22 @@ function ChartZoomController(parent, params) {
 
 
         //[Actions]
-        function moveCursor(x, date, index) {
+        function updateCurrentDateIndicators(x, date, index) {
             var left = x - $(verticalGridLinesContainer).offset().left;
             var labelLeft = Math.max(0, left - $(currentDateLabel).width() / 2);
+            var caption = '(' + index + ')<br/>' + mielk.dates.toString(date, false);
+
             $(crossHair).css({
                 left: left + 'px',
                 visibility: 'visible'
             });
-            $(currentDateLabel).
-                html(mielk.dates.toString(date, false)).
-                css({
-                    visibility: 'visible',
-                    left: labelLeft + 'px'
-                });
+            $(currentDateLabel).html(caption).css({
+                visibility: 'visible',
+                left: labelLeft + 'px'
+            });
         }
 
-        function hideCursor() {
+        function hideCurrentDateIndicators() {
             $(crossHair).css({
                 visibility: 'hidden'
             });
@@ -367,8 +367,8 @@ function ChartZoomController(parent, params) {
 
         return {
             renderDatesLine: renderDatesLine,
-            moveCursor: moveCursor,
-            hideCursor: hideCursor
+            updateCurrentDateIndicators: updateCurrentDateIndicators,
+            hideCurrentDateIndicators: hideCurrentDateIndicators
         }
 
     })();
