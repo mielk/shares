@@ -57,7 +57,7 @@
         }
 
         function setVisibilityRange() {
-            var offset = 0.05 * (valuesRange.min + valuesRange.max) / 2;
+            var offset = 0.04 * (valuesRange.min + valuesRange.max) / 2;
             var min = Math.floor(valuesRange.min - offset);
             var max = Math.floor(valuesRange.max + offset);
             self.ui.setVisibleRange(min, max);
@@ -263,6 +263,16 @@
         }
 
 
+        //Access to other HTML components.
+        function getValueLabelsContainer() {
+            return valuesLabelsContainer;
+        }
+
+        function getHorizontalGridLinesContainer() {
+            return horizontalGridLinesContainer;
+        }
+
+
         return {
             setSvgHeight: setSvgHeight,
             setVisibleRange: setVisibleRange,
@@ -271,7 +281,9 @@
             getItemsSvg: getItemsSvg,
             getExtremaSvg: getExtremaSvg,
             getTrendlinesSvg: getTrendlinesSvg,
-            getVisibleRange: getVisibleRange
+            getVisibleRange: getVisibleRange,
+            getHorizontalGridLinesContainer: getHorizontalGridLinesContainer,
+            getValueLabelsContainer: getValueLabelsContainer
         }
 
     })();
@@ -452,6 +464,100 @@
         }
 
         function renderValuesAndHorizontalGridLines() {
+            var valuesRange = self.data.getValuesRange();
+            var visibleRange = self.ui.getVisibleRange();
+
+            function calculateGridLinesStep() {
+                var factors = [1, 2, 5];
+                var baseDistance = (visibleRange.max - visibleRange.min) / 10;
+                var log = Math.log(baseDistance) / Math.LN10;
+                
+                var possibleSteps = [];
+                factors.forEach(function (value) {
+                    possibleSteps.push(Math.pow(10, Math.floor(log)) * value);
+                });
+                possibleSteps.push(Math.pow(10, Math.ceil(log)));
+
+                var minDistance;
+                var result;
+                possibleSteps.forEach(function (value) {
+                    var distance = Math.abs(value - baseDistance);
+                    if (minDistance === undefined || minDistance > distance) {
+                        minDistance = distance;
+                        result = value;
+                    }
+                });
+
+                return result;
+
+            }
+
+            function generateDisplayedValuesArray() {
+                var addSpaceRatio = 0.1;
+                var step = calculateGridLinesStep();
+                var min = Math.min(valuesRange.min, visibleRange.min);
+                var max = Math.max(valuesRange.max, visibleRange.max);
+                var spaceOffset = addSpaceRatio * ((max + min) / 2);
+                min -= spaceOffset;
+                max += spaceOffset;
+
+                var arr = [];
+                var remainder = min % step;
+                var value = min - remainder + (remainder < 0 ? 0 : step);
+                while (value <= max) {
+                    arr.push(value);
+                    value += step;
+                }
+
+                return arr;
+
+            }
+            
+            (function insertHtmlComponents() {
+                var horizontalLinesContainer = self.ui.getHorizontalGridLinesContainer();
+                var valueLabelsContainer = self.ui.getValueLabelsContainer();
+                var arr = generateDisplayedValuesArray();
+                var topValue = arr[arr.length - 1];
+                var y;
+
+                for (var i = arr.length - 1; i >= 0; i--) {
+                    y = (topValue - arr[i]) * oneUnitHeight;
+
+                    var horizontalLine = $('<div/>', {
+                        'class': 'value-horizontal-line'
+                    }).css({
+                        'top': y + 'px'
+                    }).appendTo(horizontalLinesContainer)[0];
+
+                    var ticker = $('<div/>', {
+                        'class': 'value-label-ticker'
+                    }).css({
+                        'top': y + 'px'
+                    }).appendTo(valueLabelsContainer)[0];
+
+                    var label = $('<div/>', {
+                        'class': 'value-label',
+                        'html': arr[i].toFixed(4)
+                    }).appendTo(valueLabelsContainer)[0];
+
+                    var height = $(label).height();
+                    $(label).css('top', (y - height / 2) + 'px');
+
+                }
+
+                var top = (visibleRange.max - topValue) * oneUnitHeight;
+                $(horizontalLinesContainer).css({
+                    height: y + 'px',
+                    top: top + 'px'
+                });
+
+                $(valueLabelsContainer).css({
+                    height: y + 'px',
+                    top: top + 'px'
+                });
+
+            })();
+
         }
 
 
