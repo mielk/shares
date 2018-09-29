@@ -95,9 +95,9 @@ function ChartZoomController(parent, params) {
         function createItemsArray(value) {
             items = [];
             value.forEach(function (item) {
-                items[item.DateIndex] = {
-                    index: item.DateIndex,
-                    date: mielk.dates.fromCSharpDateTime(item.Date),
+                items[item.index] = {
+                    index: item.index,
+                    date: item.date,
                     item: item
                 }
             });
@@ -130,7 +130,7 @@ function ChartZoomController(parent, params) {
         }
 
         function getValueRange(chartType) {
-            return valueRanges[chartType];
+            return valueRanges[chartType.name];
         }
 
 
@@ -230,7 +230,7 @@ function ChartZoomController(parent, params) {
         //Helper methods.
         function getX(value) {
             var candlesFromFirst = value - self.data.getStartIndex();
-            return value * itemWidth + candlePadding;
+            return candlesFromFirst * itemWidth + candlePadding;
         }
 
         return {
@@ -268,7 +268,6 @@ function ChartZoomController(parent, params) {
 
             //Resize labels container.
             $(labelsContainer).css('width', (left + 1) + 'px');
-            $(verticalGridLinesContainer).css('width', (left + 1) + 'px');
 
         }
 
@@ -330,11 +329,13 @@ function ChartZoomController(parent, params) {
         }
 
         function insertValuesChart() {
+            var type = STOCK.INDICATORS.PRICE; 
             valuesChart = new Chart(self, {
-                type: STOCK.INDICATORS.PRICE,
-                timeframe: self.params.getTimeframe()
+                type: type,
+                timeframe: self.params.getTimeframe(),
+                itemWidth: self.params.getItemWidth()
             });
-            valuesChart.ui.render();
+            valuesChart.data.setData(self.data.getDataSetInfo(), self.data.getItems(), self.data.getValueRange(type));
         }
 
         function insertAdxChart() {

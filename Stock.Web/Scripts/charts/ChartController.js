@@ -304,7 +304,7 @@
     //Data.
     self.data = (function () {
         var dataSetInfo;
-        var data;
+        var data = [];
         var valueRanges;
 
 
@@ -326,13 +326,19 @@
         }
 
         function setData(value) {
-            data = value;
+            data = [];
+            value.forEach(function (item) {
+                var dataItem = new DataItem(item);
+                data[dataItem.index] = dataItem;
+            });
+
             calculateValueRanges();
+
         }
 
         function calculateValueRanges() {
             var extremumValues = {
-                price: { min: null, max: null },
+                prices: { min: null, max: null },
                 adx: { min: null, max: null },
                 macd: { min: null, max: null }
             };
@@ -340,11 +346,11 @@
             data.forEach(function (item) {
 
                 //Quotations.
-                if (extremumValues.price.min === null || extremumValues.price.min > item.quotation.Low) {
-                    extremumValues.price.min = item.quotation.Low;
+                if (extremumValues.prices.min === null || extremumValues.prices.min > item.price.quotation.low) {
+                    extremumValues.prices.min = item.price.quotation.low;
                 }
-                if (extremumValues.price.max === null || extremumValues.price.max < item.quotation.High) {
-                    extremumValues.price.max = item.quotation.High;
+                if (extremumValues.prices.max === null || extremumValues.prices.max < item.price.quotation.high) {
+                    extremumValues.prices.max = item.price.quotation.high;
                 }
 
                 //ADX.

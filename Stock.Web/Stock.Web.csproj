@@ -277,9 +277,9 @@
     <Content Include="Scripts\analysis\AnalysisController.js" />
     <Content Include="Scripts\charts\ChartZoomController.js" />
     <Content Include="Scripts\charts\Chart.js" />
-    <Content Include="Scripts\charts\DateTimeLine.js" />
-    <Content Include="Scripts\charts\ValuePanel.js" />
-    <Content Include="Scripts\charts\SvgPanel.js" />
+    <Content Include="Scripts\charts\_DateTimeLine_toBeDeleted.js" />
+    <Content Include="Scripts\charts\_ValuePanel_toBeDeleted.js" />
+    <Content Include="Scripts\charts\_SvgPanel_toBeDeleted.js" />
     <Content Include="Scripts\unit-tests\AjaxServiceMock.js" />
     <Content Include="Scripts\unit-tests\mielk\mielk.dates.tests.js" />
     <Content Include="Scripts\unit-tests\lib\qunit-1.12.0.js" />
@@ -299,10 +299,10 @@
     <Content Include="Scripts\common\external\Raphael.js" />
     <None Include="Scripts\common\external\jquery\jquery-1.7.1.intellisense.js" />
     <Content Include="Scripts\common\external\bootstrap.js" />
-    <Content Include="Scripts\charts\ChartsContainer.js" />
+    <Content Include="Scripts\charts\_ChartsContainer_toBeDeleted.js" />
     <Content Include="Scripts\charts\ChartController.js" />
     <Content Include="Scripts\common\ResizableDiv.js" />
-    <Content Include="Scripts\charts\Chart2.js" />
+    <Content Include="Scripts\charts\_Chart2_toBeDeleted.js" />
     <Content Include="Scripts\common\external\css-element-queries\ElementQueries.js" />
     <Content Include="Scripts\common\external\css-element-queries\ResizeSensor.js" />
     <Content Include="Scripts\STOCK2\Company.js" />
