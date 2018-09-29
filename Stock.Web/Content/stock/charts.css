@@ -82,7 +82,7 @@
 
 
 
-/* Charts container */
+/* CHARTS CONTAINER */
 .charts-meta-container {
     display: block;
     position: relative;
@@ -132,6 +132,9 @@
 }
 
 
+
+
+
 /* CHART GRID LINES */
 .vertical-grid-lines {
     display: block;
@@ -172,6 +175,9 @@
 }
 
 
+
+
+
 /* VALUES */
 .values-container {
     display: block;
@@ -208,6 +214,9 @@
     background: #999999;
     border: none;
 }
+
+
+
 
 
 /* DATES */
@@ -259,7 +268,28 @@
     border: none;
 }
 
+.crosshair-vertical-line {
+    position: absolute;
+    box-sizing: border-box;
+    height: 100%;
+    width: 1px;
+    border: none;
+    border-right: 1px dashed #B7B7B7;
+}
 
+.current-data-label {
+    position: absolute;
+    height: 21px;
+    width: 72px;
+    background-color: #4C525E;
+    color: white;
+    line-height: 11px;
+    font-size: 11px;
+    font-family: 'Century Gothic';
+    text-align: center;
+    padding: 5px 0;
+    z-index: 5;
+}
 
 
 
@@ -270,72 +300,20 @@ svg {
     width: 100%;
 }
 
-.chart-svg-layer-container {
-    display: block;
-    position: relative;
-    float: left;
-    box-sizing: border-box;
-    background-color: white;
-    border: none;
-    height: 100%;
-    width: 100%;
-}
 
-.chart-svg-layer {
-    display: block;
+
+
+
+/* EVENTS  */
+.events-layer {
     position: absolute;
-    float: left;
-    box-sizing: border-box;
-    background-color: white;
-    border: none;
+    width: 100%;
+    height: 100%;
     top: 0;
-    bottom: 1px;
     left: 0;
-    right: 1px;
-    overflow: hidden;
+    background-color: rgba(255, 255, 255, 0);
+    z-index: 5;
 }
-
-.chart-svg-panel-container {
-    display: block;
-    position: relative;
-    float: left;
-    box-sizing: border-box;
-    background-color: white;
-    height: 100%;
-    width: 100%;
-}
-
-.chart-svg-panel {
-    display: block;
-    position: absolute;
-    float: left;
-    box-sizing: border-box;
-    background-color: white;
-    border: none;
-    left: 0px;
-}
-
-.grid-lines-container {
-    position: absolute;
-    left: 0;
-}
-
-
-
-
-
-
-
-/* VALUES */
-.value-labels-container {
-    position: absolute;
-    left: 0;
-    width: 100%;
-    overflow: hidden;
-}
-    
-
-
 
 
 /*

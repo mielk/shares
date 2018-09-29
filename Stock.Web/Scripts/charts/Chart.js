@@ -50,7 +50,7 @@
         //[Setters]
         function setData($dataSetInfo, $items, $valuesRange) {
             dataSetInfo = $dataSetInfo;
-            items = $items;
+            items = $items.slice(0);
             valuesRange = $valuesRange;
             setVisibilityRange();
             self.svg.render();
@@ -69,6 +69,14 @@
             return dataSetInfo;
         }
 
+        function getStartIndex() {
+            return dataSetInfo.startIndex;
+        }
+
+        function getEndIndex() {
+            return dataSetInfo.endIndex;
+        }
+
         function getItems() {
             return items;
         }
@@ -85,6 +93,8 @@
         return {
             setData: setData,
             getDataSetInfo: getDataSetInfo,
+            getStartIndex: getStartIndex,
+            getEndIndex: getEndIndex,
             getItems: getItems,
             getValuesRange: getValuesRange,
             countNonEmptyItems: countNonEmptyItems
@@ -109,6 +119,7 @@
         var svgBoxHeight = 1000;
         var svgItemsBoxOffset = 100;
         var svgItemsBoxTop = 0;
+        var svgLeft = 0;
         //[Visibility]
         var visibleRange = {};
         //------------------------------------------------------------------
@@ -150,9 +161,10 @@
 
             svgItems.setAttribute('preserveAspectRatio', 'none meet');
             svgItems.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
-            svgItems.style.top = '0px';
             svgItems.style.height = height + 'px';
+            svgItems.style.top = '0px';
             svgItems.style.width = width + 'px';
+            svgItems.style.left = svgLeft + 'px';
             chartContainer.appendChild(svgItems);
 
         }
@@ -165,9 +177,10 @@
 
             svgExtrema.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
             svgExtrema.setAttribute('preserveAspectRatio', 'none meet');
-            svgExtrema.style.top = top + 'px';
             svgExtrema.style.height = height + 'px';
+            svgExtrema.style.top = top + 'px';
             svgExtrema.style.width = width + 'px';
+            svgExtrema.style.left = svgLeft + 'px';
 
             chartContainer.appendChild(svgExtrema);
 
@@ -181,9 +194,10 @@
 
             svgTrendlines.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
             svgTrendlines.setAttribute('preserveAspectRatio', 'none meet');
-            svgTrendlines.style.top = top + 'px';
             svgTrendlines.style.height = height + 'px';
+            svgTrendlines.style.top = top + 'px';
             svgTrendlines.style.width = width + 'px';
+            svgTrendlines.style.left = svgLeft + 'px';
 
             chartContainer.appendChild(svgItems);
 
@@ -243,7 +257,7 @@
             return svgBoxHeight;
         }
 
-        function getSvgItemsBoxOffset() {
+        function getSvgItemsBoxTopOffset() {
             return svgItemsBoxOffset;
         }
 
@@ -262,6 +276,10 @@
             return svgTrendlines;
         }
 
+        function getSvgLeftOffset() {
+            return $(svgItems).offset().left;
+        }
+
 
         //Access to other HTML components.
         function getValueLabelsContainer() {
@@ -272,18 +290,24 @@
             return horizontalGridLinesContainer;
         }
 
+        function getChartContainer() {
+            return chartContainer;
+        }
+
 
         return {
             setSvgHeight: setSvgHeight,
             setVisibleRange: setVisibleRange,
-            getSvgItemsBoxOffset: getSvgItemsBoxOffset,
+            getSvgLeftOffset: getSvgLeftOffset,
+            getSvgItemsBoxTopOffset: getSvgItemsBoxTopOffset,
             getSvgBoxHeight: getSvgBoxHeight,
             getItemsSvg: getItemsSvg,
             getExtremaSvg: getExtremaSvg,
             getTrendlinesSvg: getTrendlinesSvg,
             getVisibleRange: getVisibleRange,
             getHorizontalGridLinesContainer: getHorizontalGridLinesContainer,
-            getValueLabelsContainer: getValueLabelsContainer
+            getValueLabelsContainer: getValueLabelsContainer,
+            getChartContainer: getChartContainer
         }
 
     })();
@@ -292,11 +316,12 @@
     self.svg = (function () {
         var type = self.params.getType();
         var svgBoxHeight = self.ui.getSvgBoxHeight();
-        var itemsSvgOffset = self.ui.getSvgItemsBoxOffset();
+        var itemsSvgOffset = self.ui.getSvgItemsBoxTopOffset();
         var oneUnitHeight;
         var visibleRange = {};
         
 
+        //[RENDERING]
         function render() {
             if (type === STOCK.INDICATORS.PRICE) {
                 renderPrices();
@@ -366,6 +391,8 @@
                     if (item.item) {
                         var quotation = item.item.price.quotation;
                         var body = {
+                            type: 'body',
+                            item: item,
                             fill: (quotation.priceUp ? priceUpBodyInsideColor : priceDownBodyInsideColor),
                             stroke: (quotation.priceUp ? priceUpBodyBorderColor : priceDownBodyBorderColor),
                             strokeWidth: item.coordinates.width < (strokeWidth * 2 + 1) ? 0 : strokeWidth,
@@ -375,6 +402,8 @@
                             x: item.coordinates.left + 0.5
                         };
                         var shadow = {
+                            type: 'shadow',
+                            item: item,
                             fill: shadowColor,
                             stroke: shadowColor,
                             strokeWidth: 0,
@@ -388,6 +417,19 @@
                     }
                 });
 
+                function appendSvgComponentToItem(component, params) {
+                    var item = params.item;
+                    var type = params.type;
+                    
+                    if (item.svg === undefined) item.svg = {};
+                    if (type === 'body') {
+                        item.svg.body = component;
+                    } else if (type === 'shadow') {
+                        item.svg.shadow = component;
+                    }
+
+                }
+
                 $(svg).empty();
                 rectangles.forEach(function (item) {
                     var rectangle = mielk.svg.createRectangle(item.width, item.height, item.x, item.y, item.fill)
@@ -396,6 +438,7 @@
                     rectangle.style.vectorEffect = 'non-scaling-stroke';
                     rectangle.style.shapeRendering = 'crispEdges'
                     svg.appendChild(rectangle);
+                    appendSvgComponentToItem(rectangle, item);
                 });
 
             })();
@@ -421,12 +464,25 @@
                     var stroke = 'rgb(' + greyscale + ',' + greyscale + ',' + greyscale + ')';
                     return {
                         item: item,
+                        isPeak: !isMin,
                         x: x,
                         y: y,
                         radius: radius,
                         stroke: stroke,
                         fill: fill
                     }
+                }
+
+                function appendSvgComponentToItem(component, params) {
+                    var item = params.item;
+                    if (item.svg === undefined) item.svg = {};
+                    if (item.svg.extrema === undefined) item.svg.extrema = {};
+                    if (params.isPeak) {
+                        item.svg.extrema.peak = component;
+                    } else {
+                        item.svg.extrema.trough = component;
+                    }
+
                 }
 
                 items.forEach(function (item) {
@@ -453,6 +509,7 @@
                     circle.style.vectorEffect = 'non-scaling-stroke';
                     circle.style.shapeRendering = 'crispEdges'
                     svg.appendChild(circle);
+                    appendSvgComponentToItem(circle, item);
                 });
 
             })();
@@ -579,6 +636,109 @@
 
     })();
 
+
+    self.events = (function () {
+        var eventsLayer;
+        var movingParams = {
+            state: false,
+            startX: 0,
+            startY: 0
+        };
+
+        function findCoordinates(e) {
+            var x = e.pageX - self.ui.getSvgLeftOffset();
+            var y = e.pageY - $(eventsLayer).offset().top;
+            var item = findItemByX(x);
+            var value = getValueByY(y);
+
+            return {
+                item: item,
+                value: value
+            };
+
+        }
+
+        function findItemByX(x) {
+            var width = self.params.getItemWidth();
+            var items = self.data.getItems();
+            var startIndex = self.data.getStartIndex();
+            var endIndex = items.length - 1;
+            var i = Math.floor(x / width) + startIndex;
+
+            if (i > endIndex) {
+                return items[endIndex];
+            } else {
+                var item = items[i];
+                if (item.coordinates.left > x) {
+                    while (items[i].coordinates.right > x) {
+                        if (--i < startIndex) {
+                            return item;
+                        }
+                        item = items[i];
+                    }
+                } else if (item.coordinates.right < x) {
+                    while (items[++i].coordinates.left < x) {
+                        item = items[i];
+                        if (i >= items.length) {
+                            return item;
+                        }
+                    }
+                }
+                return item;
+            }
+
+        }
+
+        function getValueByY(y) {
+            var visibleRange = self.ui.getVisibleRange();
+            var pixelUnits = (visibleRange.max - visibleRange.min) / visibleRange.height;
+            return visibleRange.max - (pixelUnits * y);
+        }
+
+        function showInfo(e) {
+            var res = findCoordinates(e);
+            self.parent.dates.moveCursor(e.pageX, res.item.date, res.item.index);
+        }
+
+        function handleLeavingChartPanel() {
+            self.parent.dates.hideCursor();
+        }
+
+        (function insertEventsLayer() {
+            var chartContainer = self.ui.getChartContainer();
+            eventsLayer = $('<div/>', {
+                'class': 'events-layer'
+            }).appendTo(chartContainer)[0];
+        })();
+
+        (function bindEvents(){ 
+            $(eventsLayer).bind({
+                mousedown: function (e) {
+                    movingParams.state = true;
+                    movingParams.startX = e.pageX;
+                    movingParams.startY = e.pageY;
+                    findCoordinates(e);
+                },
+                mouseup: function (e) {
+                    if (movingParams.state) {
+                        movingParams.state = false;
+                        var x = 1;
+                        //slide(e.pageX);
+                    }
+                },
+                mousemove: function (e) {
+                    if (movingParams.state) {
+                        //slide(e.pageX);
+                    }
+                    setTimeout(showInfo(e), 0);
+                },
+                mouseleave: function (e) {
+                    setTimeout(handleLeavingChartPanel(), 0);
+                }
+            });
+        })();
+
+    })();
 
 }
 

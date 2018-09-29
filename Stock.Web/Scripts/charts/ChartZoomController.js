@@ -93,14 +93,26 @@ function ChartZoomController(parent, params) {
         }
 
         function createItemsArray(value) {
+            var timeframe = self.params.getTimeframe();
+            var item;
+            var date;
+
             items = [];
-            value.forEach(function (item) {
-                items[item.index] = {
-                    index: item.index,
-                    date: item.date,
+            for (var i = dataSetInfo.startIndex; i <= dataSetInfo.endIndex; i++) {
+                if (value[i]) {
+                    item = value[i];
+                    date = item.date;
+                } else {
+                    item = null;
+                    date = timeframe.next(date);
+                }
+
+                items[i] = {
+                    index: i,
+                    date: date,
                     item: item
                 }
-            });
+            }
         }
 
         function setValueRanges(value) {
@@ -245,6 +257,8 @@ function ChartZoomController(parent, params) {
         var datesContainer = document.getElementById('date-line-content');
         var verticalGridLinesContainer;
         var labelsContainer;
+        var crossHair;
+        var currentDateLabel;
 
 
         function renderDatesLine() {
@@ -255,6 +269,8 @@ function ChartZoomController(parent, params) {
 
             if (labelsContainer === undefined) insertLabelsContainer();
             if (verticalGridLinesContainer === undefined) insertVerticalGridLinesContainer();
+            if (crossHair === undefined) insertCrossHair();
+            if (currentDateLabel === undefined) insertCurrentDateLabel();
 
             items.forEach(function (item) {
                 var date = item.date;
@@ -271,7 +287,7 @@ function ChartZoomController(parent, params) {
 
         }
 
-        //[Acctual render functions]
+        //[Actual render functions]
         function insertLabelsContainer() {
             labelsContainer = $('<div/>', {
                 'class': 'date-labels-container',
@@ -285,6 +301,21 @@ function ChartZoomController(parent, params) {
                 'id': 'vertical-grid-lines'
             }).appendTo(self.ui.getChartsContainer())[0];
         }
+
+        function insertCrossHair() {
+            crossHair = $('<div/>', {
+                'class': 'crosshair-vertical-line'
+            }).appendTo(verticalGridLinesContainer)[0];
+        }
+
+        function insertCurrentDateLabel() {
+            currentDateLabel = $('<div/>', {
+                'class': 'current-data-label'
+            }).css({
+                visibility: 'hidden'
+            }).appendTo(labelsContainer)[0];
+        }
+
 
         function addPeriodSeparator(x, label) {
             var verticalLine = $('<div/>', {
@@ -309,9 +340,35 @@ function ChartZoomController(parent, params) {
         }
 
 
+        //[Actions]
+        function moveCursor(x, date, index) {
+            var left = x - $(verticalGridLinesContainer).offset().left;
+            var labelLeft = Math.max(0, left - $(currentDateLabel).width() / 2);
+            $(crossHair).css({
+                left: left + 'px',
+                visibility: 'visible'
+            });
+            $(currentDateLabel).
+                html(mielk.dates.toString(date, false)).
+                css({
+                    visibility: 'visible',
+                    left: labelLeft + 'px'
+                });
+        }
+
+        function hideCursor() {
+            $(crossHair).css({
+                visibility: 'hidden'
+            });
+            $(currentDateLabel).css({
+                visibility: 'hidden'
+            });
+        }
 
         return {
-            renderDatesLine: renderDatesLine
+            renderDatesLine: renderDatesLine,
+            moveCursor: moveCursor,
+            hideCursor: hideCursor
         }
 
     })();
