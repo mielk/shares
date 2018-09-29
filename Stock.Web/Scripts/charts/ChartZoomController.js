@@ -344,7 +344,7 @@ function ChartZoomController(parent, params) {
         function updateCurrentDateIndicators(x, date, index) {
             var left = x - $(verticalGridLinesContainer).offset().left;
             var labelLeft = Math.max(0, left - $(currentDateLabel).width() / 2);
-            var caption = '(' + index + ')<br/>' + mielk.dates.toString(date, false);
+            var caption = mielk.dates.toString(date, false) + '<br/>[' + index + ']';
 
             $(crossHair).css({
                 left: left + 'px',

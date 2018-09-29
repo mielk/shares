@@ -749,8 +749,9 @@
 
         function showInfo(e) {
             var res = findCoordinates(e);
-            self.parent.dates.updateCurrentDateIndicators(e.pageX, res.item.date, res.item.index);
-            self.valuesPanel.updateCurrentValueIndicators(e.pageY, res.value);
+            setTimeout(self.parent.dates.updateCurrentDateIndicators(e.pageX, res.item.date, res.item.index), 0);
+            setTimeout(self.valuesPanel.updateCurrentValueIndicators(e.pageY, res.value), 0);
+            setTimeout(self.legend.updateLegend(res.item), 0);
         }
 
         function handleLeavingChartPanel() {
@@ -791,6 +792,123 @@
                 }
             });
         })();
+
+    })();
+
+
+    self.legend = (function () {
+        var legendContainer;
+        var legendItems = {};
+
+        (function insertLegendComponents() {
+            var parentContainer = self.ui.getChartContainer();
+            legendContainer = $('<div/>', {
+                'class': 'legend-container'
+            }).appendTo(parentContainer)[0];
+        })();
+
+
+        //[RENDERING]
+        function renderPriceLegend() {
+
+            var legendItem = function($name, $symbol){
+                var name = $name;
+                var symbol = $symbol;
+                var mainSpan;
+                var symbolSpan;
+                var priceSpan;
+
+                (function render() {
+                    mainSpan = $('<span/>', {
+                        'class': 'legend-item'
+                    }).css({
+                        visibility: 'hidden'
+                    }).appendTo(legendContainer)[0];
+
+                    symbolSpan = $('<span/>', {
+                        'class': 'legend-price-label',
+                        html: symbol
+                    }).appendTo(mainSpan)[0];
+
+                    priceSpan = $('<span/>', {
+                        'class': 'legend-price-value'
+                    }).appendTo(mainSpan)[0];
+
+                })();
+
+                function updateValue(value) {
+                    $(mainSpan).css('visibility', 'visible');
+                    $(priceSpan).html(value.toFixed(4));
+                }
+
+                return {
+                    updateValue: updateValue
+                }
+
+            }
+
+            legendItems.open = legendItem('open', 'O');
+            legendItems.high = legendItem('high', 'H');
+            legendItems.low = legendItem('low', 'L');
+            legendItems.close = legendItem('close', 'C');
+
+        }
+
+        function renderAdxLegend() {
+
+        }
+
+        function renderMacdLegend() {
+
+        }
+
+        (function render() {
+            var type = self.params.getType();
+            if (type === STOCK.INDICATORS.PRICE) {
+                renderPriceLegend();
+            } else if (type === STOCK.INDICATORS.ADX) {
+                renderAdxLegend();
+            } else if (type === STOCK.INDICATORS.MACD) {
+                renderMacdLegend();
+            }
+        })()
+
+
+        //[UPDATING]
+        function updateLegend(item) {
+            var type = self.params.getType();
+            if (type === STOCK.INDICATORS.PRICE) {
+                updatePriceLegend(item);
+            } else if (type === STOCK.INDICATORS.ADX) {
+                updateAdxLegend(item);
+            } else if (type === STOCK.INDICATORS.MACD) {
+                updateMacdLegend(item);
+            }
+        }
+
+        function updatePriceLegend(item) {
+            if (item.item) {
+                var quotation = item.item.price.quotation;
+                legendItems.open.updateValue(quotation.open);
+                legendItems.high.updateValue(quotation.high);
+                legendItems.low.updateValue(quotation.low);
+                legendItems.close.updateValue(quotation.close);
+            }
+        }
+
+        function updateAdxLegend(item) {
+
+        }
+
+        function updateMacdLegend(item) {
+
+        }
+
+
+        return {
+            updateLegend: updateLegend
+        }
+
 
     })();
 

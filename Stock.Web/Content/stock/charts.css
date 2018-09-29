@@ -300,15 +300,15 @@
 
 .current-data-label {
     position: absolute;
-    height: 32px;
+    height: 28px;
     width: 72px;
     background-color: #4C525E;
     color: white;
-    line-height: 13px;
+    line-height: 12px;
     font-size: 11px;
     font-family: 'Century Gothic';
     text-align: center;
-    padding: 3px 0;
+    padding: 2px 0;
     z-index: 5;
 }
 
@@ -337,32 +337,47 @@ svg {
 }
 
 
+
+/* LEGEND */
+.legend-container {
+    position: absolute;
+    height: auto;
+    width: auto;
+    top: 3px;
+    left: 3px;
+    padding: 3px;
+    z-index: 6;
+    background-color: rgba(255, 255, 255, 0);
+}
+
+.legend-item {
+    height: auto;
+    width: auto;
+    background-color: rgba(255, 255, 255, 0);
+    margin-right: 9px;
+}
+
+.legend-price-label {
+    width: auto;
+    height: auto;
+    font-size: 14px;
+    line-height: 20px;  
+    color: rgb(152, 152, 152);
+}
+
+.legend-price-value {
+    width: auto;
+    height: auto;
+    font-size: 14px;
+    line-height: 20px;
+    margin-left: 3px;
+    color: rgb(91, 26, 19);
+}
+
+
 /*
 path{
     shape-rendering: crispEdges;
-}
-
-.crosshair {
-    position: absolute;
-    display: block;
-    border: 1px dotted rgb(0, 23, 216);
-    margin: 0;
-    padding: 0;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 1;
-}
-
-.crosshair-vertical {
-    width: 1px;
-    height: 100%;
-}
-
-.crosshair-horizontal {
-    width: 100%;
-    height: 1px;
 }
 
 .chart-details-panel {
