@@ -554,6 +554,12 @@
 
     var ui = (function(){
 
+        function getComponentCssOffset(component, offsetType) {
+            var cssValue = $(component).css(offsetType);
+            var numericValue = text.onlyDigits(cssValue, true);
+            return numericValue[0];
+        }
+
         function getPosition(e) {
             var x, y;
 
@@ -622,7 +628,8 @@
         return {
             getPosition: getPosition,
             getPositionInElement: getPositionInElement,
-            findPosition: findPosition
+            findPosition: findPosition,
+            getComponentCssOffset: getComponentCssOffset
         };
 
     })();
@@ -851,8 +858,13 @@
 
     var text = (function() {
 
-        function onlyDigits(s) {
-            return (s + '').match(/^-?\d*/g);
+        function onlyDigits(s, includeNumericSigns) {
+            if (includeNumericSigns) {
+                var regex = /[+-]?\d+(?:\.\d+)?/g;
+                return regex.exec(s + '').map(Number);
+            } else {
+                return (s + '').match(/^-?\d*/g);
+            }
         }
 
         function countMatchedEnd(base, compared) {

@@ -390,16 +390,17 @@
                 items.forEach(function (item) {
                     if (item.item) {
                         var quotation = item.item.price.quotation;
+                        var hasBody = item.coordinates.bodyHeight >= 1;
                         var body = {
                             type: 'body',
                             item: item,
-                            fill: (quotation.priceUp ? priceUpBodyInsideColor : priceDownBodyInsideColor),
+                            fill: (hasBody ? (quotation.priceUp ? priceUpBodyInsideColor : priceDownBodyInsideColor) : shadowColor),
                             stroke: (quotation.priceUp ? priceUpBodyBorderColor : priceDownBodyBorderColor),
-                            strokeWidth: item.coordinates.width < (strokeWidth * 2 + 1) ? 0 : strokeWidth,
-                            height: item.coordinates.bodyHeight,
-                            width: item.coordinates.width + 1,
+                            strokeWidth: (hasBody ? (item.coordinates.width < (strokeWidth * 2 + 1) ? 0 : strokeWidth) : 0),
+                            height: (item.coordinates.bodyHeight < 1 ? 1 : item.coordinates.bodyHeight),
+                            width: (hasBody ? item.coordinates.width + 1 : item.coordinates.width + 2),
                             y: item.coordinates.bodyTop + 0.5,
-                            x: item.coordinates.left + 0.5
+                            x: (hasBody ? item.coordinates.left + 0.5 : item.coordinates.left - 0.5)
                         };
                         var shadow = {
                             type: 'shadow',
@@ -764,7 +765,7 @@
         function isPointWithinCircle(circle, x, y) {
             if (circle) {
                 var circleX = circle.cx.baseVal.value;
-                var circleY = circle.cy.baseVal.value + topOffset / 2;
+                var circleY = circle.cy.baseVal.value;// + topOffset / 2;
                 var radius = circle.r.baseVal.value;
                 var deltaX = Math.abs(x - circleX);
                 var deltaY = Math.abs(y - circleY);
@@ -775,23 +776,12 @@
 
         function handleExtremumDetailsClick(e) {
             var x = e.pageX - self.ui.getSvgLeftOffset();
-            var y = e.pageY - $(eventsLayer).offset().top;
+            var y = e.pageY - $(self.ui.getExtremaSvg()).offset().top;
             var items = self.data.getItems();
             var clickedItem = findItemByX(x);
             var index = clickedItem.index;
 
-            function displayExtremumInfo(circle, isPeak, extrema, x, y) {
-
-                highlightedExtremumCircle = {
-                    circle: circle,
-                    strokeWidth: circle.style.strokeWidth,
-                    stroke: circle.style.stroke,
-                    fill: circle.style.fill
-                };
-
-                circle.style.strokeWidth = '2px';
-                circle.style.stroke = 'black';
-                circle.style.fill = (isPeak ? 'rgba(0, 255, 0, 1)' : 'rgba(255, 0, 0, 1)');
+            function displayExtremumInfo(params) {
 
                 function getBetterExtremum(items) {
                     var better;
@@ -807,30 +797,56 @@
                     return better;
                 }
 
-                var detailsInfoPanelOffset = 3;
-                var displayX = circle.cx.baseVal.value + circle.r.baseVal.value + detailsInfoPanelOffset;
-                var circleTop = circle.cy.baseVal.value - circle.r.baseVal.value + topOffset / 2;
-                var circleBottom = circleTop + 2 * circle.r.baseVal.value;
-                var betterExtremum = getBetterExtremum(extrema);
-                self.legend.updateExtremumDetailsPanel(betterExtremum, displayX, circleTop, circleBottom);
+                if (params) {
+                    var circle = params.circle;
+
+                    highlightedExtremumCircle = {
+                        circle: circle,
+                        strokeWidth: circle.style.strokeWidth,
+                        stroke: circle.style.stroke,
+                        fill: circle.style.fill
+                    };
+
+                    circle.style.strokeWidth = '2px';
+                    circle.style.stroke = 'black';
+                    circle.style.fill = (params.isPeak ? 'rgba(0, 255, 0, 1)' : 'rgba(255, 0, 0, 1)');
+
+                    var circleLeft = circle.cx.baseVal.value - circle.r.baseVal.value;
+                    var circleRight = circle.cx.baseVal.value + circle.r.baseVal.value;
+                    var circleTop = circle.cy.baseVal.value - circle.r.baseVal.value + mielk.ui.getComponentCssOffset(self.ui.getExtremaSvg(), 'top');
+                    var circleBottom = circleTop + 2 * circle.r.baseVal.value;
+                    var betterExtremum = getBetterExtremum(params.extrema);
+                    self.legend.updateExtremumDetailsPanel(betterExtremum, circleLeft, circleRight, circleTop, circleBottom);
+                }
 
             }
 
-            for (var i = index - 10; i <= index + 10; i++) {
-                var item = items[i];
-                if (item) {
-                    var price = (item.item ? item.item.price : null);
-                    var svgExtrema = (item.svg ? item.svg.extrema : null);
-                    if (svgExtrema && price) {
-                        if (isPointWithinCircle(svgExtrema.peak, x, y)) {
-                            displayExtremumInfo(svgExtrema.peak, true, [price.peakByClose, price.peakByHigh], x, y);
-                            break;
-                        } else if (isPointWithinCircle(svgExtrema.trough, x, y)) {
-                            displayExtremumInfo(svgExtrema.trough, false, [price.troughByClose, price.troughByLow], x, y);
+            function findClickedCircle() {
+                for (var i = index - 10; i <= index + 10; i++) {
+                    var item = items[i];
+                    if (item) {
+                        var price = (item.item ? item.item.price : null);
+                        var svgExtrema = (item.svg ? item.svg.extrema : null);
+                        if (svgExtrema && price) {
+                            if (isPointWithinCircle(svgExtrema.peak, x, y)) {
+                                return {
+                                    circle: svgExtrema.peak,
+                                    isPeak: true,
+                                    extrema: [price.peakByClose, price.peakByHigh]
+                                }
+                            } else if (isPointWithinCircle(svgExtrema.trough, x, y)) {
+                                return {
+                                    circle: svgExtrema.trough,
+                                    isPeak: false,
+                                    extrema: [price.troughByClose, price.troughByLow]
+                                }
+                            }
                         }
                     }
                 }
             }
+
+            displayExtremumInfo(findClickedCircle());
 
         }
 
@@ -976,7 +992,7 @@
                 var extremumDetailItem = function ($caption, $property, $decimalPlaces, $fontBold) {
                     var caption = $caption;
                     var property = $property;
-                    var decimalPlaces = ($decimalPlaces === undefined ? 4 : $decimalPlaces);
+                    var decimalPlaces = ($decimalPlaces === undefined ? 2 : $decimalPlaces);
                     var fontBold = $fontBold || false;
                     var mainSpan;
                     var propertySpan;
@@ -1154,8 +1170,10 @@
 
         }
 
-        function updateExtremumDetailsPanel(extremum, x, circleTop, circleBottom) {
+        function updateExtremumDetailsPanel(extremum, circleLeft, circleRight, circleTop, circleBottom) {
             var margin = 6;
+            var detailsInfoPanelOffset = 3;
+            //Top
             var parentHeight = $(self.ui.getChartContainer()).height();
             var panelHeight = $(extremumDetailsInfoPanel).outerHeight(true);
             var top = circleTop;
@@ -1163,10 +1181,19 @@
             if (bottom > parentHeight - margin) {
                 top = Math.max(0, circleBottom - panelHeight);
             }
+            //Left
+            var parentWidth = $(self.ui.getChartContainer()).width();
+            var panelWidth = $(extremumDetailsInfoPanel).outerWidth(true);
+            var left = circleRight + detailsInfoPanelOffset;
+            var right = left + panelWidth;
+            if (right > parentWidth - margin) {
+                left = circleLeft - detailsInfoPanelOffset - panelWidth;
+            }
+
 
             $(extremumDetailsInfoPanel).css({
                 top: top + 'px',
-                left: x + 'px',
+                left: left + 'px',
                 visibility: 'visible'
             });
 
