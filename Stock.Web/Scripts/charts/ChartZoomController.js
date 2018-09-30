@@ -70,6 +70,22 @@ function ChartZoomController(parent, params) {
             });
         })();
 
+        function triggerHorizontalSlideEvent(x) {
+            if (x) {
+                var left = self.dates.getLeftOffset() + x;
+                if (left <= 0) {
+                    self.trigger({
+                        type: 'horizontalSlide',
+                        left: left
+                    });
+                }
+            }
+        }
+
+        return {
+            triggerHorizontalSlideEvent: triggerHorizontalSlideEvent
+        }
+
     })();
 
 
@@ -261,6 +277,12 @@ function ChartZoomController(parent, params) {
         var currentDateLabel;
 
 
+        //[Getters]
+        function getLeftOffset() {
+            return $(verticalGridLinesContainer).position().left;
+        }
+
+
         function renderDatesLine() {
             var items = self.data.getItems();
             var timeframe = self.params.getTimeframe();
@@ -365,10 +387,24 @@ function ChartZoomController(parent, params) {
             });
         }
 
+
+        //[Events]
+        (function bindEvents() {
+            self.bind({
+                horizontalSlide: function (e) {
+                    var left = e.left;
+                    $(verticalGridLinesContainer).css('left', left + 'px');
+                    $(labelsContainer).css('left', left + 'px');
+                }
+            });
+        })();
+
+
         return {
             renderDatesLine: renderDatesLine,
             updateCurrentDateIndicators: updateCurrentDateIndicators,
-            hideCurrentDateIndicators: hideCurrentDateIndicators
+            hideCurrentDateIndicators: hideCurrentDateIndicators,
+            getLeftOffset: getLeftOffset
         }
 
     })();

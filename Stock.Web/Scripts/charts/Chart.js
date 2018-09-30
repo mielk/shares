@@ -295,6 +295,23 @@
         }
 
 
+
+
+        //[EVENTS]
+        (function bindEvents() {
+            self.parent.bind({
+                horizontalSlide: function (e) {
+                    svgLeft = e.left;
+                    if (svgItems) svgItems.style.left = svgLeft + 'px';
+                    if (svgExtrema) svgExtrema.style.left = svgLeft + 'px';
+                    if (svgTrendlines) svgTrendlines.style.left = svgLeft + 'px';
+                }
+            });
+        })();
+
+
+
+
         return {
             setSvgHeight: setSvgHeight,
             setVisibleRange: setVisibleRange,
@@ -533,7 +550,6 @@
         }
 
 
-
         return {
             render: render
         }
@@ -693,13 +709,10 @@
     self.events = (function () {
         var topOffset = self.ui.getSvgItemsBoxTopOffset();
         var eventsLayer;
-        var movingParams = {
-            state: false,
-            startX: 0,
-            startY: 0
-        };
         var highlightedExtremumCircle;
-
+        var moveParams;
+        
+        
 
         //[ACTIONS]
         function findCoordinates(e) {
@@ -761,6 +774,43 @@
 
 
 
+        //[Sliding chart]
+        function resetMoveParamsObject() {
+            moveParams = {
+                state: false,
+                x: null,
+                y: null
+            };
+        }
+
+        function slide(e) {
+            if (moveParams && moveParams.state) {
+                var offsetX = (e.clientX - moveParams.x);
+                moveParams.x = e.clientX;
+                var offsetY = (e.clientY - moveParams.y);
+                moveParams.y = e.clientY;
+                setTimeout(self.parent.events.triggerHorizontalSlideEvent(offsetX), 0);
+
+                //self.trigger({
+                //    type: 'verticalSlide',
+                //    y: offsetY
+                //});
+            }
+        }
+
+        function startMoveMode(e) {
+            resetMoveParamsObject();
+            moveParams.state = true;
+            moveParams.x = e.clientX;
+            moveParams.y = e.clientY;
+        }
+
+        function endMoveMode(e) {
+            resetMoveParamsObject();
+            showInfo(e);
+        }
+
+
         //[Extrema]
         function isPointWithinCircle(circle, x, y) {
             if (circle) {
@@ -798,6 +848,9 @@
                 }
 
                 if (params) {
+                    var svgLayer = self.ui.getExtremaSvg();
+                    var svgTop = mielk.ui.getComponentCssOffset(svgLayer, 'top');
+                    var svgLeft = mielk.ui.getComponentCssOffset(svgLayer, 'left');
                     var circle = params.circle;
 
                     highlightedExtremumCircle = {
@@ -811,9 +864,9 @@
                     circle.style.stroke = 'black';
                     circle.style.fill = (params.isPeak ? 'rgba(0, 255, 0, 1)' : 'rgba(255, 0, 0, 1)');
 
-                    var circleLeft = circle.cx.baseVal.value - circle.r.baseVal.value;
-                    var circleRight = circle.cx.baseVal.value + circle.r.baseVal.value;
-                    var circleTop = circle.cy.baseVal.value - circle.r.baseVal.value + mielk.ui.getComponentCssOffset(self.ui.getExtremaSvg(), 'top');
+                    var circleLeft = circle.cx.baseVal.value - circle.r.baseVal.value + svgLeft;
+                    var circleRight = circle.cx.baseVal.value + circle.r.baseVal.value + svgLeft;
+                    var circleTop = circle.cy.baseVal.value - circle.r.baseVal.value + svgTop;
                     var circleBottom = circleTop + 2 * circle.r.baseVal.value;
                     var betterExtremum = getBetterExtremum(params.extrema);
                     self.legend.updateExtremumDetailsPanel(betterExtremum, circleLeft, circleRight, circleTop, circleBottom);
@@ -871,25 +924,25 @@
         function handleLeavingChartPanel() {
             self.parent.dates.hideCurrentDateIndicators();
             self.valuesPanel.hideCurrentValueIndicators();
+            resetMoveParamsObject();
         }
 
 
         function handleMouseDown(e) {
-            if (e.which === 1) {
+            if (e.buttons === 1) {
                 setTimeout(handleLeftButtonMouseDown(e), 0);
-            } else if (e.which === 2) {
+            } else if (e.buttons === 2) {
                 setTimeout(handleRightButtonMouseDown(e), 0);
             }
         }
 
         function handleLeftButtonMouseDown(e) {
             setTimeout(handleExtremumDetailsClick(e), 0);
+            setTimeout(startMoveMode(e), 0);
         }
 
         function handleRightButtonMouseDown(e) {
-            movingParams.state = true;
-            movingParams.startX = e.pageX;
-            movingParams.startY = e.pageY;
+            setTimeout(startMoveMode(e), 0);
         }
 
 
@@ -903,15 +956,11 @@
         }
 
         function handleLeftButtonMouseUp(e) {
-
+            setTimeout(endMoveMode(e), 0);
         }
 
         function handleRightButtonMouseUp(e) {
-            if (movingParams.state) {
-                movingParams.state = false;
-                var x = 1;
-                //slide(e.pageX);
-            }
+            setTimeout(endMoveMode(e), 0);
         }
 
 
@@ -932,13 +981,12 @@
         }
 
         function handleLeftButtonMouseMove(e) {
+            setTimeout(slide(e), 0);
             setTimeout(showInfo(e), 0);
         }
 
         function handleRightButtonMouseMove(e) {
-            if (movingParams.state) {
-                //slide(e.pageX);
-            }
+            setTimeout(slide(e), 0);
         }
 
 
@@ -952,10 +1000,15 @@
 
         (function bindEvents(){ 
             $(eventsLayer).bind({
+                contextmenu: function (e) {
+                    e.preventDefault();
+                },
                 mousedown: function (e) {
                     setTimeout(handleMouseDown(e), 0);
                 },
                 mouseup: function (e) {
+                    e.preventDefault();
+
                     setTimeout(handleMouseUp(e), 0);
                 },
                 mousemove: function (e) {
