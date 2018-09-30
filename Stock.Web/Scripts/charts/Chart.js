@@ -818,14 +818,16 @@
 
             for (var i = index - 10; i <= index + 10; i++) {
                 var item = items[i];
-                var price = (item.item ? item.item.price : null);
-                var svgExtrema = (item.svg ? item.svg.extrema : null);
-                if (svgExtrema && price) {
-                    if (isPointWithinCircle(svgExtrema.peak, x, y)) {
-                        displayExtremumInfo(svgExtrema.peak, true, [price.peakByClose, price.peakByHigh], x, y);
-                        break;
-                    } else if (isPointWithinCircle(svgExtrema.trough, x, y)) {
-                        displayExtremumInfo(svgExtrema.trough, false, [price.troughByClose, price.troughByLow], x, y);
+                if (item) {
+                    var price = (item.item ? item.item.price : null);
+                    var svgExtrema = (item.svg ? item.svg.extrema : null);
+                    if (svgExtrema && price) {
+                        if (isPointWithinCircle(svgExtrema.peak, x, y)) {
+                            displayExtremumInfo(svgExtrema.peak, true, [price.peakByClose, price.peakByHigh], x, y);
+                            break;
+                        } else if (isPointWithinCircle(svgExtrema.trough, x, y)) {
+                            displayExtremumInfo(svgExtrema.trough, false, [price.troughByClose, price.troughByLow], x, y);
+                        }
                     }
                 }
             }
@@ -910,7 +912,7 @@
 
         function handleNoButtonMouseMove(e) {
             setTimeout(showInfo(e), 0);
-            //setTimeout(checkIfExtremumDetailsLeft(e), 0);
+            setTimeout(checkIfExtremumDetailsLeft(e), 0);
         }
 
         function handleLeftButtonMouseMove(e) {
@@ -971,10 +973,11 @@
                     visibility: 'hidden'
                 }).appendTo(parentContainer)[0];
 
-                var extremumDetailItem = function ($caption, $property, $decimalPlaces) {
+                var extremumDetailItem = function ($caption, $property, $decimalPlaces, $fontBold) {
                     var caption = $caption;
                     var property = $property;
                     var decimalPlaces = ($decimalPlaces === undefined ? 4 : $decimalPlaces);
+                    var fontBold = $fontBold || false;
                     var mainSpan;
                     var propertySpan;
                     var valueSpan;
@@ -987,22 +990,28 @@
                         propertySpan = $('<span/>', {
                             'class': 'extremum-detail-label',
                             html: $caption
+                        }).css({
+                            'font-weight': fontBold ? 'bold' : 'normal'
                         }).appendTo(mainSpan)[0];
 
                         valueSpan = $('<span/>', {
                             'class': 'extremum-detail-value'
+                        }).css({
+                            'font-weight': fontBold ? 'bold' : 'normal'
                         }).appendTo(mainSpan)[0];
 
                     })();
 
                     function updateValue(item) {
                         var value = item[property];
-                        var caption = '';
+                        var caption;
                         if (value === true) {
                             caption = 'TRUE';
                         } else if (value === false) {
                             caption = 'FALSE';
-                        } else if (value !== undefined) {
+                        } else if (value === undefined || value === null) {
+                            caption = '';
+                        } else {
                             caption = value.toFixed(decimalPlaces);
                         }
                         $(valueSpan).html(caption);
@@ -1020,8 +1029,9 @@
                     }).appendTo(extremumDetailsInfoPanel)[0];
                 }
 
-                extremumDetailItems.push(new extremumDetailItem('Index', 'DateIndex', 0));
-                extremumDetailItems.push(new extremumDetailItem('Is open', 'IsEvaluationOpen'));
+                extremumDetailItems.push(new extremumDetailItem('Index', 'DateIndex', 0, true));
+                extremumDetailItems.push(new extremumDetailItem('Value', 'Value', 2, true));
+                extremumDetailItems.push(new extremumDetailItem('Is open', 'IsEvaluationOpen', 0, true));
                 separator();
                 extremumDetailItems.push(new extremumDetailItem('Earlier counter', 'EarlierCounter', 0));
                 extremumDetailItems.push(new extremumDetailItem('Earlier amplitude', 'EarlierAmplitude'));
@@ -1147,11 +1157,11 @@
         function updateExtremumDetailsPanel(extremum, x, circleTop, circleBottom) {
             var margin = 6;
             var parentHeight = $(self.ui.getChartContainer()).height();
-            var panelHeight = $(extremumDetailsInfoPanel).height()
+            var panelHeight = $(extremumDetailsInfoPanel).outerHeight(true);
             var top = circleTop;
             var bottom = top + panelHeight;
             if (bottom > parentHeight - margin) {
-                top = circleBottom - panelHeight;
+                top = Math.max(0, circleBottom - panelHeight);
             }
 
             $(extremumDetailsInfoPanel).css({
