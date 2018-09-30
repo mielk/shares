@@ -73,8 +73,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TransferObjects\AnalysisInfoDto.cs" />
     <Compile Include="TransferObjects\ExtremumDto.cs" />
+    <Compile Include="TransferObjects\ExtremumGroupDto.cs" />
     <Compile Include="TransferObjects\QuotationDto.cs" />
+    <Compile Include="TransferObjects\TrendBreakDto.cs" />
+    <Compile Include="TransferObjects\TrendHitDto.cs" />
     <Compile Include="TransferObjects\TrendlineDto.cs" />
+    <Compile Include="TransferObjects\TrendRangeDto.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">
