@@ -690,13 +690,17 @@
 
 
     self.events = (function () {
+        var topOffset = self.ui.getSvgItemsBoxTopOffset();
         var eventsLayer;
         var movingParams = {
             state: false,
             startX: 0,
             startY: 0
         };
+        var highlightedExtremumCircle;
 
+
+        //[ACTIONS]
         function findCoordinates(e) {
             var x = e.pageX - self.ui.getSvgLeftOffset();
             var y = e.pageY - $(eventsLayer).offset().top;
@@ -754,10 +758,172 @@
             setTimeout(self.legend.updateLegend(res.item), 0);
         }
 
+
+
+        //[Extrema]
+        function isPointWithinCircle(circle, x, y) {
+            if (circle) {
+                var circleX = circle.cx.baseVal.value;
+                var circleY = circle.cy.baseVal.value + topOffset / 2;
+                var radius = circle.r.baseVal.value;
+                var deltaX = Math.abs(x - circleX);
+                var deltaY = Math.abs(y - circleY);
+                var distance = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
+                return distance <= radius;
+            }
+        }
+
+        function handleExtremumDetailsClick(e) {
+            var x = e.pageX - self.ui.getSvgLeftOffset();
+            var y = e.pageY - $(eventsLayer).offset().top;
+            var items = self.data.getItems();
+            var clickedItem = findItemByX(x);
+            var index = clickedItem.index;
+
+            function displayExtremumInfo(circle, isPeak, extrema, x, y) {
+
+                highlightedExtremumCircle = {
+                    circle: circle,
+                    strokeWidth: circle.style.strokeWidth,
+                    stroke: circle.style.stroke,
+                    fill: circle.style.fill
+                };
+
+                circle.style.strokeWidth = '2px';
+                circle.style.stroke = 'black';
+                circle.style.fill = (isPeak ? 'rgba(0, 255, 0, 1)' : 'rgba(255, 0, 0, 1)');
+
+                function getBetterExtremum(items) {
+                    var better;
+                    var value;
+                    items.forEach(function (item) {
+                        if (item) {
+                            if (value === undefined || item.value > value) {
+                                value = item.value;
+                                better = item;
+                            }
+                        }
+                    });
+                    return better;
+                }
+
+                var detailsInfoPanelOffset = 3;
+                var displayX = circle.cx.baseVal.value + circle.r.baseVal.value + detailsInfoPanelOffset;
+                var circleTop = circle.cy.baseVal.value - circle.r.baseVal.value + topOffset / 2;
+                var circleBottom = circleTop + 2 * circle.r.baseVal.value;
+                var betterExtremum = getBetterExtremum(extrema);
+                self.legend.updateExtremumDetailsPanel(betterExtremum, displayX, circleTop, circleBottom);
+
+            }
+
+            for (var i = index - 10; i <= index + 10; i++) {
+                var item = items[i];
+                var price = (item.item ? item.item.price : null);
+                var svgExtrema = (item.svg ? item.svg.extrema : null);
+                if (svgExtrema && price) {
+                    if (isPointWithinCircle(svgExtrema.peak, x, y)) {
+                        displayExtremumInfo(svgExtrema.peak, true, [price.peakByClose, price.peakByHigh], x, y);
+                        break;
+                    } else if (isPointWithinCircle(svgExtrema.trough, x, y)) {
+                        displayExtremumInfo(svgExtrema.trough, false, [price.troughByClose, price.troughByLow], x, y);
+                    }
+                }
+            }
+
+        }
+
+        function checkIfExtremumDetailsLeft(e) {
+            if (highlightedExtremumCircle) {
+                var x = e.pageX - self.ui.getSvgLeftOffset();
+                var y = e.pageY - $(eventsLayer).offset().top;
+                var circle = highlightedExtremumCircle.circle;
+                if (!isPointWithinCircle(circle, x, y)) {
+                    circle.style.strokeWidth = highlightedExtremumCircle.strokeWidth;
+                    circle.style.stroke = highlightedExtremumCircle.stroke;
+                    circle.style.fill = highlightedExtremumCircle.fill;
+                    highlightedExtremumCircle = undefined;
+                    self.legend.hideExtremumDetailsPanel();
+                }
+            }
+        }
+
+
+
+        //[EVENT HANDLERS]
         function handleLeavingChartPanel() {
             self.parent.dates.hideCurrentDateIndicators();
             self.valuesPanel.hideCurrentValueIndicators();
         }
+
+
+        function handleMouseDown(e) {
+            if (e.which === 1) {
+                setTimeout(handleLeftButtonMouseDown(e), 0);
+            } else if (e.which === 2) {
+                setTimeout(handleRightButtonMouseDown(e), 0);
+            }
+        }
+
+        function handleLeftButtonMouseDown(e) {
+            setTimeout(handleExtremumDetailsClick(e), 0);
+        }
+
+        function handleRightButtonMouseDown(e) {
+            movingParams.state = true;
+            movingParams.startX = e.pageX;
+            movingParams.startY = e.pageY;
+        }
+
+
+
+        function handleMouseUp(e) {
+            if (e.which === 1) {
+                setTimeout(handleLeftButtonMouseUp(e), 0);
+            } else if (e.which === 2) {
+                setTimeout(handleRightButtonMouseUp(e), 0);
+            }
+        }
+
+        function handleLeftButtonMouseUp(e) {
+
+        }
+
+        function handleRightButtonMouseUp(e) {
+            if (movingParams.state) {
+                movingParams.state = false;
+                var x = 1;
+                //slide(e.pageX);
+            }
+        }
+
+
+
+        function handleMouseMove(e) {
+            if (e.buttons === 0) {
+                handleNoButtonMouseMove(e);
+            } else if (e.buttons === 1) {
+                handleLeftButtonMouseMove(e);
+            } else if (e.buttons === 2) {
+                handleRightButtonMouseMove(e);
+            }
+        }
+
+        function handleNoButtonMouseMove(e) {
+            setTimeout(showInfo(e), 0);
+            //setTimeout(checkIfExtremumDetailsLeft(e), 0);
+        }
+
+        function handleLeftButtonMouseMove(e) {
+            setTimeout(showInfo(e), 0);
+        }
+
+        function handleRightButtonMouseMove(e) {
+            if (movingParams.state) {
+                //slide(e.pageX);
+            }
+        }
+
+
 
         (function insertEventsLayer() {
             var chartContainer = self.ui.getChartContainer();
@@ -769,23 +935,13 @@
         (function bindEvents(){ 
             $(eventsLayer).bind({
                 mousedown: function (e) {
-                    movingParams.state = true;
-                    movingParams.startX = e.pageX;
-                    movingParams.startY = e.pageY;
-                    findCoordinates(e);
+                    setTimeout(handleMouseDown(e), 0);
                 },
                 mouseup: function (e) {
-                    if (movingParams.state) {
-                        movingParams.state = false;
-                        var x = 1;
-                        //slide(e.pageX);
-                    }
+                    setTimeout(handleMouseUp(e), 0);
                 },
                 mousemove: function (e) {
-                    if (movingParams.state) {
-                        //slide(e.pageX);
-                    }
-                    setTimeout(showInfo(e), 0);
+                    setTimeout(handleMouseMove(e), 0);
                 },
                 mouseleave: function (e) {
                     setTimeout(handleLeavingChartPanel(), 0);
@@ -799,12 +955,96 @@
     self.legend = (function () {
         var legendContainer;
         var legendItems = {};
+        var extremumDetailsInfoPanel;
+        var extremumDetailItems = [];
 
         (function insertLegendComponents() {
             var parentContainer = self.ui.getChartContainer();
             legendContainer = $('<div/>', {
                 'class': 'legend-container'
             }).appendTo(parentContainer)[0];
+
+            (function insertExtremumDetailsInfoPanel() {
+                extremumDetailsInfoPanel = $('<div/>', {
+                    'class': 'extremum-details-panel'
+                }).css({
+                    visibility: 'hidden'
+                }).appendTo(parentContainer)[0];
+
+                var extremumDetailItem = function ($caption, $property, $decimalPlaces) {
+                    var caption = $caption;
+                    var property = $property;
+                    var decimalPlaces = ($decimalPlaces === undefined ? 4 : $decimalPlaces);
+                    var mainSpan;
+                    var propertySpan;
+                    var valueSpan;
+
+                    (function render() {
+                        mainSpan = $('<span/>', {
+                            'class': 'extremum-detail-item'
+                        }).appendTo(extremumDetailsInfoPanel)[0];
+
+                        propertySpan = $('<span/>', {
+                            'class': 'extremum-detail-label',
+                            html: $caption
+                        }).appendTo(mainSpan)[0];
+
+                        valueSpan = $('<span/>', {
+                            'class': 'extremum-detail-value'
+                        }).appendTo(mainSpan)[0];
+
+                    })();
+
+                    function updateValue(item) {
+                        var value = item[property];
+                        var caption = '';
+                        if (value === true) {
+                            caption = 'TRUE';
+                        } else if (value === false) {
+                            caption = 'FALSE';
+                        } else if (value !== undefined) {
+                            caption = value.toFixed(decimalPlaces);
+                        }
+                        $(valueSpan).html(caption);
+                    }
+
+                    return {
+                        updateValue: updateValue
+                    }
+
+                }
+
+                var separator = function () {
+                    var item = $('<div/>', {
+                        'class': 'extremum-detail-items-separator'
+                    }).appendTo(extremumDetailsInfoPanel)[0];
+                }
+
+                extremumDetailItems.push(new extremumDetailItem('Index', 'DateIndex', 0));
+                extremumDetailItems.push(new extremumDetailItem('Is open', 'IsEvaluationOpen'));
+                separator();
+                extremumDetailItems.push(new extremumDetailItem('Earlier counter', 'EarlierCounter', 0));
+                extremumDetailItems.push(new extremumDetailItem('Earlier amplitude', 'EarlierAmplitude'));
+                extremumDetailItems.push(new extremumDetailItem('Earlier total area', 'EarlierTotalArea'));
+                extremumDetailItems.push(new extremumDetailItem('Earlier average area', 'EarlierAverageArea'));
+                extremumDetailItems.push(new extremumDetailItem('Earlier change [1]', 'EarlierChange1'));
+                extremumDetailItems.push(new extremumDetailItem('Earlier change [2]', 'EarlierChange2'));
+                extremumDetailItems.push(new extremumDetailItem('Earlier change [3]', 'EarlierChange3'));
+                extremumDetailItems.push(new extremumDetailItem('Earlier change [5]', 'EarlierChange5'));
+                extremumDetailItems.push(new extremumDetailItem('Earlier change [10]', 'EarlierChange10'));
+                separator();
+                extremumDetailItems.push(new extremumDetailItem('Later counter', 'LaterCounter', 0));
+                extremumDetailItems.push(new extremumDetailItem('Later amplitude', 'LaterAmplitude'));
+                extremumDetailItems.push(new extremumDetailItem('Later total area', 'LaterTotalArea'));
+                extremumDetailItems.push(new extremumDetailItem('Later average area', 'LaterAverageArea'));
+                extremumDetailItems.push(new extremumDetailItem('Later change [1]', 'LaterChange1'));
+                extremumDetailItems.push(new extremumDetailItem('Later change [2]', 'LaterChange2'));
+                extremumDetailItems.push(new extremumDetailItem('Later change [3]', 'LaterChange3'));
+                extremumDetailItems.push(new extremumDetailItem('Later change [5]', 'LaterChange5'));
+                extremumDetailItems.push(new extremumDetailItem('Later change [10]', 'LaterChange10'));
+
+            })();
+
         })();
 
 
@@ -904,9 +1144,39 @@
 
         }
 
+        function updateExtremumDetailsPanel(extremum, x, circleTop, circleBottom) {
+            var margin = 6;
+            var parentHeight = $(self.ui.getChartContainer()).height();
+            var panelHeight = $(extremumDetailsInfoPanel).height()
+            var top = circleTop;
+            var bottom = top + panelHeight;
+            if (bottom > parentHeight - margin) {
+                top = circleBottom - panelHeight;
+            }
+
+            $(extremumDetailsInfoPanel).css({
+                top: top + 'px',
+                left: x + 'px',
+                visibility: 'visible'
+            });
+
+            extremumDetailItems.forEach(function (item) {
+                item.updateValue(extremum);
+            });
+
+        }
+
+        function hideExtremumDetailsPanel() {
+            $(extremumDetailsInfoPanel).css({
+                visibility: 'hidden'
+            });
+        }
+
 
         return {
-            updateLegend: updateLegend
+            updateLegend: updateLegend,
+            updateExtremumDetailsPanel: updateExtremumDetailsPanel,
+            hideExtremumDetailsPanel: hideExtremumDetailsPanel
         }
 
 
