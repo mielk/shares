@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace Stock.Domain.Entities
 {
-    public class TrendBreak
+    public class TrendBreak : ITrendRangeDelimiter
     {
         public int TrendBreakId { get; set; }
         public int TrendlineId { get; set; }
         public int DateIndex { get; set; }
         public int BreakFromAbove { get; set; }
-        public double Value { get; set; }
+        public double? Value { get; set; }
 
         public static TrendBreak FromDto(TrendBreakDto dto)
         {

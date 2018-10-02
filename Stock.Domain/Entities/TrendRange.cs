@@ -18,17 +18,19 @@ namespace Stock.Domain.Entities
         public int CounterIsHit { get; set; }
         public int CounterDateIndex { get; set; }
         public int IsPeak { get; set; }
-        public double ExtremumPriceCrossPenaltyPoints { get; set; }
-        public int ExtremumPriceCrossCounter { get; set; }
-        public double OCPriceCrossPenaltyPoints { get; set; }
-        public int OCPriceCrossCounter { get; set; }
-        public int TotalCandles { get; set; }
-        public double AverageVariation { get; set; }
-        public double ExtremumVariation { get; set; }
-        public double OpenCloseVariation { get; set; }
-        public double BaseHitValue { get; set; }
-        public double CounterHitValue { get; set; }
-        public double Value { get; set; }
+        public double? ExtremumPriceCrossPenaltyPoints { get; set; }
+        public int? ExtremumPriceCrossCounter { get; set; }
+        public double? OCPriceCrossPenaltyPoints { get; set; }
+        public int? OCPriceCrossCounter { get; set; }
+        public int? TotalCandles { get; set; }
+        public double? AverageVariation { get; set; }
+        public double? ExtremumVariation { get; set; }
+        public double? OpenCloseVariation { get; set; }
+        public double? BaseHitValue { get; set; }
+        public double? CounterHitValue { get; set; }
+        public double? Value { get; set; }
+        public ITrendRangeDelimiter StartDelimiter { get; set; }
+        public ITrendRangeDelimiter EndDelimiter { get; set; }
 
 
         public static TrendRange FromDto(TrendRangeDto dto)
@@ -58,7 +60,6 @@ namespace Stock.Domain.Entities
             };
             return trendRange;
         }
-
 
     }
 }

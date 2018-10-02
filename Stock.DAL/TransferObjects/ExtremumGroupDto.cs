@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ namespace Stock.DAL.TransferObjects
 {
     public class ExtremumGroupDto
     {
+        [Key]
         public int ExtremumGroupId { get; set; }
         public int AssetId { get; set; }
         public int TimeframeId { get; set; }

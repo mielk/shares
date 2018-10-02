@@ -1,5 +1,6 @@
 ﻿using System;
 using Stock.DAL.TransferObjects;
+using System.Collections.Generic;
 
 namespace Stock.Domain.Entities
 {
@@ -8,15 +9,23 @@ namespace Stock.Domain.Entities
         public int Id { get; set; }
         public int AssetId { get; set; }
         public int TimeframeId { get; set; }
-        public int BaseStartIndex { get; set; }
+        public int BaseExtremumGroupId { get; set; }
+        public ExtremumGroup BaseExtremumGroup { get; set; }
+        public int BaseDateIndex { get; set; }
         public double BaseLevel { get; set; }
-        public int CounterStartIndex { get; set; }
+        public int CounterExtremumGroupId { get; set; }
+        public ExtremumGroup CounterExtremumGroup { get; set; }
+        public int CounterDateIndex { get; set; }
         public double CounterLevel { get; set; }
-        public int StartIndex { get; set; }
-        public int EndIndex { get; set; }
+        public int? StartIndex { get; set; }
+        public int? EndIndex { get; set; }
         public double Value { get; set; }
+        public bool IsOpenFromLeft { get; set; }
+        public bool IsOpenFromRight { get; set; }
         public bool ShowOnChart { get; set; }
         public double Slope { get; set; }
+        public List<TrendRange> TrendRanges { get; set; }
+        
 
         public static Trendline FromDto(TrendlineDto dto)
         {
@@ -28,14 +37,24 @@ namespace Stock.Domain.Entities
                 Slope = dto.Angle,
                 ShowOnChart = dto.ShowOnChart,
                 Value = dto.Value,
-                BaseStartIndex = dto.BaseDateIndex,
+                BaseExtremumGroupId = dto.BaseExtremumGroupId,
+                BaseDateIndex = dto.BaseDateIndex,
                 BaseLevel = dto.BaseLevel,
-                CounterStartIndex = dto.CounterDateIndex,
+                CounterExtremumGroupId = dto.CounterExtremumGroupId,
+                CounterDateIndex = dto.CounterDateIndex,
                 CounterLevel = dto.CounterLevel,
-                StartIndex = dto.StartDateIndex ?? -1,
-                EndIndex = dto.EndDateIndex ?? -1
+                StartIndex = dto.StartDateIndex,
+                EndIndex = dto.EndDateIndex,
+                IsOpenFromLeft = dto.IsOpenFromLeft,
+                IsOpenFromRight = dto.IsOpenFromRight,
+                TrendRanges = new List<TrendRange>()
             };
             return trendline;
+        }
+
+        public void AddTrendRange(TrendRange trendRange)
+        {
+            TrendRanges.Add(trendRange);
         }
 
     }
