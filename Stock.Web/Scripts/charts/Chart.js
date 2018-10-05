@@ -92,6 +92,12 @@
             return items;
         }
 
+        function getItem(index) {
+            if (index > 0 && index < items.length) {
+                return items[index];
+            }
+        }
+
         function getTrendlines() {
             return trendlines;
         }
@@ -111,6 +117,7 @@
             getStartIndex: getStartIndex,
             getEndIndex: getEndIndex,
             getItems: getItems,
+            getItem: getItem,
             getValuesRange: getValuesRange,
             getTrendlines: getTrendlines,
             countNonEmptyItems: countNonEmptyItems
@@ -136,6 +143,7 @@
         var svgItemsBoxOffset = 100;
         var svgItemsBoxTop = 0;
         var svgLeft = 0;
+        var svgTrendlinesRightExtention = 200;
         //[Visibility]
         var visibleRange = {};
         //------------------------------------------------------------------
@@ -205,7 +213,7 @@
         function insertSvgTrendlines() {
             svgTrendlines = mielk.svg.createSvg();
             var height = svgBoxHeight + svgItemsBoxOffset;
-            var width = calculateItemsWidth();
+            var width = calculateItemsWidth() + svgTrendlinesRightExtention;
             var top = (svgItemsBoxTop - svgItemsBoxOffset / 2);
 
             svgTrendlines.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
@@ -560,12 +568,41 @@
                 return pointsDistance * unitHeight;
             }
 
-            (function appendVerticalCoordinates() {
+            (function appendCoordinates() {
                 trendlines.forEach(function (item) {
-                    var startValue = item.trendline.countPriceForDateIndex(item.footholds.start);
-                    var endValue = item.trendline.countPriceForDateIndex(item.footholds.end);
-                    item.coordinates.startY = getY(startValue) + itemsSvgOffset / 2;
-                    item.coordinates.endY = getY(endValue) + itemsSvgOffset / 2;
+                    var viewSlope = 0;
+                    var linkedItems = {
+                        start: self.data.getItem(item.footholds.start),
+                        base: self.data.getItem(item.trendline.edgePoints.base.index),
+                        counter: self.data.getItem(item.trendline.edgePoints.counter.index),
+                        end: self.data.getItem(item.footholds.end)
+                    };
+                    var edgePointsCoordinates = {
+                        base: {
+                            x: linkedItems.base.coordinates.middle,
+                            y: Math.round(getY(item.trendline.edgePoints.base.level)) + itemsSvgOffset / 2
+                        },
+                        counter: {
+                            x: linkedItems.counter.coordinates.middle,
+                            y: Math.round(getY(item.trendline.edgePoints.counter.level)) + itemsSvgOffset / 2
+                        }
+                    };
+                    viewSlope = (edgePointsCoordinates.counter.y - edgePointsCoordinates.base.y) / (edgePointsCoordinates.counter.x - edgePointsCoordinates.base.x);
+
+
+                    function calculateCoordinatesForPoint(x) {
+                        return {
+                            x: x,
+                            y: Math.round(edgePointsCoordinates.base.y + (x - edgePointsCoordinates.base.x) * viewSlope)
+                        }
+                        return 
+                    }
+
+                    item.coordinates = {
+                        start: calculateCoordinatesForPoint(linkedItems.start.coordinates.middle),
+                        end: calculateCoordinatesForPoint(linkedItems.end.coordinates.middle)
+                    }
+
                 });
             })();
 
@@ -576,7 +613,7 @@
 
                 trendlines.forEach(function (item) {
                     var path = {
-                        d: 'M ' + item.coordinates.baseX + ' ' + item.coordinates.startY + 'L' + item.coordinates.counterX + ' ' + item.coordinates.endY,
+                        d: 'M ' + item.coordinates.start.x + ' ' + item.coordinates.start.y + 'L' + item.coordinates.end.x + ' ' + item.coordinates.end.y,
                         //stroke: 'rgba(0, 0, 0, ' + item.trendline.value / 100 + ')',
                         stroke: 'rgba(0, 0, 0, 1)',
                         strokeWidth: strokeWidth,
@@ -777,8 +814,14 @@
         var eventsLayer;
         var highlightedExtremumCircle;
         var moveParams;
+        var activeOutterPanels = [];
         
         
+        //[HELPER METHODS]
+        function anyPanelsActive() {
+            return activeOutterPanels.length > 0;
+        }
+
 
         //[ACTIONS]
         function findCoordinates(e) {
@@ -996,8 +1039,8 @@
             resetMoveParamsObject();
         }
 
-
         function handleMouseDown(e) {
+            if (anyPanelsActive()) return;
             if (e.buttons === 1) {
                 setTimeout(handleLeftButtonMouseDown(e), 0);
             } else if (e.buttons === 2) {
@@ -1035,6 +1078,7 @@
 
 
         function handleMouseMove(e) {
+            if (anyPanelsActive()) return;
             if (e.buttons === 0) {
                 handleNoButtonMouseMove(e);
             } else if (e.buttons === 1) {
@@ -1067,7 +1111,22 @@
             }).appendTo(chartContainer)[0];
         })();
 
-        (function bindEvents(){ 
+        (function bindEvents() {
+
+            self.bind({
+                panelMoveModeStart: function (e) {
+                    activeOutterPanels.push(e.name);
+                },
+                panelMoveModeEnd: function (e) {
+                    var tag = e.name;
+                    for (var i = activeOutterPanels.length - 1; i >= 0; i--) {
+                        if (activeOutterPanels[i] === tag) {
+                            activeOutterPanels.splice(i, 1);
+                        }
+                    }
+                }
+            });
+
             $(eventsLayer).bind({
                 contextmenu: function (e) {
                     e.preventDefault();
@@ -1077,7 +1136,6 @@
                 },
                 mouseup: function (e) {
                     e.preventDefault();
-
                     setTimeout(handleMouseUp(e), 0);
                 },
                 mousemove: function (e) {
@@ -1097,6 +1155,7 @@
         var legendItems = {};
         var extremumDetailsInfoPanel;
         var extremumDetailItems = [];
+        var trendlinePanelButton;
 
         (function insertLegendComponents() {
             var parentContainer = self.ui.getChartContainer();
@@ -1191,6 +1250,11 @@
                 extremumDetailItems.push(new extremumDetailItem('Later change [5]', function (item) { return item.stats.later.change5; }));
                 extremumDetailItems.push(new extremumDetailItem('Later change [10]', function (item) { return item.stats.later.change10; }));
             })();
+
+            trendlinePanelButton = $('<span/>', {
+                'class': 'show-trendline-panel-button open-panel-button',
+                'html': 'Trendlines'
+            }).appendTo(parentContainer)[0];
 
         })();
 
@@ -1331,12 +1395,205 @@
         }
 
 
+        //EVENTS
+        (function bindEvents() {
+            $(trendlinePanelButton).bind({
+                click: function (e) {
+                    self.trendlinesPanel.show();
+                }
+            });
+
+            self.bind({
+                trendlinesPanelOpen: function (e) {
+                    trendlinePanelButton.classList.remove('open-panel-button');
+                },
+                trendlinesPanelClosed: function (e) {
+                    trendlinePanelButton.classList.add('open-panel-button');
+                }
+            });
+
+        })();
+
+
         return {
             updateLegend: updateLegend,
             updateExtremumDetailsPanel: updateExtremumDetailsPanel,
             hideExtremumDetailsPanel: hideExtremumDetailsPanel
         }
 
+
+    })();
+
+
+    self.trendlinesPanel = (function () {
+        var PANEL_NAME = 'trendlines-panel';
+        var status = false;
+        var moveParams;
+        //[UI components]
+        var panel;
+        var titleBar;
+        var closeButton;
+        var container;
+        //---------------------------------------------------
+
+
+        //RENDERING
+        (function renderElements() {
+            panel = $('<div/>', {
+                'class': 'trendlines-details-panel'
+            }).css({
+                'visibility': 'hidden'
+            }).appendTo(document.body)[0];
+
+            titleBar = $('<div/>', {
+                'class': 'trendlines-details-panel-title-bar',
+                'html': '<span>Trendlines</span>'
+            }).appendTo(panel)[0];
+
+            closeButton = $('<div/>', {
+                'class': 'trendlines-details-panel-close-button'
+            }).appendTo(titleBar)[0];
+
+            container = $('<div/>', {
+                'class': 'trendlines-details-panel-content'
+            }).appendTo(panel)[0];
+            
+        })();
+
+
+        //CONTROL EVENTS
+        (function bindControlEvents() {
+
+            $(closeButton).bind({
+                click: function (e) {
+                    hide();
+                }
+            });
+
+            $(titleBar).bind({
+                mousedown: function (e) {
+                    setTimeout(handleMouseDown(e), 0);
+                },
+                mouseup: function (e) {
+                    e.preventDefault();
+                    setTimeout(handleMouseUp(e), 0);
+                },
+                mousemove: function (e) {
+                    setTimeout(handleMouseMove(e), 0);
+                }
+            });
+
+            $(document.body).bind({
+                mouseup: function (e) {
+                    setTimeout(endMoveMode(), 0);
+                },
+                mousemove: function (e) {
+                    setTimeout(handleMouseMove(e), 0);
+                }
+            });
+
+        })();
+
+
+        //MOVING
+        function handleLeavingTrendlinesPanel() {
+            //setTimeout(resetMoveParamsObject(), 0);
+        }
+
+        function handleMouseDown(e) {
+            setTimeout(startMoveMode(e), 0);
+        }
+
+        function handleMouseMove(e) {
+            setTimeout(slide(e), 0);
+        }
+
+        function handleMouseUp(e) {
+            setTimeout(endMoveMode(e), 0);
+        }
+
+        //[Sliding chart]
+        function resetMoveParamsObject() {
+            moveParams = {
+                state: false,
+                x: null,
+                y: null
+            };
+        }
+
+        function slide(e) {
+            if (moveParams && moveParams.state) {
+                var offsetX = (e.screenX - moveParams.x);
+                moveParams.x = e.screenX;
+                var offsetY = (e.screenY - moveParams.y);
+                moveParams.y = e.screenY;
+
+                var currentPosition = {
+                    left: mielk.ui.getComponentCssOffset(panel, 'left'),
+                    top: mielk.ui.getComponentCssOffset(panel, 'top')
+                }
+
+                $(panel).css({
+                    'left': (currentPosition.left + offsetX) + 'px',
+                    'top': (currentPosition.top + offsetY) + 'px'
+                });
+
+            }
+        }
+
+        function startMoveMode(e) {
+            self.trigger({ type: 'panelMoveModeStart', name: PANEL_NAME });
+            resetMoveParamsObject();
+            moveParams.state = true;
+            moveParams.x = e.screenX;
+            moveParams.y = e.screenY;
+        }
+
+        function endMoveMode(e) {
+            self.trigger({ type: 'panelMoveModeEnd', name: PANEL_NAME });
+            resetMoveParamsObject();
+        }
+
+
+
+        //API
+        function isOpen() {
+            return status;
+        }
+
+        function show() {
+            $(panel).css('visibility', 'visible');
+            (function centerOnScreen() {
+                var browserSize = {
+                    width: $(window).width(),
+                    height: $(window).height()
+                };
+                var panelSize = {
+                    width: $(panel).width(),
+                    height: $(panel).height()
+                };
+                var coordinates = {
+                    left: (browserSize.width - panelSize.width) / 2,
+                    top: (browserSize.height - panelSize.height) / 2
+                };
+                $(panel).css({
+                    'left': coordinates.left + 'px',
+                    'top': coordinates.top + 'px'
+                });
+            })();
+            self.trigger({ type: 'trendlinesPanelOpen' });
+        }
+
+        function hide() {
+            $(panel).css('visibility', 'hidden');
+            self.trigger({ type: 'trendlinesPanelClosed' });
+        }
+
+        return {
+            isOpen: isOpen,
+            show: show,
+            hide: hide
+        }
 
     })();
 

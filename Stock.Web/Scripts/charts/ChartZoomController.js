@@ -294,10 +294,10 @@ function ChartZoomController(parent, params) {
                     end: trendline.range.end ? trendline.range.end + closedRightOffset : lastQuotationIndex + openRightOffset
                 }
 
-                item.coordinates = {
-                    baseX: getX(item.footholds.start),
-                    counterX: getX(item.footholds.end)
-                }
+                //item.coordinates = {
+                //    baseX: getX(item.footholds.start),
+                //    counterX: getX(item.footholds.end)
+                //}
                 
             });
         }

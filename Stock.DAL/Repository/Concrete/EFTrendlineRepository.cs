@@ -28,7 +28,8 @@ namespace Stock.DAL.Repositories
             IEnumerable<TrendlineDto> trendlines;
             using (var context = new EFDbContext())
             {
-                trendlines = context.Trendlines.Where(t => t.AssetId == assetId && t.TimeframeId == timeframeId && t.ShowOnChart == true).ToList();
+                //trendlines = context.Trendlines.Where(t => t.AssetId == assetId && t.TimeframeId == timeframeId && t.ShowOnChart == true).ToList();
+                trendlines = context.Trendlines.Where(t => t.AssetId == assetId && t.TimeframeId == timeframeId).ToList();
             }
             return trendlines;
         }

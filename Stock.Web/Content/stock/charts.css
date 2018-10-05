@@ -221,7 +221,7 @@
     height: 1px;
     width: 100%;
     border: none;
-    border-top: 1px dashed #B7B7B7;
+    border-top: 1px dashed #c7c7c7;
 }
 
 .current-value-label {
@@ -237,6 +237,8 @@
     padding: 5px 0;
     z-index: 5;
 }
+
+
 
 
 
@@ -295,7 +297,7 @@
     height: 100%;
     width: 1px;
     border: none;
-    border-right: 1px dashed #B7B7B7;
+    border-right: 1px dashed #c7c7c7;
 }
 
 .current-data-label {
@@ -311,6 +313,7 @@
     padding: 2px 0;
     z-index: 5;
 }
+
 
 
 
@@ -376,6 +379,8 @@ svg {
 
 
 
+
+
 /* EXTREMUM DETAILS */
 .extremum-details-panel {
     position: absolute;
@@ -425,252 +430,84 @@ svg {
 }
 
 
-/*
-path{
-    shape-rendering: crispEdges;
-}
 
-.chart-details-panel {
-    display: block;
+
+/* TRENDLINES */
+.show-trendline-panel-button {
     position: absolute;
-    top: 6px;
-    left: 6px;
-    width: 134px;
-    height: auto;
-    margin: 0;
-    padding: 0;
-    border: 1px solid #888;
-    background-color: white;
-    z-index: 2;
-}
-
-.chart-detail-line-container {
-    display: block;
-    position: relative;
+    box-sizing: border-box;
+    bottom: 3px;
+    left: 3px;
+    width: auto;
+    height: 22px;
     padding: 3px;
-    width: 132px;
-    height: 18px;
-    font-size: 11px;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    background-color: #DDD;
-    color: #333;
-    line-height: 12px;
-}
-
-.chart-detail-line-label {
-    display: block;
-    position: relative;
-    float: left;
-    width: 60px;
-    height: 100%;
-}
-
-.svg-date-line {
-    background: #EEE;
-    border-bottom: 1px solid #444;
-}
-
-.svg-date-value {
-    text-align: center !important;
-    width: 100% !important;
-}*/
-
-/*.chart-detail-line-value {
-    display: block;
-    position: relative;
-    float: left;
-    width: 65px;
-    height: 100%;
-    text-align: right;
-}
-
-.scale-indicator {
-    display: none;
-    position: absolute;
-    width: auto;
-    height: 24px;
-    color: #444;
-    font-size: 10px;
-    line-height: 12px;
-    padding: 6px;
-    margin: 0 3px;
-    text-align: center;
-    border: 1px solid;
-    z-index: 2;
-    overflow: hidden;
-}
-
-.value-indicator {
-    background-color: rgb(242, 242, 188);
-    border-color: rgb(193, 161, 0);
-    margin-top: -12px;
-    left: 6px;
-}
-
-.date-indicator {
-    background-color: rgb(242, 242, 188);
-    border-color: rgb(193, 161, 0);
-    width: 70px;
-    margin-left: -35px;
-    top: 6px;
-}
-
-
-
-
-.draw-layer {
-    display: block;
-    position: relative;
-    float: left;
-    width: 100%;
-    height: 100%;
-    background-color: #ffffff;
-    background-color: rgba(255, 255, 255, 0);
-    margin: 0;
-    padding: 0;
-    z-index: 999;
-}
-
-
-.info-panel {
-    display: block;
-    visibility: visible;
-    background-color: blue;
-    height: 100px;
-    width: 100%;
-    padding: 6px;
-    padding-left: 0;
+    font-size: 14px;
+    line-height: 14px;
     font-family: 'Century Gothic';
-    color: white;
-    line-height: 20px;
-    margin: 0 6px;
-}*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*.date-scale-container {
-    display: block;
-    position: relative;
-    box-sizing: border-box;
-    overflow: hidden;
-    width: 100%;
-    background-color: white;
-}
-
-.date-scale-labels {
-    display: block;
-    position: absolute;
-    box-sizing: border-box;
-    overflow: hidden;
-    height: 100%;
-    bottom: 0;
-    left: 0;
-    background-color: blue;
-    z-index: 0;
-}
-
-.date-scale-slider {
-    display: block;
-    position: absolute;
-    box-sizing: border-box;
-    overflow: hidden;
-    height: 100%;
-    bottom: 0;
-    left: 0;
+    font-weight: normal;
     background-color: transparent;
-    z-index: 1;
+    color: black;
+    opacity: 0.25;
+    border: 1px solid #999;
+    cursor: pointer;
+    z-index: 7;
 }
 
-.timeframe-charts-container {
-    display: block;
-    position: relative;
-    float: left;
-    box-sizing: border-box;
-    width: 100%;
-    overflow: hidden;
-}*/
-
-/*.chart-container {
-    display: block;
-    position: relative;
-    float: left;
-    box-sizing: border-box;
-    width: 100%;
-    overflow: hidden;
-    border-bottom: 1px solid #333;
+.open-panel-button:hover {
+    opacity: 1;
+    background-color: #faa800;
+    font-weight: bold;
 }
 
-.chart-container-values {
-    display: block;
-    position: relative;
-    float: right;
-    box-sizing: border-box;
-    height: 100%;
-    overflow: hidden;
+.trendlines-details-panel {
+    position: absolute;
+    width: 400px;
+    height: auto;
+    top: 200px;
+    left: 10px;
+    border: 1px solid black;
     background-color: white;
+    z-index: 10;
 }
 
-.chart-container-visible {
-    display: block;
-    position: absolute;
-    float: right;
+.trendlines-details-panel-title-bar {
+    position: relative;
+    float: left;
     box-sizing: border-box;
-    height: 100%;
-    overflow: hidden;
-    background-color: #DDD;
-    bottom: 0;
-    top: 0;
-    left: 0;
-    border-right: 1px solid #333;
-}*/
-
-/*.chart-infobox {
-    display: block;
-    position: absolute;
-    box-sizing: border-box;
+    width: 400px;
+    height: 20px;
     border: none;
-    top: 6px;
-    left: 6px;
-    width: auto;
-    height: 18px;
-    z-index: 2;
+    border-bottom: 1px solid rgb(152, 152, 152);
+    line-height: 14px;
+    padding: 3px;
+    font-size: 13px;
     font-family: 'Century Gothic';
-    line-height: 18px;
-    color: #444;
-}*/
-
-/*.chart-events-layer {
-    display: block;
-    position: absolute;
-    float: right;
-    box-sizing: border-box;
-    background-color: transparent;
-    height: 100%;
-    bottom: 0;
-    top: 0;
-    left: 0;
-    border-right: 1px solid transparent;
-    z-index: 1;
+    font-weight: bold;
+    color: black;
+    background-image: -webkit-gradient(linear, left bottom, left top, color-stop(0, #eee), color-stop(0.9, #fff));
+    background-image: -webkit-linear-gradient(center bottom, #eee 0, #fff 90%);
+    background-image: -moz-linear-gradient(center bottom, #eee 0, #fff 90%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#eeeeee', GradientType=0);
+    /* ReSharper disable once InvalidValue */
+    background-image: linear-gradient(top, #eee 0, #fff 90%);
 }
 
+.trendlines-details-panel-close-button {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 2px;
+    right: 2px;
+    border: none;
+    background-image: url('../images/delete.png');
+    background-size: contain;
+    cursor: pointer;
+}
 
-span.info {
-    margin-left: 12px; 
-}*/
+.trendlines-details-panel-content {
+    position: relative;
+    float: left;
+    width: 400px;
+    height: 200px;
+    background-color: transparent;
+}

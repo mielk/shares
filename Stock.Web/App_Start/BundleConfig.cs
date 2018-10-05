@@ -22,6 +22,7 @@ namespace Stock.Web
 
             bundles.Add(new ScriptBundle("~/bundles/global").Include(
                         "~/Scripts/common/external/notify.js",
+                        "~/Scripts/common/external/fancygrid/fancy.full.min.js",
                         "~/Scripts/common/mielk.js",
                         "~/Scripts/common/external/jquery/jquery.sizes.js",
                         "~/Scripts/common/util.js",
@@ -58,6 +59,7 @@ namespace Stock.Web
                         "~/Scripts/modernizr-*"));
 
             bundles.Add(new StyleBundle("~/Content/css").Include(
+                        "~/Content/common/fancy.min.css",
                         "~/Content/common/select2.css",
                         "~/Content/stock/analysis.css",
                         "~/Content/stock/simulation.css",
