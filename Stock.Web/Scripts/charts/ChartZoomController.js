@@ -140,8 +140,23 @@ function ChartZoomController(parent, params) {
             if (trendlines === undefined) {
                 trendlines = {};
             }
-            trendlines[chartType] = value;
+            trendlines[chartType] = createTrendlinesArray(value, chartType);
+            self.layout.appendXCoordinatesForTrendlines(trendlines[STOCK.INDICATORS.PRICE]);
         }
+
+        function createTrendlinesArray(trendlines, chartType) {
+            var arr = [];
+            var counter = 0;
+            trendlines.forEach(function (trendline) {
+                arr[counter++] = {
+                    trendline: trendline,
+                    chartType: chartType
+                }
+            });
+            return arr;
+        }
+
+
 
 
         //Getters.
@@ -153,12 +168,20 @@ function ChartZoomController(parent, params) {
             return dataSetInfo.startIndex;
         }
 
+        function getLastQuotationIndex(){
+            return dataSetInfo.endIndex;
+        }
+
         function getItems() {
             return items;
         }
 
         function getValueRange(chartType) {
             return valueRanges[chartType.name];
+        }
+
+        function getTrendlines(chartType) {
+            return trendlines[chartType];
         }
 
 
@@ -187,7 +210,9 @@ function ChartZoomController(parent, params) {
             getDataSetInfo: getDataSetInfo,
             getStartIndex: getStartIndex,
             getItems: getItems,
-            getValueRange: getValueRange
+            getValueRange: getValueRange,
+            getTrendlines: getTrendlines,
+            getLastQuotationIndex: getLastQuotationIndex
         }
 
     })();
@@ -255,6 +280,28 @@ function ChartZoomController(parent, params) {
             });
         }
 
+        function appendXCoordinatesForTrendlines(trendlines) {
+            var leftOffset = STOCK.CONFIG.trendlines.leftOffset;
+            var closedRightOffset = STOCK.CONFIG.trendlines.closedRightOffset;
+            var openRightOffset = STOCK.CONFIG.trendlines.openRightOffset;
+            var lastQuotationIndex = self.data.getLastQuotationIndex();
+
+            trendlines.forEach(function (item) {
+                var trendline = item.trendline;
+
+                item.footholds = {
+                    start: trendline.range.start - leftOffset,
+                    end: trendline.range.end ? trendline.range.end + closedRightOffset : lastQuotationIndex + openRightOffset
+                }
+
+                item.coordinates = {
+                    baseX: getX(item.footholds.start),
+                    counterX: getX(item.footholds.end)
+                }
+                
+            });
+        }
+
         //Helper methods.
         function getX(value) {
             var candlesFromFirst = value - self.data.getStartIndex();
@@ -263,7 +310,8 @@ function ChartZoomController(parent, params) {
 
         return {
             countVisibleCandles: countVisibleCandles,
-            appendXCoordinates: appendXCoordinates
+            appendXCoordinates: appendXCoordinates,
+            appendXCoordinatesForTrendlines: appendXCoordinatesForTrendlines
         }
 
     })();
@@ -428,7 +476,7 @@ function ChartZoomController(parent, params) {
                 timeframe: self.params.getTimeframe(),
                 itemWidth: self.params.getItemWidth()
             });
-            valuesChart.data.setData(self.data.getDataSetInfo(), self.data.getItems(), self.data.getValueRange(type));
+            valuesChart.data.setData(self.data.getDataSetInfo(), self.data.getItems(), self.data.getTrendlines(type), self.data.getValueRange(type));
         }
 
         function insertAdxChart() {

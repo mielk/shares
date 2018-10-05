@@ -21,21 +21,21 @@ namespace Stock.Domain.Services
         {
             _repository = new EFTrendlineRepository();
             var dtos = _repository.GetTrendlines(assetId, timeframeId);
-            return GetTrendlines(dtos);
+            return GetTrendlines(assetId, timeframeId, dtos);
         }
 
         public IEnumerable<Trendline> GetVisibleTrendlines(int assetId, int timeframeId)
         {
             _repository = new EFTrendlineRepository();
             var dtos = _repository.GetVisibleTrendlines(assetId, timeframeId);
-            return GetTrendlines(dtos);
+            return GetTrendlines(assetId, timeframeId, dtos);
         }
 
-        private IEnumerable<Trendline> GetTrendlines(IEnumerable<TrendlineDto> dtos)
+        private IEnumerable<Trendline> GetTrendlines(int assetId, int timeframeId, IEnumerable<TrendlineDto> dtos)
         {
             IEnumerable<Trendline> trendlines = dtos.Select(dto => Trendline.FromDto(dto));
-            IEnumerable<TrendRange> trendRanges = GetTrendRanges();
-            Dictionary<int, ExtremumGroup> extremumGroupsMap = GetExtremumGroupsMap();
+            IEnumerable<TrendRange> trendRanges = GetTrendRanges(assetId, timeframeId);
+            Dictionary<int, ExtremumGroup> extremumGroupsMap = GetExtremumGroupsMap(assetId, timeframeId);
             Dictionary<int, Trendline> trendlinesMap = new Dictionary<int, Trendline>();
 
             foreach (var trendline in trendlines)
@@ -66,13 +66,13 @@ namespace Stock.Domain.Services
         }
 
 
-        private IEnumerable<TrendRange> GetTrendRanges()
+        private IEnumerable<TrendRange> GetTrendRanges(int assetId, int timeframeId)
         {
             _repository = new EFTrendlineRepository();
             IEnumerable<TrendRangeDto> dtos = _repository.GetTrendRanges();
             IEnumerable<TrendRange> trendRanges = dtos.Select(tr => TrendRange.FromDto(tr));
-            Dictionary<int, TrendHit> trendHits = GetTrendHitsMap();
-            Dictionary<int, TrendBreak> trendBreaks = GetTrendBreaksMap();
+            Dictionary<int, TrendHit> trendHits = GetTrendHitsMap(assetId, timeframeId);
+            Dictionary<int, TrendBreak> trendBreaks = GetTrendBreaksMap(assetId, timeframeId);
             List<TrendRange> result = new List<TrendRange>();
 
             foreach (var trendRange in trendRanges)
@@ -111,14 +111,14 @@ namespace Stock.Domain.Services
 
         }
 
-        private Dictionary<int, TrendHit> GetTrendHitsMap()
+        private Dictionary<int, TrendHit> GetTrendHitsMap(int assetId, int timeframeId)
         {
             _repository = new EFTrendlineRepository();
             IEnumerable<TrendHitDto> dtos = _repository.GetTrendHits();
             IEnumerable<TrendHit> trendHits = dtos.Select(th => TrendHit.FromDto(th));
             Dictionary<int, TrendHit> trendHitsMap = new Dictionary<int, TrendHit>();
-            
-            Dictionary<int, ExtremumGroup> extremumGroupsMap = GetExtremumGroupsMap();
+
+            Dictionary<int, ExtremumGroup> extremumGroupsMap = GetExtremumGroupsMap(assetId, timeframeId);
             foreach (var trendHit in trendHits)
             {
                 ExtremumGroup eg = null;
@@ -134,7 +134,7 @@ namespace Stock.Domain.Services
 
         }
 
-        private Dictionary<int, TrendBreak> GetTrendBreaksMap()
+        private Dictionary<int, TrendBreak> GetTrendBreaksMap(int assetId, int timeframeId)
         {
             _repository = new EFTrendlineRepository();
             IEnumerable<TrendBreakDto> dtos = _repository.GetTrendBreaks();
@@ -149,16 +149,22 @@ namespace Stock.Domain.Services
 
         }
 
-        private Dictionary<int, ExtremumGroup> GetExtremumGroupsMap()
+        private Dictionary<int, ExtremumGroup> GetExtremumGroupsMap(int assetId, int timeframeId)
         {
             _repository = new EFTrendlineRepository();
             Dictionary<int, ExtremumGroup> map = new Dictionary<int, ExtremumGroup>();
-            foreach (var dto in _repository.GetExtremumGroups())
+            foreach (var dto in _repository.GetExtremumGroups(assetId, timeframeId))
             {
                 var eg = ExtremumGroup.FromDto(dto);
                 map.Add(eg.ExtremumGroupId, eg);
             }
             return map;
+        }
+
+        public IEnumerable<ExtremumGroup> GetExtremumGroups(int assetId, int timeframeId)
+        {
+            _repository = new EFTrendlineRepository();
+            return _repository.GetExtremumGroups(assetId, timeframeId).Select(dto => ExtremumGroup.FromDto(dto));
         }
 
         public Trendline GetTrendlineById(int id)

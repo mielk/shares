@@ -45,16 +45,27 @@
         var dataSetInfo;
         var items;
         var valuesRange;
+        var trendlines;
 
 
         //[Setters]
-        function setData($dataSetInfo, $items, $valuesRange) {
+        function setData($dataSetInfo, $items, $trendlines, $valuesRange) {
             dataSetInfo = $dataSetInfo;
             items = $items.slice(0);
+            trendlines = $trendlines.slice(0);
             valuesRange = $valuesRange;
             setVisibilityRange();
             self.svg.render();
         }
+
+        //function setTrendlines($trendlines) {
+        //    var counter = 0;
+        //    $trendlines.forEach(function (trendline) {
+        //        trendlines[counter++] = {
+        //            trendline: trendline
+        //        };
+        //    });
+        //}
 
         function setVisibilityRange() {
             var offset = 0.04 * (valuesRange.min + valuesRange.max) / 2;
@@ -81,6 +92,10 @@
             return items;
         }
 
+        function getTrendlines() {
+            return trendlines;
+        }
+
         function getValuesRange() {
             return valuesRange;
         }
@@ -97,6 +112,7 @@
             getEndIndex: getEndIndex,
             getItems: getItems,
             getValuesRange: getValuesRange,
+            getTrendlines: getTrendlines,
             countNonEmptyItems: countNonEmptyItems
         }
 
@@ -199,7 +215,7 @@
             svgTrendlines.style.width = width + 'px';
             svgTrendlines.style.left = svgLeft + 'px';
 
-            chartContainer.appendChild(svgItems);
+            chartContainer.appendChild(svgTrendlines);
 
         }
 
@@ -272,7 +288,7 @@
         }
 
         function getTrendlinesSvg() {
-            if (svgItems === undefined) insertSvgTrendlines();
+            if (svgTrendlines === undefined) insertSvgTrendlines();
             return svgTrendlines;
         }
 
@@ -507,13 +523,13 @@
                     if (item.item) {
                         var price = item.item.price;
                         if (price.hasPeak()) {
-                            var value = Math.max(price.peakByClose ? price.peakByClose.Value : 0, price.peakByHigh ? price.peakByHigh.Value : 0);
+                            var value = Math.max(price.peakByClose ? price.peakByClose.value : 0, price.peakByHigh ? price.peakByHigh.value : 0);
                             var circle = generateCircleObject(value, false, item);
                             if (circle) circles.push(circle);
                         }
 
                         if (price.hasTrough()) {
-                            var value = Math.max(price.troughByClose ? price.troughByClose.Value : 0, price.troughByLow ? price.troughByLow.Value : 0);
+                            var value = Math.max(price.troughByClose ? price.troughByClose.value : 0, price.troughByLow ? price.troughByLow.value : 0);
                             var circle = generateCircleObject(value, true, item);
                             if (circle) circles.push(circle);
                         }
@@ -532,10 +548,60 @@
 
             })();
 
-
         }
 
         function renderPriceTrendlines() {
+            var svg = self.ui.getTrendlinesSvg();
+            var trendlines = self.data.getTrendlines();
+            var valuesRange = self.data.getValuesRange();
+
+            function getY(value) {
+                var pointsDistance = valuesRange.max - value;
+                return pointsDistance * unitHeight;
+            }
+
+            (function appendVerticalCoordinates() {
+                trendlines.forEach(function (item) {
+                    var startValue = item.trendline.countPriceForDateIndex(item.footholds.start);
+                    var endValue = item.trendline.countPriceForDateIndex(item.footholds.end);
+                    item.coordinates.startY = getY(startValue) + itemsSvgOffset / 2;
+                    item.coordinates.endY = getY(endValue) + itemsSvgOffset / 2;
+                });
+            })();
+
+            (function generateAndInsertSvgPaths() {
+                var paths = [];
+                var strokeWidth = STOCK.CONFIG.trendlines.width;
+                var stroke = STOCK.CONFIG.trendlines.color;
+
+                trendlines.forEach(function (item) {
+                    var path = {
+                        d: 'M ' + item.coordinates.baseX + ' ' + item.coordinates.startY + 'L' + item.coordinates.counterX + ' ' + item.coordinates.endY,
+                        //stroke: 'rgba(0, 0, 0, ' + item.trendline.value / 100 + ')',
+                        stroke: 'rgba(0, 0, 0, 1)',
+                        strokeWidth: strokeWidth,
+                        trendline: item.trendline
+                    };
+                    paths.push(path);
+                });
+
+                function appendSvgComponentToItem(component, item) {
+                    item.svgPath = component;
+                }
+
+                $(svg).empty();
+                paths.forEach(function (item) {
+                    var path = mielk.svg.createPath(item.d);
+                    path.style.strokeWidth = item.strokeWidth + 'px';
+                    path.style.stroke = item.stroke;
+                    path.style.vectorEffect = 'non-scaling-stroke';
+                    path.style.shapeRendering = 'crispEdges'
+                    svg.appendChild(path);
+                    appendSvgComponentToItem(path, item.trendline);
+                });
+
+            })();
+
         }
 
 
@@ -825,6 +891,9 @@
         }
 
         function handleExtremumDetailsClick(e) {
+
+            if (highlightedExtremumCircle) return;
+
             var x = e.pageX - self.ui.getSvgLeftOffset();
             var y = e.pageY - $(self.ui.getExtremaSvg()).offset().top;
             var items = self.data.getItems();
@@ -1042,9 +1111,9 @@
                     visibility: 'hidden'
                 }).appendTo(parentContainer)[0];
 
-                var extremumDetailItem = function ($caption, $property, $decimalPlaces, $fontBold) {
+                var extremumDetailItem = function ($caption, $fn, $decimalPlaces, $fontBold) {
                     var caption = $caption;
-                    var property = $property;
+                    var fn = $fn;
                     var decimalPlaces = ($decimalPlaces === undefined ? 2 : $decimalPlaces);
                     var fontBold = $fontBold || false;
                     var mainSpan;
@@ -1072,7 +1141,7 @@
                     })();
 
                     function updateValue(item) {
-                        var value = item[property];
+                        var value = fn(item);
                         var caption;
                         if (value === true) {
                             caption = 'TRUE';
@@ -1098,30 +1167,29 @@
                     }).appendTo(extremumDetailsInfoPanel)[0];
                 }
 
-                extremumDetailItems.push(new extremumDetailItem('Index', 'DateIndex', 0, true));
-                extremumDetailItems.push(new extremumDetailItem('Value', 'Value', 2, true));
-                extremumDetailItems.push(new extremumDetailItem('Is open', 'IsEvaluationOpen', 0, true));
+                extremumDetailItems.push(new extremumDetailItem('Index', function(item) { return item.price.dataItem.index; }, 0, true));
+                extremumDetailItems.push(new extremumDetailItem('Value', function (item) { return item.value; }, 2, true));
+                extremumDetailItems.push(new extremumDetailItem('Is open', function (item) { return item.stats.isOpen; } , 0, true));
                 separator();
-                extremumDetailItems.push(new extremumDetailItem('Earlier counter', 'EarlierCounter', 0));
-                extremumDetailItems.push(new extremumDetailItem('Earlier amplitude', 'EarlierAmplitude'));
-                extremumDetailItems.push(new extremumDetailItem('Earlier total area', 'EarlierTotalArea'));
-                extremumDetailItems.push(new extremumDetailItem('Earlier average area', 'EarlierAverageArea'));
-                extremumDetailItems.push(new extremumDetailItem('Earlier change [1]', 'EarlierChange1'));
-                extremumDetailItems.push(new extremumDetailItem('Earlier change [2]', 'EarlierChange2'));
-                extremumDetailItems.push(new extremumDetailItem('Earlier change [3]', 'EarlierChange3'));
-                extremumDetailItems.push(new extremumDetailItem('Earlier change [5]', 'EarlierChange5'));
-                extremumDetailItems.push(new extremumDetailItem('Earlier change [10]', 'EarlierChange10'));
+                extremumDetailItems.push(new extremumDetailItem('Earlier counter', function (item) { return item.stats.earlier.counter; }, 0));
+                extremumDetailItems.push(new extremumDetailItem('Earlier amplitude', function (item) { return item.stats.earlier.amplitude; }));
+                extremumDetailItems.push(new extremumDetailItem('Earlier total area', function (item) { return item.stats.earlier.totalArea; }));
+                extremumDetailItems.push(new extremumDetailItem('Earlier average area', function (item) { return item.stats.earlier.averageArea; }));
+                extremumDetailItems.push(new extremumDetailItem('Earlier change [1]', function (item) { return item.stats.earlier.change1; }));
+                extremumDetailItems.push(new extremumDetailItem('Earlier change [2]', function (item) { return item.stats.earlier.change2; }));
+                extremumDetailItems.push(new extremumDetailItem('Earlier change [3]', function (item) { return item.stats.earlier.change3; }));
+                extremumDetailItems.push(new extremumDetailItem('Earlier change [5]', function (item) { return item.stats.earlier.change5; }));
+                extremumDetailItems.push(new extremumDetailItem('Earlier change [10]', function (item) { return item.stats.earlier.change10; }));
                 separator();
-                extremumDetailItems.push(new extremumDetailItem('Later counter', 'LaterCounter', 0));
-                extremumDetailItems.push(new extremumDetailItem('Later amplitude', 'LaterAmplitude'));
-                extremumDetailItems.push(new extremumDetailItem('Later total area', 'LaterTotalArea'));
-                extremumDetailItems.push(new extremumDetailItem('Later average area', 'LaterAverageArea'));
-                extremumDetailItems.push(new extremumDetailItem('Later change [1]', 'LaterChange1'));
-                extremumDetailItems.push(new extremumDetailItem('Later change [2]', 'LaterChange2'));
-                extremumDetailItems.push(new extremumDetailItem('Later change [3]', 'LaterChange3'));
-                extremumDetailItems.push(new extremumDetailItem('Later change [5]', 'LaterChange5'));
-                extremumDetailItems.push(new extremumDetailItem('Later change [10]', 'LaterChange10'));
-
+                extremumDetailItems.push(new extremumDetailItem('Later counter', function (item) { return item.stats.later.counter; }, 0));
+                extremumDetailItems.push(new extremumDetailItem('Later amplitude', function (item) { return item.stats.later.amplitude; }));
+                extremumDetailItems.push(new extremumDetailItem('Later total area', function (item) { return item.stats.later.totalArea; }));
+                extremumDetailItems.push(new extremumDetailItem('Later average area', function (item) { return item.stats.later.averageArea; }));
+                extremumDetailItems.push(new extremumDetailItem('Later change [1]', function (item) { return item.stats.later.change1; }));
+                extremumDetailItems.push(new extremumDetailItem('Later change [2]', function (item) { return item.stats.later.change2; }));
+                extremumDetailItems.push(new extremumDetailItem('Later change [3]', function (item) { return item.stats.later.change3; }));
+                extremumDetailItems.push(new extremumDetailItem('Later change [5]', function (item) { return item.stats.later.change5; }));
+                extremumDetailItems.push(new extremumDetailItem('Later change [10]', function (item) { return item.stats.later.change10; }));
             })();
 
         })();

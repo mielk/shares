@@ -37,8 +37,9 @@ namespace Stock.Web.Controllers
             ITrendlineService trendlineService = new TrendlineService();
 
             IEnumerable<DataSet> dataSets = dataSetService.GetDataSets(assetId, timeframeId);
+            IEnumerable<ExtremumGroup> extremumGroups = trendlineService.GetExtremumGroups(assetId, timeframeId);
             IEnumerable<Trendline> trendlines = trendlineService.GetVisibleTrendlines(assetId, timeframeId);
-            var json = new { quotations = dataSets, trendlines = trendlines };
+            var json = new { quotations = dataSets, extremumGroups = extremumGroups, trendlines = trendlines };
             return Json(json, JsonRequestBehavior.AllowGet);
         }
 

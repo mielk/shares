@@ -306,6 +306,7 @@
         var dataSetInfo;
         var data = [];
         var valueRanges;
+        var trendlines = {};
 
 
         //Loaders
@@ -316,7 +317,22 @@
 
         function loadData(resultFromDb) {
             setData(resultFromDb.quotations);
+            setTrendlines(resultFromDb.trendlines, resultFromDb.extremumGroups);
             feedChildrenObjects(feedChildWithData);
+        }
+
+        function getAllExtremaArray(){
+            var extrema = [];
+            data.forEach(function(item){
+                var price = item.price;
+                if (price) {
+                    var priceExtrema = price.getAllExtrema();
+                    priceExtrema.forEach(function (extremum) {
+                        extrema[extremum.id] = extremum;
+                    });
+                }
+            });
+            return extrema;
         }
 
 
@@ -333,6 +349,26 @@
             });
 
             calculateValueRanges();
+
+        }
+
+        function setTrendlines($trendlines, $extremumGroups) {
+            var items = [];
+            var extremumGroups = [];
+            var extrema = getAllExtremaArray();
+
+            $extremumGroups.forEach(function (item) {
+                var eg = new ExtremumGroup(item, extrema);
+                extremumGroups[eg.id] = eg;
+            });
+
+            var counter = 0;
+            $trendlines.forEach(function (item) {
+                var trendline = new Trendline(item, extremumGroups);
+                items[counter++] = trendline;
+            });
+
+            trendlines[STOCK.INDICATORS.PRICE] = items;
 
         }
 
@@ -437,6 +473,7 @@
         }
 
         function feedChildWithData(item) {
+            item.data.setTrendlines(STOCK.INDICATORS.PRICE, trendlines[STOCK.INDICATORS.PRICE]);
             item.data.setItems(data);
             item.data.setValueRanges(valueRanges);
         }

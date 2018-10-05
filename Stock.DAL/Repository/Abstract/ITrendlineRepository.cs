@@ -16,6 +16,6 @@ namespace Stock.DAL.Repositories
         IEnumerable<TrendHitDto> GetTrendHits();
         IEnumerable<TrendBreakDto> GetTrendBreaks();
         IEnumerable<TrendRangeDto> GetTrendRanges();
-        IEnumerable<ExtremumGroupDto> GetExtremumGroups();
+        IEnumerable<ExtremumGroupDto> GetExtremumGroups(int assetId, int timeframeId);
     }
 }

@@ -73,12 +73,12 @@ namespace Stock.DAL.Repositories
             return trendRanges;
         }
 
-        public IEnumerable<ExtremumGroupDto> GetExtremumGroups()
+        public IEnumerable<ExtremumGroupDto> GetExtremumGroups(int assetId, int timeframeId)
         {
             IEnumerable<ExtremumGroupDto> extremumGroups;
             using (var context = new EFDbContext())
             {
-                extremumGroups = context.ExtremumGroups.ToList();
+                extremumGroups = context.ExtremumGroups.Where(eg => eg.AssetId == assetId && eg.TimeframeId == timeframeId).ToList();
             }
             return extremumGroups;
         }

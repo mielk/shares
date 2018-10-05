@@ -298,7 +298,11 @@ Date.prototype.isHoliday = function () {
             distance: 35
         }
         , trendlines: {
-            color: 'black'
+            color: 'black',
+            width: 0.5,
+            leftOffset: 5,
+            closedRightOffset: 3,
+            openRightOffset: 10
         }
         , modify: function (param, value) {
 

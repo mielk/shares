@@ -277,6 +277,7 @@
     <Content Include="Scripts\analysis\AnalysisController.js" />
     <Content Include="Scripts\charts\ChartZoomController.js" />
     <Content Include="Scripts\charts\Chart.js" />
+    <Content Include="Scripts\charts\Copy of Chart.js" />
     <Content Include="Scripts\unit-tests\AjaxServiceMock.js" />
     <Content Include="Scripts\unit-tests\mielk\mielk.dates.tests.js" />
     <Content Include="Scripts\unit-tests\lib\qunit-1.12.0.js" />
