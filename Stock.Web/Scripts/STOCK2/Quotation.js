@@ -215,7 +215,33 @@ function Trendline(params, extremumGroups) {
 
     self.countPriceForDateIndex = function (dateIndex) {
         return (dateIndex - self.edgePoints.base.index) * self.slope + self.edgePoints.base.level;
-    }
+    };
+
+    self.getAllTrendHits = function () {
+        var arr = [];
+        self.trendRanges.forEach(function (tr) {
+            if (tr.base && tr.base.TrendHit) {
+                arr.push(tr.base);
+            }
+            if (tr.counter && tr.counter.TrendHit) {
+                arr.push(tr.counter);
+            }
+        });
+        return arr;
+    };
+
+    self.getAllTrendBreaks = function () {
+        var arr = [];
+        self.trendRanges.forEach(function (tr) {
+            if (tr.base && tr.base.TrendBreak) {
+                arr.push(tr.base);
+            }
+            if (tr.counter && tr.counter.TrendBreak) {
+                arr.push(tr.counter);
+            }
+        });
+        return arr;
+    };
 
 }
 
@@ -230,7 +256,12 @@ function TrendHit(trendRange, params, extremumGroups) {
     self.id = params.TrendHitId;
     self.value = params.Value;
     self.extremumGroup = (extremumGroups && extremumGroups[params.ExtremumGroupId] ? extremumGroups[params.ExtremumGroupId] : params.ExtremumGroupId);
-
+    self.evaluation = {
+        gap: params.Gap,
+        relativeGap: params.RelativeGap,
+        pointsForDistance: params.PointsForDistance,
+        pointsForValue: params.PointsForValue
+    };
 }
 
 function TrendBreak(trendRange, params) {
@@ -245,7 +276,12 @@ function TrendBreak(trendRange, params) {
     self.index = params.DateIndex;
     self.fromAbove = params.BreakFromAbove;
     self.value = params.Value;
-
+    self.evaluation = {
+        breakDayAmplitude: params.BreakDayAmplitudePoints,
+        previousDayPoints: params.PreviousDayPoints,
+        nextDaysMinDistancePoints: params.NextDaysMinDistancePoints,
+        nextDaysMaxVariancePoints: params.NextDaysMaxVariancePoints
+    };
 }
 
 function TrendRange(trendline, params, extremumGroups) {
@@ -310,6 +346,15 @@ function ExtremumGroup(params, extremaArray) {
         openClose: params.OCPriceLevel,
         extremum: params.ExtremumPriceLevel,
         middle: params.MiddlePriceLevel
+    }
+
+    self.getValue = function () {
+        var points = self.master.value;
+        if (self.slave && self.slave.value > points) {
+            return self.slave.value;
+        } else {
+            return points;
+        }
     }
 
 }

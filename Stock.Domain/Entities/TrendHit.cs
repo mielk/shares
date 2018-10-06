@@ -13,6 +13,10 @@ namespace Stock.Domain.Entities
         public int TrendlineId { get; set; }
         public int ExtremumGroupId { get; set; }
         public double? Value { get; set; }
+        public double? PointsForDistance { get; set; }
+        public double? PointsForValue { get; set; }
+        public double? Gap { get; set; }
+        public double? RelativeGap { get; set; }
         public ExtremumGroup ExtremumGroup { get; set; }
 
         public static TrendHit FromDto(TrendHitDto dto)
@@ -22,7 +26,11 @@ namespace Stock.Domain.Entities
                 TrendHitId = dto.TrendHitId,
                 TrendlineId = dto.TrendlineId,
                 ExtremumGroupId = dto.ExtremumGroupId,
-                Value = dto.Value
+                Value = dto.Value,
+                PointsForDistance = dto.PointsForDistance,
+                PointsForValue = dto.PointsForValue,
+                Gap = dto.Gap,
+                RelativeGap = dto.RelativeGap
             };
             return trendHit;
         }

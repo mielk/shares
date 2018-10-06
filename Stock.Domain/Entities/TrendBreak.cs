@@ -14,6 +14,10 @@ namespace Stock.Domain.Entities
         public int DateIndex { get; set; }
         public int BreakFromAbove { get; set; }
         public double? Value { get; set; }
+        public double? BreakDayAmplitudePoints { get; set; }
+        public double? PreviousDayPoints { get; set; }
+        public double? NextDaysMinDistancePoints { get; set; }
+        public double? NextDaysMaxVariancePoints { get; set; }
 
         public static TrendBreak FromDto(TrendBreakDto dto)
         {
@@ -23,7 +27,11 @@ namespace Stock.Domain.Entities
                 TrendlineId = dto.TrendlineId,
                 DateIndex = dto.DateIndex,
                 BreakFromAbove = dto.BreakFromAbove,
-                Value = dto.Value
+                Value = dto.Value,
+                BreakDayAmplitudePoints = dto.BreakDayAmplitudePoints,
+                PreviousDayPoints = dto.PreviousDayPoints,
+                NextDaysMinDistancePoints = dto.NextDaysMinDistancePoints,
+                NextDaysMaxVariancePoints = dto.NextDaysMaxVariancePoints
             };
             return trendBreak;
         }

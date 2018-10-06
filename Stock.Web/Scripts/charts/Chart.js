@@ -1648,24 +1648,6 @@
             (function formatPanel() {
                 $(panel).css('visibility', 'visible');
                 $(titleCaption).html(eventType.name);
-                (function centerOnScreen() {
-                    var browserSize = {
-                        width: $(window).width(),
-                        height: $(window).height()
-                    };
-                    var panelSize = {
-                        width: $(panel).width(),
-                        height: $(panel).height()
-                    };
-                    var coordinates = {
-                        left: (browserSize.width - panelSize.width) / 2,
-                        top: (browserSize.height - panelSize.height) / 2
-                    };
-                    $(panel).css({
-                        'left': coordinates.left + 'px',
-                        'top': coordinates.top + 'px'
-                    });
-                })();
             })();
 
             self.trigger({ type: 'trendlinesPanelOpen' });
@@ -1683,71 +1665,34 @@
 
         //DATA
         function insertData() {
-            var data = [
-                  { name: 'Ted', surname: 'Smith', company: 'Electrical Systems', age: 30 },
-                  { name: 'Ed', surname: 'Johnson', company: 'Energy and Oil', age: 35 },
-                  { name: 'Sam', surname: 'Williams', company: 'Airbus', age: 38 },
-                  { name: 'Alexander', surname: 'Brown', company: 'Renault', age: 24 },
-                  { name: 'Nicholas', surname: 'Miller', company: 'Adobe', age: 33 },
-                  { name: 'Andrew', surname: 'Thompson', company: 'Google', age: 28 },
-                  { name: 'Ryan', surname: 'Walker', company: 'Siemens', age: 39 },
-                  { name: 'John', surname: 'Scott', company: 'Cargo', age: 45 },
-                  { name: 'James', surname: 'Phillips', company: 'Pro bugs', age: 30 },
-                  { name: 'Brian', surname: 'Edwards', company: 'IT Consultant', age: 23 },
-                  { name: 'Jack', surname: 'Richardson', company: 'Europe IT', age: 24 },
-                  { name: 'Alex', surname: 'Howard', company: 'Cisco', age: 27 },
-                  { name: 'Carlos', surname: 'Wood', company: 'HP', age: 36 },
-                  { name: 'Adrian', surname: 'Russell', company: 'Micro Systems', age: 31 },
-                  { name: 'Jeremy', surname: 'Hamilton', company: 'Big Machines', age: 30 },
-                  { name: 'Ivan', surname: 'Woods', company: '', age: 24 },
-                  { name: 'Peter', surname: 'West', company: 'Adobe', age: 26 },
-                  { name: 'Scott', surname: 'Simpson', company: 'IBM', age: 29 },
-                  { name: 'Lorenzo', surname: 'Tucker', company: 'Intel', age: 29 },
-                  { name: 'Randy', surname: 'Grant', company: 'Bridges', age: 30 },
-                  { name: 'Arthur', surname: 'Gardner', company: 'Google', age: 31 },
-                  { name: 'Orlando', surname: 'Ruiz', company: 'Apple', age: 32 }
-            ];
+            var factory = getFactory();
+            var columns = factory.getColumns();
             
-            $(function () {
+            function calculateTotalWidth(columns) {
+                var value = 0;
+                columns.forEach(function (item) {
+                    value += item.width;
+                });
+                return value;
+            }
+
+            $(function insertActualGrid () {
                 $(container).empty();
                 grid.object = $(container).FancyGrid({
-                    width: 401,
-                    height: 400,
-                    data: data,
+                    width: calculateTotalWidth(columns) + 20,
+                    height: 600,
+                    data: factory.getData(),
                     events: [{
                         rowclick: function(grid, rowIndex, dataItem){
-                            var x = dataItem;
+                            //var x = dataItem;
                         }
                     }],
-                    columns: [{
-                        index: 'company',
-                        title: 'Company',
-                        type: 'string',
-                        width: 100,
-                        sortable: true
-                    }, {
-                        index: 'name',
-                        title: 'Name',
-                        type: 'string',
-                        width: 100,
-                        sortable: true
-                    }, {
-                        index: 'surname',
-                        title: 'Sur Name',
-                        type: 'string',
-                        width: 100,
-                        sortable: true
-                    }, {
-                        index: 'age',
-                        title: 'Age',
-                        type: 'number',
-                        width: 100,
-                        sortable: true,
-                        filter: {
-                            header: true
-                        }
-                    }]
+                    columns: columns
                 });
+
+                (function getReferencesToUsefulDomComponents() {
+                    grid.body = grid.object.body.el.dom;
+                })();
 
                 (function adjustFancyGridView() {
 
@@ -1767,16 +1712,268 @@
                 })();
 
                 (function mapGridHtmlElementsToRows() {
-                    var x = grid;
-                    var data = grid.object.data;
-                    var cells = container.getElementsByClassName('fancy-grid-cell');
                     var rows = [];
+                    var data = grid.object.data;
+                    var rowHeight = grid.object.cellHeight;
+                    for (var i = 0; i < data.length; i++) {
+                        rows[i] = {
+                            index: i,
+                            cells: []
+                        }
+                    }
+                    var cells = container.getElementsByClassName('fancy-grid-cell');
+                    for (var i = 0; i < cells.length; i++) {
+                        var cell = cells[i];
+                        var top = cell.offsetTop;
+                        var rowIndex = Math.round(top / rowHeight)
+                        rows[rowIndex].cells.push(cell);
+                    }
+                    grid.rows = rows;
+                })();
+
+                (function centerOnScreen() {
+                    var browserSize = {
+                        width: $(window).width(),
+                        height: $(window).height()
+                    };
+                    var panelSize = {
+                        width: $(panel).width(),
+                        height: $(panel).height()
+                    };
+                    var coordinates = {
+                        left: (browserSize.width - panelSize.width) / 2,
+                        top: (browserSize.height - panelSize.height) / 2
+                    };
+                    $(panel).css({
+                        'left': coordinates.left + 'px',
+                        'top': coordinates.top + 'px'
+                    });
+                })();
+
+                (function addEventsToCells() {
+                    grid.rows.forEach(function (row) {
+                        var cells = row.cells;
+                        cells.forEach(function (cell) {
+                            $(cell).bind({
+                                mouseover: function (e) {
+                                    activateRow(row);
+                                }
+                            });
+                        });
+                    });
+
+                    $(grid.body).bind({
+                        mouseleave: function () {
+                            deactivateRow(grid.activeRow);
+                        }
+                    });
+
                 })();
 
             });
 
         }
 
+
+        function getFactory() {
+            if (eventType === STOCK.TRENDEVENTS.trendLine) {
+                return trendLinesFactory;
+            } else if (eventType === STOCK.TRENDEVENTS.trendHit) {
+                return trendHitsFactory;
+            } else if (eventType === STOCK.TRENDEVENTS.trendBreak) {
+                return trendBreaksFactory;
+            } else if (eventType === STOCK.TRENDEVENTS.trendRange) {
+                return trendRangesFactory;
+            }
+        }
+
+        //Data & columns factories.
+        var trendLinesFactory = null;
+        var trendHitsFactory = (function () {
+
+            function getData() {
+                var result = [];
+                var arr = [];
+                var trendlines = self.data.getTrendlines();
+                trendlines.forEach(function (item) {
+                    var trendline = item.trendline;
+                    var trendHits = trendline.getAllTrendHits();
+                    trendHits.forEach(function (hit) {
+                        arr[hit.id] = hit;
+                    });
+                });
+
+                arr.forEach(function (item) {
+                    result.push({
+                        id: item.id,
+                        trendlineId: item.trendRange.trendline.id,
+                        trendRangeId: item.trendRange.id,
+                        value: item.value.toFixed(2),
+                        startDateIndex: item.extremumGroup.dates.start,
+                        endDateIndex: item.extremumGroup.dates.end,
+                        extremumValue: item.extremumGroup.getValue().toFixed(2),
+                        gap: item.evaluation.gap.toFixed(4),
+                        relativeGap: (item.evaluation.relativeGap * 100).toFixed(2),
+                        pointsForDistance: item.evaluation.pointsForDistance.toFixed(2),
+                        pointsForValue: item.evaluation.pointsForValue.toFixed(2)
+                    });
+                });
+
+                return result;
+
+            }
+
+            function getColumns() {
+
+                return [
+                    {
+                        index: 'id',
+                        title: 'Id',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: { header: true }
+                    }, {
+                        index: 'trendlineId',
+                        title: 'Trendline',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: { header: true }
+                    }, {
+                        index: 'trendRangeId',
+                        title: 'Trend range',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: { header: true }
+                    }, {
+                        index: 'value',
+                        title: 'Value',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'startDateIndex',
+                        title: 'Start',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'endDateIndex',
+                        title: 'End',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'extremumValue',
+                        title: 'Extremum value',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'gap',
+                        title: 'Gap',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'relativeGap',
+                        title: 'Gap [%]',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'pointsForDistance',
+                        title: 'Distance points',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'pointsForValue',
+                        title: 'Value points',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }
+                ];
+            }
+
+            return {
+                getData: getData,
+                getColumns: getColumns
+            }
+
+        })();
+        var trendBreaksFactory = null;
+        var trendRangesFactory = null;
+
+
+        function activateRow(row) {
+            if (row !== grid.activeRow) {
+                setTimeout(deactivateRow(grid.activeRow), 0);
+                grid.activeRow = row;
+                var data = grid.object.store.dataView[row.index].data;
+                row.cells.forEach(function (cell) {
+                    cell.classList.add('highlighted-grid-cell');
+                });
+                var x = row;
+            }
+        }
+
+        function deactivateRow(row) {
+            if (row) {
+                row.cells.forEach(function (cell) {
+                    cell.classList.remove('highlighted-grid-cell');
+                });
+            }
+        }
 
 
         return {
