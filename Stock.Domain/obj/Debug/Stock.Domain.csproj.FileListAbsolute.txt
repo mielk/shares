@@ -102,9 +102,6 @@ C:\Tomek\aplikacje\FX\Stock.Domain\bin\Debug\EntityFramework.xml
 C:\Tomek\aplikacje\FX\Stock.Domain\obj\Debug\Stock.Domain.csprojResolveAssemblyReference.cache
 C:\Tomek\aplikacje\FX\Stock.Domain\obj\Debug\Stock.Domain.dll
 C:\Tomek\aplikacje\FX\Stock.Domain\obj\Debug\Stock.Domain.pdb
-C:\Tomek\aplikacje\shares\Stock.Domain\obj\Debug\Stock.Domain.csprojResolveAssemblyReference.cache
-C:\Tomek\aplikacje\shares\Stock.Domain\obj\Debug\Stock.Domain.dll
-C:\Tomek\aplikacje\shares\Stock.Domain\obj\Debug\Stock.Domain.pdb
 C:\Tomek\aplikacje\shares\Stock.Domain\bin\Debug\Stock.Domain.dll
 C:\Tomek\aplikacje\shares\Stock.Domain\bin\Debug\Stock.Domain.pdb
 C:\Tomek\aplikacje\shares\Stock.Domain\bin\Debug\Ninject.dll
@@ -116,3 +113,6 @@ C:\Tomek\aplikacje\shares\Stock.Domain\bin\Debug\Stock.Utils.pdb
 C:\Tomek\aplikacje\shares\Stock.Domain\bin\Debug\Ninject.pdb
 C:\Tomek\aplikacje\shares\Stock.Domain\bin\Debug\Ninject.xml
 C:\Tomek\aplikacje\shares\Stock.Domain\bin\Debug\EntityFramework.xml
+C:\Tomek\aplikacje\shares\Stock.Domain\obj\Debug\Stock.Domain.csprojResolveAssemblyReference.cache
+C:\Tomek\aplikacje\shares\Stock.Domain\obj\Debug\Stock.Domain.dll
+C:\Tomek\aplikacje\shares\Stock.Domain\obj\Debug\Stock.Domain.pdb

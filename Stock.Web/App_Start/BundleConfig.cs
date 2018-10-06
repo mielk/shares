@@ -20,9 +20,11 @@ namespace Stock.Web
             bundles.Add(new ScriptBundle("~/bundles/bootstrap").Include(
                         "~/Scripts/common/external/bootstrap.js"));
 
+            bundles.Add(new ScriptBundle("~/bundles/fancygrid").Include(
+                        "~/Scripts/common/external/fancy.full.min.js"));
+
             bundles.Add(new ScriptBundle("~/bundles/global").Include(
                         "~/Scripts/common/external/notify.js",
-                        "~/Scripts/common/external/fancygrid/fancy.full.min.js",
                         "~/Scripts/common/mielk.js",
                         "~/Scripts/common/external/jquery/jquery.sizes.js",
                         "~/Scripts/common/util.js",

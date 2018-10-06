@@ -280,6 +280,7 @@
     <Content Include="Scripts\common\external\fancygrid\fancy-angular.js" />
     <Content Include="Content\common\fancy.css" />
     <Content Include="Scripts\common\external\fancygrid\fancy.full.js" />
+    <Content Include="Scripts\common\external\fancy.full.min.js" />
     <Content Include="Scripts\common\external\fancygrid\fancy.full.min.js" />
     <Content Include="Scripts\common\external\fancygrid\fancy.js" />
     <Content Include="Content\common\fancy.min.css" />
