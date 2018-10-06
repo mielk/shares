@@ -319,6 +319,19 @@
         }
 
 
+        //Showing/hiding components
+        function showHideTrendlinesSvg(value) {
+            $(svgTrendlines).css({
+                'visibility': (value ? 'visible' : 'hidden')
+            });
+        }
+
+        function showHideExtremaSvg(value) {
+            $(svgExtrema).css({
+                'visibility': (value ? 'visible' : 'hidden')
+            });
+        }
+
 
 
         //[EVENTS]
@@ -335,7 +348,6 @@
 
 
 
-
         return {
             setSvgHeight: setSvgHeight,
             setVisibleRange: setVisibleRange,
@@ -348,7 +360,10 @@
             getVisibleRange: getVisibleRange,
             getHorizontalGridLinesContainer: getHorizontalGridLinesContainer,
             getValueLabelsContainer: getValueLabelsContainer,
-            getChartContainer: getChartContainer
+            getChartContainer: getChartContainer,
+            //Showing/hiding components
+            showHideTrendlinesSvg: showHideTrendlinesSvg,
+            showHideExtremaSvg: showHideExtremaSvg
         }
 
     })();
@@ -936,6 +951,7 @@
         function handleExtremumDetailsClick(e) {
 
             if (highlightedExtremumCircle) return;
+            if (!self.layers.extremaVisible) return;
 
             var x = e.pageX - self.ui.getSvgLeftOffset();
             var y = e.pageY - $(self.ui.getExtremaSvg()).offset().top;
@@ -1155,7 +1171,11 @@
         var legendItems = {};
         var extremumDetailsInfoPanel;
         var extremumDetailItems = [];
+        var panelButtonsContainer;
         var trendlinePanelButton;
+        var trendHitsPanelButton;
+        var trendBreaksPanelButton;
+        var trendRangesPanelButton;
 
         (function insertLegendComponents() {
             var parentContainer = self.ui.getChartContainer();
@@ -1251,10 +1271,30 @@
                 extremumDetailItems.push(new extremumDetailItem('Later change [10]', function (item) { return item.stats.later.change10; }));
             })();
 
-            trendlinePanelButton = $('<span/>', {
-                'class': 'show-trendline-panel-button open-panel-button',
-                'html': 'Trendlines'
+            panelButtonsContainer = $('<div/>', {
+                'class': 'panel-buttons-container'
             }).appendTo(parentContainer)[0];
+
+            trendlinePanelButton = $('<span/>', {
+                'class': 'show-panel-button open-panel-button',
+                'html': 'Trendlines'
+            }).appendTo(panelButtonsContainer)[0];
+
+            trendHitsPanelButton = $('<span/>', {
+                'class': 'show-panel-button open-panel-button',
+                'html': 'Hits'
+            }).appendTo(panelButtonsContainer)[0];
+
+            trendBreaksPanelButton = $('<span/>', {
+                'class': 'show-panel-button open-panel-button',
+                'html': 'Breaks'
+            }).appendTo(panelButtonsContainer)[0];
+
+            trendRangesPanelButton = $('<span/>', {
+                'class': 'show-panel-button open-panel-button',
+                'html': 'Ranges'
+            }).appendTo(panelButtonsContainer)[0];
+
 
         })();
 
@@ -1399,16 +1439,48 @@
         (function bindEvents() {
             $(trendlinePanelButton).bind({
                 click: function (e) {
-                    self.trendlinesPanel.show();
+                    if (!self.trendlinesPanel.isOpen()) {
+                        self.trendlinesPanel.show(STOCK.TRENDEVENTS.trendLine);
+                    }
+                }
+            });
+
+            $(trendHitsPanelButton).bind({
+                click: function (e) {
+                    if (!self.trendlinesPanel.isOpen()) {
+                        self.trendlinesPanel.show(STOCK.TRENDEVENTS.trendHit);
+                    }
+                }
+            });
+
+            $(trendBreaksPanelButton).bind({
+                click: function (e) {
+                    if (!self.trendlinesPanel.isOpen()) {
+                        self.trendlinesPanel.show(STOCK.TRENDEVENTS.trendBreak);
+                    }
+                }
+            });
+
+            $(trendRangesPanelButton).bind({
+                click: function (e) {
+                    if (!self.trendlinesPanel.isOpen()) {
+                        self.trendlinesPanel.show(STOCK.TRENDEVENTS.trendRange);
+                    }
                 }
             });
 
             self.bind({
                 trendlinesPanelOpen: function (e) {
                     trendlinePanelButton.classList.remove('open-panel-button');
+                    trendHitsPanelButton.classList.remove('open-panel-button');
+                    trendBreaksPanelButton.classList.remove('open-panel-button');
+                    trendRangesPanelButton.classList.remove('open-panel-button');
                 },
                 trendlinesPanelClosed: function (e) {
                     trendlinePanelButton.classList.add('open-panel-button');
+                    trendHitsPanelButton.classList.add('open-panel-button');
+                    trendBreaksPanelButton.classList.add('open-panel-button');
+                    trendRangesPanelButton.classList.add('open-panel-button');
                 }
             });
 
@@ -1428,12 +1500,15 @@
     self.trendlinesPanel = (function () {
         var PANEL_NAME = 'trendlines-panel';
         var status = false;
+        var eventType = null;
         var moveParams;
         //[UI components]
         var panel;
         var titleBar;
+        var titleCaption;
         var closeButton;
         var container;
+        var grid = {};
         //---------------------------------------------------
 
 
@@ -1450,7 +1525,7 @@
                 'class': 'trendlines-details-panel-title-bar'
             }).appendTo(panel)[0];
 
-            var titleCaption = $('<span/>', {
+            titleCaption = $('<span/>', {
                 'class': 'trendlines-details-panel-title-caption',
                 html: 'Trendlines'
             }).appendTo(titleBar)[0];
@@ -1567,33 +1642,41 @@
             return status;
         }
 
-        function show() {
-            $(panel).css('visibility', 'visible');
-            (function centerOnScreen() {
-                var browserSize = {
-                    width: $(window).width(),
-                    height: $(window).height()
-                };
-                var panelSize = {
-                    width: $(panel).width(),
-                    height: $(panel).height()
-                };
-                var coordinates = {
-                    left: (browserSize.width - panelSize.width) / 2,
-                    top: (browserSize.height - panelSize.height) / 2
-                };
-                $(panel).css({
-                    'left': coordinates.left + 'px',
-                    'top': coordinates.top + 'px'
-                });
+        function show($eventType) {
+            eventType = $eventType;
+
+            (function formatPanel() {
+                $(panel).css('visibility', 'visible');
+                $(titleCaption).html(eventType.name);
+                (function centerOnScreen() {
+                    var browserSize = {
+                        width: $(window).width(),
+                        height: $(window).height()
+                    };
+                    var panelSize = {
+                        width: $(panel).width(),
+                        height: $(panel).height()
+                    };
+                    var coordinates = {
+                        left: (browserSize.width - panelSize.width) / 2,
+                        top: (browserSize.height - panelSize.height) / 2
+                    };
+                    $(panel).css({
+                        'left': coordinates.left + 'px',
+                        'top': coordinates.top + 'px'
+                    });
+                })();
             })();
+
             self.trigger({ type: 'trendlinesPanelOpen' });
             insertData();
+            status = true;
         }
 
         function hide() {
             $(panel).css('visibility', 'hidden');
             self.trigger({ type: 'trendlinesPanelClosed' });
+            status = false;
         }
 
 
@@ -1627,7 +1710,7 @@
             
             $(function () {
                 $(container).empty();
-                $(container).FancyGrid({
+                grid.object = $(container).FancyGrid({
                     width: 401,
                     height: 400,
                     data: data,
@@ -1666,11 +1749,29 @@
                     }]
                 });
 
-                var tags = container.getElementsByTagName('a');
-                for (var i = 0; i < tags.length; i++) {
-                    tags[i].style.cssText = '';
-                    tags[i].style.visibility = 'hidden';
-                }
+                (function adjustFancyGridView() {
+
+                    //Hide logo
+                    var tags = container.getElementsByTagName('a');
+                    for (var i = 0; i < tags.length; i++) {
+                        tags[i].style.cssText = '';
+                        tags[i].style.visibility = 'hidden';
+                    }
+
+                    //Adjust width.
+                    var gridContainer = container.childNodes[0];
+                    var gridCenter = gridContainer.getElementsByClassName('fancy-grid-center')[0];
+                    var width = mielk.text.onlyDigits(gridCenter.style.width, true)[0];
+                    gridContainer.style.width = width + 'px';
+
+                })();
+
+                (function mapGridHtmlElementsToRows() {
+                    var x = grid;
+                    var data = grid.object.data;
+                    var cells = container.getElementsByClassName('fancy-grid-cell');
+                    var rows = [];
+                })();
 
             });
 
@@ -1682,6 +1783,61 @@
             isOpen: isOpen,
             show: show,
             hide: hide
+        }
+
+    })();
+
+
+    self.layers = (function () {
+        var extremaVisible = self.parent.parent.optionPanel.extremaVisible();
+        var trendlinesVisible = self.parent.parent.optionPanel.trendlinesVisible();
+        var adxVisible = self.parent.parent.optionPanel.adxVisible();
+        var macdVisible = self.parent.parent.optionPanel.macdVisible();
+
+        //Events.
+        (function bindToParent() {
+            self.parent.bind({
+                changeShowPeaksSetting: function (e) {
+                    extremaVisible = e.value;
+                    self.ui.showHideExtremaSvg(extremaVisible);
+                },
+                changeShowTrendlinesSetting: function (e) {
+                    trendlinesVisible = e.value;
+                    self.ui.showHideTrendlinesSvg(trendlinesVisible);
+                },
+                changeShowADXSetting: function (e) {
+                    adxVisible = e.value;
+                    self.ui.showHideTrendlinesSvg(adxVisible);
+                },
+                changeShowMACDSetting: function (e) {
+                    macdVisible = e.value;
+                    self.ui.showHideTrendlinesSvg(macdVisible);
+                }
+            });
+        })();
+
+        function extremaVisible() {
+            return extremaVisible;
+        }
+
+        function trendlinesVisible() {
+            return trendlinesVisible;
+        }
+        
+        function adxVisible() {
+            return adxVisible;
+        }
+
+        function macdVisible() {
+            return macdVisible;
+        }
+
+
+        return {
+            extremaVisible: extremaVisible,
+            trendlinesVisible: trendlinesVisible,
+            adxVisible: adxVisible,
+            macdVisible: macdVisible
         }
 
     })();

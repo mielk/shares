@@ -18,6 +18,25 @@ Date.prototype.isHoliday = function () {
 
     'use strict';
 
+    var trendEvents = {
+        trendLine: {
+            id: 0,
+            name: 'Trendlines'
+        },
+        trendHit: {
+            id: 1,
+            name: 'Trend hits'
+        },
+        trendBreak: {
+            id: 2,
+            name: 'Trend breaks'
+        },
+        trendRange: {
+            id: 3,
+            name: 'Trend ranges'
+        }
+    }
+
     var timeframes = {
         M5: {
             id: 1, name: '5 minutes', symbol: 'M5', period: 5, selectable: true,
@@ -342,7 +361,8 @@ Date.prototype.isHoliday = function () {
     var stock = {
         TIMEFRAMES: timeframes,
         INDICATORS: indicators,
-        CONFIG: config
+        CONFIG: config,
+        TRENDEVENTS: trendEvents
     };
 
 

@@ -197,7 +197,10 @@
             $(controls.showPeaksCheckbox).bind({
                 click: function (e) {
                     var $this = $(this);
-                    changeShowPeaksSetting($this.is(':checked'));
+                    self.trigger({
+                        type: 'changeShowPeaksSetting',
+                        value: $this.is(':checked')
+                    });
                 }
             });
 
@@ -205,7 +208,10 @@
             $(controls.showTrendlinesCheckbox).bind({
                 click: function (e) {
                     var $this = $(this);
-                    changeShowTrendlinesSetting($this.is(':checked'));
+                    self.trigger({
+                        type: 'changeShowTrendlinesSetting',
+                        value: $this.is(':checked')
+                    });
                 }
             });
 
@@ -213,7 +219,10 @@
             $(controls.showADXCheckbox).bind({
                 click: function (e) {
                     var $this = $(this);
-                    changeShowADXSetting($this.is(':checked'));
+                    self.trigger({
+                        type: 'changeShowADXSetting',
+                        value: $this.is(':checked')
+                    });
                 }
             });
 
@@ -221,7 +230,10 @@
             $(controls.showMACDCheckbox).bind({
                 click: function (e) {
                     var $this = $(this);
-                    changeShowMACDSetting($this.is(':checked'));
+                    self.trigger({
+                        type: 'changeShowMACDSetting',
+                        value: $this.is(':checked')
+                    });
                 }
             });
 
@@ -244,8 +256,29 @@
 
         initialize();
 
-        return {
 
+        function extremaVisible() {
+            return $(controls.showPeaksCheckbox).is(':checked');
+        }
+
+        function trendlinesVisible() {
+            return $(controls.showTrendlinesCheckbox).is(':checked');
+        }
+
+        function adxVisible() {
+            return $(controls.showADXCheckbox).is(':checked');
+        }
+
+        function macdVisible() {
+            return $(controls.showMACDCheckbox).is(':checked');
+        }
+
+
+        return {
+            extremaVisible: extremaVisible,
+            trendlinesVisible: trendlinesVisible,
+            adxVisible: adxVisible,
+            macdVisible: macdVisible
         };
 
     })(params);

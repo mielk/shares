@@ -433,11 +433,20 @@ svg {
 
 
 /* TRENDLINES */
-.show-trendline-panel-button {
+.panel-buttons-container {
     position: absolute;
-    box-sizing: border-box;
     bottom: 3px;
     left: 3px;
+    height: auto;
+    width: auto;
+    background: transparent;
+    z-index: 7;
+}
+
+.show-panel-button {
+    position: relative;
+    float: left;
+    box-sizing: border-box;
     width: auto;
     height: 22px;
     padding: 3px;
@@ -450,7 +459,7 @@ svg {
     opacity: 0.25;
     border: 1px solid #999;
     cursor: pointer;
-    z-index: 7;
+    margin-right: 6px;
 }
 
 .open-panel-button:hover {

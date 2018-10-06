@@ -66,6 +66,30 @@ function ChartZoomController(parent, params) {
             self.parent.bind({
                 zoom: function (e) {
                     self.params.setIsActive(e.activeChartZoomController === self)
+                },
+                changeShowPeaksSetting: function (e) {
+                    self.trigger({
+                        type: 'changeShowPeaksSetting',
+                        value: e.value
+                    });
+                },
+                changeShowTrendlinesSetting: function (e) {
+                    self.trigger({
+                        type: 'changeShowTrendlinesSetting',
+                        value: e.value
+                    });
+                },
+                changeShowADXSetting: function (e) {
+                    self.trigger({
+                        type: 'changeShowADXSetting',
+                        value: e.value
+                    });
+                },
+                changeShowMACDSetting: function (e) {
+                    self.trigger({
+                        type: 'changeShowMACDSetting',
+                        value: e.value
+                    });
                 }
             });
         })();
