@@ -649,7 +649,7 @@
                     path.style.vectorEffect = 'non-scaling-stroke';
                     path.style.shapeRendering = 'crispEdges'
                     svg.appendChild(path);
-                    appendSvgComponentToItem(path, item.trendline);
+                    appendSvgComponentToItem(path, item);
                 });
 
             })();
@@ -1788,7 +1788,156 @@
         }
 
         //Data & columns factories.
-        var trendLinesFactory = null;
+        var trendLinesFactory = (function () {
+
+            function getData() {
+                var result = [];
+                var arr = [];
+                var trendlines = self.data.getTrendlines();
+                trendlines.forEach(function (item) {
+                    var trendline = item.trendline;
+                    arr.push(trendline);
+                });
+
+                arr.forEach(function (item) {
+                    result.push({
+                        id: item.id,
+                        baseDateIndex: item.edgePoints.base.index,
+                        baseLevel: item.edgePoints.base.level,
+                        counterDateIndex: item.edgePoints.counter.index,
+                        counterLevel: item.edgePoints.counter.level,
+                        angle: item.slope.toFixed(4),
+                        startDateIndex: item.range.start,
+                        endDateIndex: (item.range.end ? item.range.end : ''),
+                        isOpen: !item.isClosed,
+                        value: item.value.toFixed(2),
+                    });
+                });
+
+                return result;
+
+            }
+
+            function getColumns() {
+                return [
+                    {
+                        index: 'id',
+                        title: 'Id',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: { header: true }
+                    }, {
+                        index: 'baseDateIndex',
+                        title: 'Base index',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'baseLevel',
+                        title: 'Base level',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'counterDateIndex',
+                        title: 'Counter index',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'counterLevel',
+                        title: 'Counter level',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'angle',
+                        title: 'Angle',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'startDateIndex',
+                        title: 'Start',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'endDateIndex',
+                        title: 'End',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'isOpen',
+                        title: 'Is open',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'value',
+                        title: 'Value',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }
+                ];
+            }
+
+            return {
+                getData: getData,
+                getColumns: getColumns
+            }
+
+        })();
         var trendHitsFactory = (function () {
 
             function getData() {
@@ -1951,8 +2100,403 @@
             }
 
         })();
-        var trendBreaksFactory = null;
-        var trendRangesFactory = null;
+        var trendBreaksFactory = (function () {
+
+            function getData() {
+                var result = [];
+                var arr = [];
+                var trendlines = self.data.getTrendlines();
+                trendlines.forEach(function (item) {
+                    var trendline = item.trendline;
+                    var trendBreaks = trendline.getAllTrendBreaks();
+                    trendBreaks.forEach(function (tb) {
+                        arr[tb.id] = tb;
+                    });
+                });
+
+                arr.forEach(function (item) {
+                    result.push({
+                        id: item.id,
+                        trendlineId: item.trendRange.trendline.id,
+                        trendRangeId: item.trendRange.id,
+                        value: item.value.toFixed(2),
+                        dateIndex: item.index,
+                        fromAbove: item.fromAbove,
+                        breakDayAmplitude: (item.evaluation.breakDayAmplitude * 100).toFixed(2),
+                        previousDayPoints: (item.evaluation.previousDayPoints * 100).toFixed(2),
+                        nextDaysMinDistancePoints: (item.evaluation.nextDaysMinDistancePoints * 100).toFixed(2),
+                        nextDaysMaxVariancePoints: (item.evaluation.nextDaysMaxVariancePoints * 100).toFixed(2)
+                    });
+                });
+
+                return result;
+
+            }
+
+            function getColumns() {
+                return [
+                    {
+                        index: 'id',
+                        title: 'Id',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: { header: true }
+                    }, {
+                        index: 'trendlineId',
+                        title: 'Trendline',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: { header: true }
+                    }, {
+                        index: 'trendRangeId',
+                        title: 'Trend range',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: { header: true }
+                    }, {
+                        index: 'value',
+                        title: 'Value',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'dateIndex',
+                        title: 'Index',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'fromAbove',
+                        title: 'From above (?)',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'breakDayAmplitude',
+                        title: 'Break day',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'previousDayPoints',
+                        title: 'Previous day',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'nextDaysMinDistancePoints',
+                        title: 'Min distance',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'nextDaysMaxVariancePoints',
+                        title: 'Max variance',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }
+                ];
+            }
+
+            return {
+                getData: getData,
+                getColumns: getColumns
+            }
+
+        })();
+        var trendRangesFactory = (function () {
+
+            function getData() {
+                var result = [];
+                var arr = [];
+                var trendlines = self.data.getTrendlines();
+                trendlines.forEach(function (item) {
+                    var trendline = item.trendline;
+                    var trendRanges = trendline.trendRanges;
+                    trendRanges.forEach(function (range) {
+                        arr.push(range);
+                    });
+                });
+
+                arr.forEach(function (item) {
+                    result.push({
+                        id: item.id,
+                        trendlineId: item.trendline.id,
+                        isPeak: item.isPeak ? false : true,
+                        value: item.value.toFixed(2),
+                        baseIndex: item.base.extremumGroup.master.price.dataItem.index,
+                        baseType: item.base.TrendHit ? 'hit' : 'break',
+                        baseValue: item.base.value.toFixed(2),
+                        counterIndex: item.counter.TrendBreak ? item.counter.index : item.counter.extremumGroup.master.price.dataItem.index,
+                        counterType: item.counter.TrendHit ? 'hit' : 'break',
+                        counterValue: item.counter.value.toFixed(2),
+                        totalCandles: item.stats.totalCandles,
+                        extremumPriceCrossPenaltyPoints: item.stats.extremumPriceCross.penaltyPoints ? item.stats.extremumPriceCross.penaltyPoints.toFixed(4) : '',
+                        extremumPriceCrossCounter: item.stats.extremumPriceCross.counter,
+                        OCPriceCrossPenaltyPoints: item.stats.openClosePriceCross.penaltyPoints ? item.stats.openClosePriceCross.penaltyPoints.toFixed(4) : '',
+                        OCPriceCrossCounter: item.stats.openClosePriceCross.counter,
+                        averageVariation: item.stats.variation.average.toFixed(2),
+                        extremumVariation: item.stats.variation.extremum.toFixed(2),
+                        openCloseVariation: item.stats.variation.openClose.toFixed(2)
+                        
+                    });
+                });
+
+                return result;
+
+            }
+
+            function getColumns() {
+                return [
+                    {
+                        index: 'id',
+                        title: 'Id',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: { header: true }
+                    }, {
+                        index: 'trendlineId',
+                        title: 'Trendline',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: { header: true }
+                    }, {
+                        index: 'isPeak',
+                        title: 'Is peak (?)',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'value',
+                        title: 'Value',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'baseIndex',
+                        title: 'Base index',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'baseType',
+                        title: 'Base type',
+                        type: 'string',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'baseValue',
+                        title: 'Base value',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'counterIndex',
+                        title: 'Counter index',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'counterType',
+                        title: 'Counter type',
+                        type: 'string',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'counterValue',
+                        title: 'Counter value',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'totalCandles',
+                        title: 'Total candles',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'extremumPriceCrossPenaltyPoints',
+                        title: 'Ext price cross',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'extremumPriceCrossCounter',
+                        title: 'Ext price count',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'OCPriceCrossPenaltyPoints',
+                        title: 'OC price cross',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'OCPriceCrossCounter',
+                        title: 'OC price count',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'averageVariation',
+                        title: 'Average variation',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'extremumVariation',
+                        title: 'Extremum variation',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }, {
+                        index: 'openCloseVariation',
+                        title: 'OC variation',
+                        type: 'number',
+                        width: 100,
+                        sortable: true,
+                        align: 'center',
+                        cellAlign: 'right',
+                        filter: {
+                            header: true
+                        }
+                    }
+                ];
+            }
+
+            return {
+                getData: getData,
+                getColumns: getColumns
+            }
+
+        })();;
 
 
         function activateRow(row) {
