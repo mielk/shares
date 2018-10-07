@@ -332,6 +332,14 @@ function TrendRange(trendline, params, extremumGroups) {
         }
     }
 
+    self.getTrendBreakById = function (id) {
+        if (self.base.TrendBreak && self.base.id === id) {
+            return self.base;
+        } else if (self.counter.TrendBreak && self.counter.id === id) {
+            return self.counter;
+        }
+    }
+
 }
 
 function ExtremumGroup(params, extremaArray) {

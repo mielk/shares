@@ -2296,11 +2296,20 @@
             }
 
             function showDataItemOnChart(dataItem) {
+                var trendlineWrapper = self.data.getTrendline(dataItem.trendlineId);
+                var trendline = trendlineWrapper.trendline;
+                var trendRange = trendline.getTrendRangeById(dataItem.trendRangeId);
+                var trendBreak = trendRange.getTrendBreakById(dataItem.id);
+
+                trendlineWrapper.svgPath.style.visibility = 'visible';
                 var x = 1 / 0;
             }
 
             function hideDataItemOnChart(dataItem) {
-                var x = 1 / 0;
+                if (dataItem) {
+                    var trendlineWrapper = self.data.getTrendline(dataItem.trendlineId);
+                    trendlineWrapper.svgPath.style.visibility = 'hidden';
+                }
             }
 
             return {
