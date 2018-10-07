@@ -243,6 +243,15 @@ function Trendline(params, extremumGroups) {
         return arr;
     };
 
+    self.getTrendRangeById = function (id) {
+        for (var i = 0; i < self.trendRanges.length; i++) {
+            var range = self.trendRanges[i];
+            if (range.id === id) {
+                return range;
+            }
+        }
+    }
+
 }
 
 function TrendHit(trendRange, params, extremumGroups) {
@@ -313,6 +322,14 @@ function TrendRange(trendline, params, extremumGroups) {
             openClose: params.OpenCloseVariation
         }
 
+    }
+
+    self.getTrendHitById = function (id) {
+        if (self.base.TrendHit && self.base.id === id) {
+            return self.base;
+        } else if (self.counter.TrendHit && self.counter.id === id) {
+            return self.counter;
+        }
     }
 
 }

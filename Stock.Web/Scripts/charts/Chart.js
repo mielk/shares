@@ -58,15 +58,6 @@
             self.svg.render();
         }
 
-        //function setTrendlines($trendlines) {
-        //    var counter = 0;
-        //    $trendlines.forEach(function (trendline) {
-        //        trendlines[counter++] = {
-        //            trendline: trendline
-        //        };
-        //    });
-        //}
-
         function setVisibilityRange() {
             var offset = 0.04 * (valuesRange.min + valuesRange.max) / 2;
             var min = Math.floor(valuesRange.min - offset);
@@ -102,6 +93,15 @@
             return trendlines;
         }
 
+        function getTrendline(id) {
+            for (var i = 0; i < trendlines.length; i++) {
+                var trendline = trendlines[i];
+                if (trendline.trendline.id === id) {
+                    return trendline;
+                }
+            }
+        }
+
         function getValuesRange() {
             return valuesRange;
         }
@@ -120,6 +120,7 @@
             getItem: getItem,
             getValuesRange: getValuesRange,
             getTrendlines: getTrendlines,
+            getTrendline: getTrendline,
             countNonEmptyItems: countNonEmptyItems
         }
 
@@ -632,7 +633,7 @@
                         //stroke: 'rgba(0, 0, 0, ' + item.trendline.value / 100 + ')',
                         stroke: 'rgba(0, 0, 0, 0.5)',
                         strokeWidth: strokeWidth,
-                        trendline: item.trendline
+                        trendline: item
                     };
                     paths.push(path);
                 });
@@ -649,7 +650,7 @@
                     path.style.vectorEffect = 'non-scaling-stroke';
                     path.style.shapeRendering = 'crispEdges'
                     svg.appendChild(path);
-                    appendSvgComponentToItem(path, item);
+                    appendSvgComponentToItem(path, item.trendline);
                 });
 
             })();
@@ -1509,6 +1510,7 @@
         var closeButton;
         var container;
         var grid = {};
+        var factory;
         //---------------------------------------------------
 
 
@@ -1651,6 +1653,7 @@
             })();
 
             self.trigger({ type: 'trendlinesPanelOpen' });
+            setTimeout(showHideAllTrendlines(false), 0);
             insertData();
             status = true;
         }
@@ -1658,14 +1661,21 @@
         function hide() {
             $(panel).css('visibility', 'hidden');
             self.trigger({ type: 'trendlinesPanelClosed' });
+            setTimeout(showHideAllTrendlines(true), 0);
             status = false;
         }
 
+        function showHideAllTrendlines(value) {
+            var trendlines = self.data.getTrendlines();
+            trendlines.forEach(function (item) {
+                item.svgPath.style.visibility = (value ? 'visible' : 'hidden');
+            });
+        }
 
 
         //DATA
         function insertData() {
-            var factory = getFactory();
+            factory = getFactory();
             var columns = factory.getColumns();
             
             function calculateTotalWidth(columns) {
@@ -1685,6 +1695,10 @@
                     events: [{
                         rowclick: function(grid, rowIndex, dataItem){
                             //var x = dataItem;
+                        },
+                        filter: function (grid, filters) {
+                            mapGridHtmlElementsToRows();
+                            addEventsToCells();
                         }
                     }],
                     columns: columns
@@ -1711,26 +1725,6 @@
 
                 })();
 
-                (function mapGridHtmlElementsToRows() {
-                    var rows = [];
-                    var data = grid.object.data;
-                    var rowHeight = grid.object.cellHeight;
-                    for (var i = 0; i < data.length; i++) {
-                        rows[i] = {
-                            index: i,
-                            cells: []
-                        }
-                    }
-                    var cells = container.getElementsByClassName('fancy-grid-cell');
-                    for (var i = 0; i < cells.length; i++) {
-                        var cell = cells[i];
-                        var top = cell.offsetTop;
-                        var rowIndex = Math.round(top / rowHeight)
-                        rows[rowIndex].cells.push(cell);
-                    }
-                    grid.rows = rows;
-                })();
-
                 (function centerOnScreen() {
                     var browserSize = {
                         width: $(window).width(),
@@ -1750,30 +1744,52 @@
                     });
                 })();
 
-                (function addEventsToCells() {
-                    grid.rows.forEach(function (row) {
-                        var cells = row.cells;
-                        cells.forEach(function (cell) {
-                            $(cell).bind({
-                                mouseover: function (e) {
-                                    activateRow(row);
-                                }
-                            });
-                        });
-                    });
-
-                    $(grid.body).bind({
-                        mouseleave: function () {
-                            deactivateRow(grid.activeRow);
-                        }
-                    });
-
-                })();
+                mapGridHtmlElementsToRows();
+                addEventsToCells();
 
             });
 
         }
 
+        function mapGridHtmlElementsToRows() {
+            var rows = [];
+            var data = grid.object.data;
+            var rowHeight = grid.object.cellHeight;
+            for (var i = 0; i < data.length; i++) {
+                rows[i] = {
+                    index: i,
+                    cells: []
+                }
+            }
+            var cells = container.getElementsByClassName('fancy-grid-cell');
+            for (var i = 0; i < cells.length; i++) {
+                var cell = cells[i];
+                var top = cell.offsetTop;
+                var rowIndex = Math.round(top / rowHeight)
+                rows[rowIndex].cells.push(cell);
+            }
+            grid.rows = rows;
+        };
+
+        function addEventsToCells() {
+            grid.rows.forEach(function (row) {
+                var cells = row.cells;
+                cells.forEach(function (cell) {
+                    $(cell).bind({
+                        mouseover: function (e) {
+                            activateRow(row);
+                        }
+                    });
+                });
+            });
+
+            $(grid.body).bind({
+                mouseleave: function () {
+                    setTimeout(deactivateCurrentRow(), 0);
+                }
+            });
+
+        }
 
         function getFactory() {
             if (eventType === STOCK.TRENDEVENTS.trendLine) {
@@ -1932,13 +1948,30 @@
                 ];
             }
 
+            function showDataItemOnChart(dataItem) {
+                if (dataItem) {
+                    var trendline = self.data.getTrendline(dataItem.id);
+                    trendline.svgPath.style.visibility = 'visible';
+                }
+            }
+
+            function hideDataItemOnChart(dataItem) {
+                if (dataItem) {
+                    var trendline = self.data.getTrendline(dataItem.id);
+                    trendline.svgPath.style.visibility = 'hidden';
+                }
+            }
+
             return {
                 getData: getData,
-                getColumns: getColumns
+                getColumns: getColumns,
+                showDataItemOnChart: showDataItemOnChart,
+                hideDataItemOnChart: hideDataItemOnChart
             }
 
         })();
         var trendHitsFactory = (function () {
+            var svgObjects = [];
 
             function getData() {
                 var result = [];
@@ -2094,9 +2127,28 @@
                 ];
             }
 
+            function showDataItemOnChart(dataItem) {
+                var trendlineWrapper = self.data.getTrendline(dataItem.trendlineId);
+                var trendline = trendlineWrapper.trendline;
+                var trendRange = trendline.getTrendRangeById(dataItem.trendRangeId);
+                var trendHit = trendRange.getTrendHitById(dataItem.id);
+
+                trendlineWrapper.svgPath.style.visibility = 'visible';
+                var x = 1 / 0;
+            }
+
+            function hideDataItemOnChart(dataItem) {
+                if (dataItem) {
+                    var trendlineWrapper = self.data.getTrendline(dataItem.trendlineId);
+                    trendlineWrapper.svgPath.style.visibility = 'hidden';
+                }
+            }
+
             return {
                 getData: getData,
-                getColumns: getColumns
+                getColumns: getColumns,
+                showDataItemOnChart: showDataItemOnChart,
+                hideDataItemOnChart: hideDataItemOnChart
             }
 
         })();
@@ -2243,9 +2295,19 @@
                 ];
             }
 
+            function showDataItemOnChart(dataItem) {
+                var x = 1 / 0;
+            }
+
+            function hideDataItemOnChart(dataItem) {
+                var x = 1 / 0;
+            }
+
             return {
                 getData: getData,
-                getColumns: getColumns
+                getColumns: getColumns,
+                showDataItemOnChart: showDataItemOnChart,
+                hideDataItemOnChart: hideDataItemOnChart
             }
 
         })();
@@ -2491,9 +2553,19 @@
                 ];
             }
 
+            function showDataItemOnChart(dataItem) {
+                var x = 1 / 0;
+            }
+
+            function hideDataItemOnChart(dataItem) {
+                var x = 1 / 0;
+            }
+
             return {
                 getData: getData,
-                getColumns: getColumns
+                getColumns: getColumns,
+                showDataItemOnChart: showDataItemOnChart,
+                hideDataItemOnChart: hideDataItemOnChart
             }
 
         })();;
@@ -2501,17 +2573,26 @@
 
         function activateRow(row) {
             if (row !== grid.activeRow) {
-                setTimeout(deactivateRow(grid.activeRow), 0);
+                setTimeout(deactivateCurrentRow(), 0);
                 grid.activeRow = row;
-                var data = grid.object.store.dataView[row.index].data;
-                row.cells.forEach(function (cell) {
-                    cell.classList.add('highlighted-grid-cell');
-                });
-                var x = row;
+                grid.activeDataItem = grid.object.store.dataView[row.index].data;
+                setTimeout(highlightRow(grid.activeRow), 0);
+                setTimeout(factory.showDataItemOnChart(grid.activeDataItem), 0);
             }
         }
 
-        function deactivateRow(row) {
+        function deactivateCurrentRow() {
+            setTimeout(unhighlightRow(grid.activeRow), 0);
+            setTimeout(factory.hideDataItemOnChart(grid.activeDataItem), 0);
+        }
+
+        function highlightRow(row) {
+            row.cells.forEach(function (cell) {
+                cell.classList.add('highlighted-grid-cell');
+            });
+        }
+
+        function unhighlightRow(row) {
             if (row) {
                 row.cells.forEach(function (cell) {
                     cell.classList.remove('highlighted-grid-cell');
