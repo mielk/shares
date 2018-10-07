@@ -140,6 +140,7 @@
         var svgItems;
         var svgExtrema;
         var svgTrendlines;
+        var svgPreview;
         var svgBoxHeight = 1000;
         var svgItemsBoxOffset = 100;
         var svgItemsBoxTop = 0;
@@ -184,12 +185,14 @@
             var height = svgBoxHeight;
             var width = calculateItemsWidth();
 
+            svgItems.setAttribute('id', 'items');
             svgItems.setAttribute('preserveAspectRatio', 'none meet');
             svgItems.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
             svgItems.style.height = height + 'px';
             svgItems.style.top = '0px';
             svgItems.style.width = width + 'px';
             svgItems.style.left = svgLeft + 'px';
+            svgItems.style.zIndex = 2;
             chartContainer.appendChild(svgItems);
 
         }
@@ -200,12 +203,14 @@
             var width = calculateItemsWidth();
             var top = (svgItemsBoxTop - svgItemsBoxOffset / 2);
 
+            svgExtrema.setAttribute('id', 'extrema');
             svgExtrema.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
             svgExtrema.setAttribute('preserveAspectRatio', 'none meet');
             svgExtrema.style.height = height + 'px';
             svgExtrema.style.top = top + 'px';
             svgExtrema.style.width = width + 'px';
             svgExtrema.style.left = svgLeft + 'px';
+            svgItems.style.zIndex = 2;
 
             chartContainer.appendChild(svgExtrema);
 
@@ -217,14 +222,33 @@
             var width = calculateItemsWidth() + svgTrendlinesRightExtention;
             var top = (svgItemsBoxTop - svgItemsBoxOffset / 2);
 
+            svgTrendlines.setAttribute('id', 'trendlines');
             svgTrendlines.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
             svgTrendlines.setAttribute('preserveAspectRatio', 'none meet');
             svgTrendlines.style.height = height + 'px';
             svgTrendlines.style.top = top + 'px';
             svgTrendlines.style.width = width + 'px';
             svgTrendlines.style.left = svgLeft + 'px';
+            svgItems.style.zIndex = 2;
 
             chartContainer.appendChild(svgTrendlines);
+
+        }
+
+        function insertSvgPreview() {
+            svgPreview = mielk.svg.createSvg();
+            var height = svgBoxHeight;
+            var width = calculateItemsWidth();
+
+            svgPreview.setAttribute('id', 'preview');
+            svgPreview.setAttribute('preserveAspectRatio', 'none meet');
+            svgPreview.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+            svgPreview.style.height = height + 'px';
+            svgPreview.style.top = svgItemsBoxTop + 'px';
+            svgPreview.style.width = width + 'px';
+            svgPreview.style.left = svgLeft + 'px';
+            chartContainer.appendChild(svgPreview);
+            svgItems.style.zIndex = 1;
 
         }
 
@@ -254,6 +278,13 @@
                 svgTrendlines.setAttribute('viewBox', '0 0 ' + width + ' ' + (svgBoxHeight + svgItemsBoxOffset));
                 svgTrendlines.style.height = (svgBoxHeight + svgItemsBoxOffset) + 'px';
                 if (top !== undefined) svgTrendlines.style.top = (top - svgItemsBoxOffset / 2) + 'px';
+            }
+
+            //[Preview]
+            if (svgPreview) {
+                svgPreview.setAttribute('viewBox', '0 0 ' + width + ' ' + svgBoxHeight);
+                svgPreview.style.height = svgBoxHeight + 'px';
+                svgPreview.style.top = top + 'px';
             }
 
             
@@ -299,6 +330,11 @@
         function getTrendlinesSvg() {
             if (svgTrendlines === undefined) insertSvgTrendlines();
             return svgTrendlines;
+        }
+
+        function getPreviewSvg() {
+            if (svgPreview === undefined) insertSvgPreview();
+            return svgPreview;
         }
 
         function getSvgLeftOffset() {
@@ -358,6 +394,7 @@
             getItemsSvg: getItemsSvg,
             getExtremaSvg: getExtremaSvg,
             getTrendlinesSvg: getTrendlinesSvg,
+            getPreviewSvg: getPreviewSvg,
             getVisibleRange: getVisibleRange,
             getHorizontalGridLinesContainer: getHorizontalGridLinesContainer,
             getValueLabelsContainer: getValueLabelsContainer,
@@ -1972,6 +2009,7 @@
         })();
         var trendHitsFactory = (function () {
             var svgObjects = [];
+            var previewFill = STOCK.CONFIG.trendlines.previewFill;
 
             function getData() {
                 var result = [];
@@ -2128,20 +2166,63 @@
             }
 
             function showDataItemOnChart(dataItem) {
-                var trendlineWrapper = self.data.getTrendline(dataItem.trendlineId);
-                var trendline = trendlineWrapper.trendline;
-                var trendRange = trendline.getTrendRangeById(dataItem.trendRangeId);
-                var trendHit = trendRange.getTrendHitById(dataItem.id);
+                if (dataItem) {
+                    var trendlineWrapper = self.data.getTrendline(dataItem.trendlineId);
+                    if (trendlineWrapper) {
+                        if (trendlineWrapper.svgPath) trendlineWrapper.svgPath.style.visibility = 'visible';
+                        var trendline = trendlineWrapper.trendline;
+                        if (trendline) {
+                            var trendHit = trendline.getTrendHitById(dataItem.trendRangeId, dataItem.id);
+                            if (trendHit) {
+                                var range = trendHit.extremumGroup.dates;
+                                var items = [];
+                                var coordinates = {};
 
-                trendlineWrapper.svgPath.style.visibility = 'visible';
-                var x = 1 / 0;
+                                for(var i = range.start; i <= range.end; i++){
+                                    var item = self.data.getItem(i);
+                                    if (item) items.push(item);
+                                }
+
+                                coordinates.left = items[0].coordinates.left - 1;
+                                coordinates.right = items[items.length - 1].coordinates.right + 3;
+                                coordinates.top = items[0].coordinates.shadowTop;
+                                coordinates.bottom = items[0].coordinates.shadowBottom;
+
+                                items.forEach(function (item) {
+                                    if (item.coordinates.shadowTop < coordinates.top) coordinates.top = item.coordinates.shadowTop;
+                                    if (item.coordinates.shadowBottom > coordinates.bottom) coordinates.bottom = item.coordinates.shadowBottom;
+                                });
+                                coordinates.width = coordinates.right - coordinates.left;
+                                coordinates.height = coordinates.bottom - coordinates.top + 10;
+                                
+                                var rectangle = mielk.svg.createRectangle(coordinates.width, coordinates.height, coordinates.left, coordinates.top - 5, previewFill);
+                                rectangle.setAttribute('id', mielk.numbers.generateUUID());
+                                rectangle.style.stroke = STOCK.CONFIG.trendlines
+                                self.ui.getPreviewSvg().appendChild(rectangle);
+                                svgObjects.push(rectangle);
+
+                            }
+                        }
+                    }
+                }
             }
 
             function hideDataItemOnChart(dataItem) {
                 if (dataItem) {
                     var trendlineWrapper = self.data.getTrendline(dataItem.trendlineId);
-                    trendlineWrapper.svgPath.style.visibility = 'hidden';
+                    if (trendlineWrapper && trendlineWrapper.svgPath) {
+                        trendlineWrapper.svgPath.style.visibility = 'hidden';
+                    }
                 }
+
+                svgObjects.forEach(function (object) {
+                    var parent = object.parentNode;
+                    if (parent) {
+                        parent.removeChild(object);
+                    }
+                });
+                svgObjects.length = 0;
+
             }
 
             return {

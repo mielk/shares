@@ -321,7 +321,9 @@ Date.prototype.isHoliday = function () {
             width: 0.5,
             leftOffset: 5,
             closedRightOffset: 3,
-            openRightOffset: 10
+            openRightOffset: 10,
+            previewFill: 'rgba(243, 160, 0, 0.4)'
+
         }
         , modify: function (param, value) {
 

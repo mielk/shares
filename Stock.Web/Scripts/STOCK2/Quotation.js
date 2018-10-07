@@ -252,6 +252,14 @@ function Trendline(params, extremumGroups) {
         }
     }
 
+    self.getTrendHitById = function(trendRangeId, trendHitId){
+        var range = self.getTrendRangeById(trendRangeId);
+        if (range){
+            return range.getTrendHitById(trendHitId);
+        }
+    }
+
+
 }
 
 function TrendHit(trendRange, params, extremumGroups) {

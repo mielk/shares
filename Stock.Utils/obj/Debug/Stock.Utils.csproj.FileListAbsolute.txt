@@ -12,3 +12,4 @@ C:\Tomek\aplikacje\shares\Stock.Utils\bin\Debug\Stock.Utils.dll
 C:\Tomek\aplikacje\shares\Stock.Utils\bin\Debug\Stock.Utils.pdb
 C:\Tomek\aplikacje\shares\Stock.Utils\obj\Debug\Stock.Utils.dll
 C:\Tomek\aplikacje\shares\Stock.Utils\obj\Debug\Stock.Utils.pdb
+C:\Tomek\aplikacje\shares\Stock.Utils\obj\Debug\Stock.Utils.csprojResolveAssemblyReference.cache
