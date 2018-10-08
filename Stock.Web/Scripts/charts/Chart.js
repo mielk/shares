@@ -1995,7 +1995,7 @@
             function hideDataItemOnChart(dataItem) {
                 if (dataItem) {
                     var trendline = self.data.getTrendline(dataItem.id);
-                    trendline.svgPath.style.visibility = 'hidden';
+                    if (trendline) trendline.svgPath.style.visibility = 'hidden';
                 }
             }
 
@@ -2007,6 +2007,7 @@
             }
 
         })();
+
         var trendHitsFactory = (function () {
             var svgObjects = [];
             var previewFill = STOCK.CONFIG.trendlines.previewFill;
@@ -2176,28 +2177,13 @@
                             if (trendHit) {
                                 var range = trendHit.extremumGroup.dates;
                                 var items = [];
-                                var coordinates = {};
 
                                 for(var i = range.start; i <= range.end; i++){
                                     var item = self.data.getItem(i);
                                     if (item) items.push(item);
                                 }
-
-                                coordinates.left = items[0].coordinates.left - 1;
-                                coordinates.right = items[items.length - 1].coordinates.right + 3;
-                                coordinates.top = items[0].coordinates.shadowTop;
-                                coordinates.bottom = items[0].coordinates.shadowBottom;
-
-                                items.forEach(function (item) {
-                                    if (item.coordinates.shadowTop < coordinates.top) coordinates.top = item.coordinates.shadowTop;
-                                    if (item.coordinates.shadowBottom > coordinates.bottom) coordinates.bottom = item.coordinates.shadowBottom;
-                                });
-                                coordinates.width = coordinates.right - coordinates.left;
-                                coordinates.height = coordinates.bottom - coordinates.top + 10;
-                                
+                                var coordinates = getCoordinatesFromItemsSet(items);
                                 var rectangle = mielk.svg.createRectangle(coordinates.width, coordinates.height, coordinates.left, coordinates.top - 5, previewFill);
-                                rectangle.setAttribute('id', mielk.numbers.generateUUID());
-                                rectangle.style.stroke = STOCK.CONFIG.trendlines
                                 self.ui.getPreviewSvg().appendChild(rectangle);
                                 svgObjects.push(rectangle);
 
@@ -2233,7 +2219,10 @@
             }
 
         })();
+
         var trendBreaksFactory = (function () {
+            var svgObjects = [];
+            var previewFill = STOCK.CONFIG.trendlines.previewFill;
 
             function getData() {
                 var result = [];
@@ -2377,20 +2366,49 @@
             }
 
             function showDataItemOnChart(dataItem) {
-                var trendlineWrapper = self.data.getTrendline(dataItem.trendlineId);
-                var trendline = trendlineWrapper.trendline;
-                var trendRange = trendline.getTrendRangeById(dataItem.trendRangeId);
-                var trendBreak = trendRange.getTrendBreakById(dataItem.id);
+                if (dataItem) {
+                    var trendlineWrapper = self.data.getTrendline(dataItem.trendlineId);
+                    if (trendlineWrapper) {
+                        if (trendlineWrapper.svgPath) trendlineWrapper.svgPath.style.visibility = 'visible';
+                        var trendline = trendlineWrapper.trendline;
+                        if (trendline) {
+                            var trendBreak = trendline.getTrendBreakById(dataItem.trendRangeId, dataItem.id);
+                            if (trendBreak) {
+                                var dateIndex = trendBreak.index;
+                                var items = [];
 
-                trendlineWrapper.svgPath.style.visibility = 'visible';
-                var x = 1 / 0;
+                                for (var i = dateIndex - 2; i <= (dateIndex + 2); i++) {
+                                    var item = self.data.getItem(i);
+                                    if (item) items.push(item);
+                                }
+
+                                var coordinates = getCoordinatesFromItemsSet(items);
+                                var rectangle = mielk.svg.createRectangle(coordinates.width, coordinates.height, coordinates.left, coordinates.top - 5, previewFill);
+                                self.ui.getPreviewSvg().appendChild(rectangle);
+                                svgObjects.push(rectangle);
+
+                            }
+                        }
+                    }
+                }
             }
 
             function hideDataItemOnChart(dataItem) {
                 if (dataItem) {
                     var trendlineWrapper = self.data.getTrendline(dataItem.trendlineId);
-                    trendlineWrapper.svgPath.style.visibility = 'hidden';
+                    if (trendlineWrapper && trendlineWrapper.svgPath) {
+                        trendlineWrapper.svgPath.style.visibility = 'hidden';
+                    }
                 }
+
+                svgObjects.forEach(function (object) {
+                    var parent = object.parentNode;
+                    if (parent) {
+                        parent.removeChild(object);
+                    }
+                });
+                svgObjects.length = 0;
+
             }
 
             return {
@@ -2401,7 +2419,10 @@
             }
 
         })();
+
         var trendRangesFactory = (function () {
+            var svgObjects = [];
+            var previewFill = STOCK.CONFIG.trendlines.previewFill;
 
             function getData() {
                 var result = [];
@@ -2421,10 +2442,10 @@
                         trendlineId: item.trendline.id,
                         isPeak: item.isPeak ? false : true,
                         value: item.value.toFixed(2),
-                        baseIndex: item.base.extremumGroup.master.price.dataItem.index,
+                        baseIndex: (item.base.TrendBreak ? item.base.index : item.base.extremumGroup.master.price.dataItem.index),
                         baseType: item.base.TrendHit ? 'hit' : 'break',
                         baseValue: item.base.value.toFixed(2),
-                        counterIndex: item.counter.TrendBreak ? item.counter.index : item.counter.extremumGroup.master.price.dataItem.index,
+                        counterIndex: (item.counter.TrendBreak ? item.counter.index : item.counter.extremumGroup.master.price.dataItem.index),
                         counterType: item.counter.TrendHit ? 'hit' : 'break',
                         counterValue: item.counter.value.toFixed(2),
                         totalCandles: item.stats.totalCandles,
@@ -2470,7 +2491,7 @@
                         width: 100,
                         sortable: true,
                         align: 'center',
-                        cellAlign: 'right',
+                        cellAlign: 'center',
                         filter: {
                             header: true
                         }
@@ -2644,11 +2665,89 @@
             }
 
             function showDataItemOnChart(dataItem) {
-                var x = 1 / 0;
+                if (dataItem) {
+                    var trendlineWrapper = self.data.getTrendline(dataItem.trendlineId);
+                    if (trendlineWrapper) {
+                        if (trendlineWrapper.svgPath) trendlineWrapper.svgPath.style.visibility = 'visible';
+                        (function insertHighlightRectangle() {
+                            var items = [];
+                            var isPeak = dataItem.isPeak;
+                            var trendline = trendlineWrapper.trendline;
+                            var startIndex = dataItem.baseIndex;
+                            var endIndex = dataItem.counterIndex;
+
+                            for (var i = startIndex; i <= endIndex; i++) {
+                                var item = self.data.getItem(i);
+                                if (item) items.push(item);
+                            }
+
+                            
+                            var trendlineTouchPoints = {
+                                start: {
+                                    index: items[0].index,
+                                    price: trendline.calculatePriceForDateIndex(items[0].index)
+                                },
+                                end: {
+                                    index: items[items.length - 1].index,
+                                    price: trendline.calculatePriceForDateIndex(items[items.length - 1].index)
+                                }
+                            };
+
+                            function calculateTouchPointY(item, price) {
+                                var high = item.item.price.quotation.high;
+                                var low = item.item.price.quotation.low;
+                                var shadowTop = item.coordinates.shadowTop;
+                                var shadowBottom = item.coordinates.shadowBottom;
+                                var ratio = ((high - low) > 0 ? (high - price) / (high - low) : 0)
+                                var y = ratio * (shadowBottom - shadowTop) + shadowTop;
+                                return y;
+                            }
+
+                            trendlineTouchPoints.start.x = items[0].coordinates.middle;
+                            trendlineTouchPoints.start.y = calculateTouchPointY(items[0], trendlineTouchPoints.start.price);
+                            trendlineTouchPoints.end.x = items[items.length - 1].coordinates.middle;
+                            trendlineTouchPoints.end.y = calculateTouchPointY(items[items.length - 1], trendlineTouchPoints.end.price);
+
+                            var d = 'M ' + trendlineTouchPoints.end.x + ' ' + trendlineTouchPoints.end.y + 
+                                    'L' + trendlineTouchPoints.start.x + ' ' + trendlineTouchPoints.start.y;
+                            items.forEach(function (item) {
+                                var c = item.coordinates;
+                                var y = (isPeak ? c.bodyTop : c.bodyBottom);
+                                if (y) {
+                                    var startX = (item.index === trendlineTouchPoints.start.index ? c.middle : c.left);
+                                    var endX = (item.index === trendlineTouchPoints.end.index ? c.middle : c.right);
+                                    d += 'L' + startX + ' ' + y + 'L' + endX + ' ' + y;
+                                }
+                            });
+                            d += 'Z';
+
+                            var path = mielk.svg.createPath(d);
+                            path.style.fill = previewFill;
+                            path.style.strokeWidth = 0;
+                            self.ui.getPreviewSvg().appendChild(path);
+                            svgObjects.push(path);
+
+                        })();
+                    }
+                }
             }
 
             function hideDataItemOnChart(dataItem) {
-                var x = 1 / 0;
+                if (dataItem) {
+                    var trendlineWrapper = self.data.getTrendline(dataItem.trendlineId);
+                    if (trendlineWrapper && trendlineWrapper.svgPath) {
+                        trendlineWrapper.svgPath.style.visibility = 'hidden';
+                    }
+                }
+
+                svgObjects.forEach(function (object) {
+                    var parent = object.parentNode;
+                    if (parent) {
+                        parent.removeChild(object);
+                    }
+                });
+                svgObjects.length = 0;
+
             }
 
             return {
@@ -2659,6 +2758,25 @@
             }
 
         })();;
+
+        function getCoordinatesFromItemsSet(items) {
+            var coordinates = {};
+
+            coordinates.left = items[0].coordinates.left - 1;
+            coordinates.right = items[items.length - 1].coordinates.right + 3;
+            coordinates.top = items[0].coordinates.shadowTop;
+            coordinates.bottom = items[0].coordinates.shadowBottom;
+
+            items.forEach(function (item) {
+                if (item.coordinates.shadowTop < coordinates.top) coordinates.top = item.coordinates.shadowTop;
+                if (item.coordinates.shadowBottom > coordinates.bottom) coordinates.bottom = item.coordinates.shadowBottom;
+            });
+            coordinates.width = coordinates.right - coordinates.left;
+            coordinates.height = coordinates.bottom - coordinates.top + 10;
+
+            return coordinates;
+
+        }
 
 
         function activateRow(row) {

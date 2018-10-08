@@ -213,7 +213,7 @@ function Trendline(params, extremumGroups) {
         return arr;
     })(params.TrendRanges, extremumGroups);
 
-    self.countPriceForDateIndex = function (dateIndex) {
+    self.calculatePriceForDateIndex = function (dateIndex) {
         return (dateIndex - self.edgePoints.base.index) * self.slope + self.edgePoints.base.level;
     };
 
@@ -259,6 +259,12 @@ function Trendline(params, extremumGroups) {
         }
     }
 
+    self.getTrendBreakById = function (trendRangeId, trendBreakId) {
+        var range = self.getTrendRangeById(trendRangeId);
+        if (range) {
+            return range.getTrendBreakById(trendBreakId);
+        }
+    }
 
 }
 
@@ -310,7 +316,7 @@ function TrendRange(trendline, params, extremumGroups) {
     self.trendline = trendline;
 
     self.id = params.TrendRangeId;
-    self.isPeak = params.IsPeak;
+    self.isPeak = (params.IsPeak === 1 ? true : false);
     self.value = params.Value;
     self.base = params.BaseIsHit ? new TrendHit(self, params.StartDelimiter, extremumGroups) : new TrendBreak(self, params.StartDelimiter);
     self.counter = params.CounterIsHit ? new TrendHit(self, params.EndDelimiter, extremumGroups) : new TrendBreak(self, params.EndDelimiter);
