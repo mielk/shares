@@ -1729,6 +1729,11 @@
                     width: calculateTotalWidth(columns) + 20,
                     height: 600,
                     data: factory.getData(),
+                    paging: {
+                        pageSize: 20,
+                        pageSizeData: [5, 10, 20, 50],
+                        barType: 'both'
+                    },
                     events: [{
                         rowclick: function(grid, rowIndex, dataItem){
                             //var x = dataItem;

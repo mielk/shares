@@ -268,7 +268,7 @@ function Trendline(params, extremumGroups) {
 
 }
 
-function TrendHit(trendRange, params, extremumGroups) {
+function TrendHit(trendRange, params, extremumGroups, allParams) {
 
     'use strict';
 
@@ -318,8 +318,8 @@ function TrendRange(trendline, params, extremumGroups) {
     self.id = params.TrendRangeId;
     self.isPeak = (params.IsPeak === 1 ? true : false);
     self.value = params.Value;
-    self.base = params.BaseIsHit ? new TrendHit(self, params.StartDelimiter, extremumGroups) : new TrendBreak(self, params.StartDelimiter);
-    self.counter = params.CounterIsHit ? new TrendHit(self, params.EndDelimiter, extremumGroups) : new TrendBreak(self, params.EndDelimiter);
+    self.base = params.BaseIsHit ? new TrendHit(self, params.StartDelimiter, extremumGroups, params) : new TrendBreak(self, params.StartDelimiter, params);
+    self.counter = params.CounterIsHit ? new TrendHit(self, params.EndDelimiter, extremumGroups, params) : new TrendBreak(self, params.EndDelimiter, params);
     self.stats = {
         extremumPriceCross: {
             penaltyPoints: params.ExtremumPriceCrossPenaltyPoints,

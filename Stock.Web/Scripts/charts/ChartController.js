@@ -469,7 +469,9 @@
                 {
                     async: true,
                     callback: function (res) { loadData(res); },
-                    err: function (msg) { alert(msg.status + ' | ' + msg.statusText); }
+                    err: function (msg) {
+                        alert(msg.status + ' | ' + msg.statusText);
+                    }
                 }
             );
         }
