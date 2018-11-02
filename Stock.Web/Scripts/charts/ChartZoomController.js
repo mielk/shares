@@ -106,8 +106,32 @@ function ChartZoomController(parent, params) {
             }
         }
 
+        function triggerHorizontalSlideEvent(x) {
+            if (x) {
+                var left = self.dates.getLeftOffset() + x;
+                if (left <= 0) {
+                    self.trigger({
+                        type: 'horizontalSlide',
+                        left: left
+                    });
+                }
+            }
+        }
+
+        function triggerScrollToX(left) {
+            if (left !== undefined && left !== null) {
+                self.dates.scrollToX(left);
+                self.trigger({
+                    type: 'scrollToX',
+                    left: left
+                });
+
+            }
+        }
+
         return {
-            triggerHorizontalSlideEvent: triggerHorizontalSlideEvent
+            triggerHorizontalSlideEvent: triggerHorizontalSlideEvent,
+            triggerScrollToX: triggerScrollToX
         }
 
     })();
@@ -459,6 +483,9 @@ function ChartZoomController(parent, params) {
             });
         }
 
+        function scrollToX(left) {
+            return $(verticalGridLinesContainer).css('left', left + 'px');
+        }
 
         //[Events]
         (function bindEvents() {
@@ -476,7 +503,8 @@ function ChartZoomController(parent, params) {
             renderDatesLine: renderDatesLine,
             updateCurrentDateIndicators: updateCurrentDateIndicators,
             hideCurrentDateIndicators: hideCurrentDateIndicators,
-            getLeftOffset: getLeftOffset
+            getLeftOffset: getLeftOffset,
+            scrollToX: scrollToX
         }
 
     })();

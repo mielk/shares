@@ -110,6 +110,17 @@
             return dataSetInfo.endIndex - dataSetInfo.startIndex + 1;
         }
 
+        function findItemByLeft(left) {
+            for(var i = 0; i < items.length; i++){
+                var item = items[i];
+                if (item) {
+                    if (item.coordinates.left >= left) {
+                        return item;
+                    }
+                }
+            }
+        }
+
 
         return {
             setData: setData,
@@ -121,7 +132,8 @@
             getValuesRange: getValuesRange,
             getTrendlines: getTrendlines,
             getTrendline: getTrendline,
-            countNonEmptyItems: countNonEmptyItems
+            countNonEmptyItems: countNonEmptyItems,
+            findItemByLeft: findItemByLeft
         }
 
     })();
@@ -253,7 +265,7 @@
         }
 
 
-        //Adjusting SGV containers heights.
+        //Adjusting SGV containers size & position.
         function setSvgHeight(height, top) {
             svgBoxHeight = height;
             var width = calculateItemsWidth();
@@ -289,6 +301,17 @@
 
             
         }
+
+        function setSvgLeft(left) {
+            if (left) {
+                svgLeft = left;
+                if (svgItems) svgItems.style.left = svgLeft + 'px';
+                if (svgExtrema) svgExtrema.style.left = svgLeft + 'px';
+                if (svgTrendlines) svgTrendlines.style.left = svgLeft + 'px';
+                if (svgPreview) svgPreview.style.left = svgLeft + 'px';
+            }
+        }
+
 
 
         //Helper functions.
@@ -341,6 +364,10 @@
             return $(svgItems).offset().left;
         }
 
+        function scrollSvgsHorizontally(left) {
+            setSvgLeft(left);
+        }
+
 
         //Access to other HTML components.
         function getValueLabelsContainer() {
@@ -369,16 +396,23 @@
             });
         }
 
+        function scrollToXByItem(index, offset) {
+            var item = self.data.getItem(index);
+            if (item){
+                var left = item.coordinates.left - offset;
+                setTimeout(self.parent.events.triggerScrollToX(-left), 0);
+            }
+        }
 
 
         //[EVENTS]
         (function bindEvents() {
             self.parent.bind({
                 horizontalSlide: function (e) {
-                    svgLeft = e.left;
-                    if (svgItems) svgItems.style.left = svgLeft + 'px';
-                    if (svgExtrema) svgExtrema.style.left = svgLeft + 'px';
-                    if (svgTrendlines) svgTrendlines.style.left = svgLeft + 'px';
+                    setSvgLeft(e.left);
+                },
+                scrollToX: function (e) {
+                    setSvgLeft(e.left);
                 }
             });
         })();
@@ -387,6 +421,7 @@
 
         return {
             setSvgHeight: setSvgHeight,
+            setSvgLeft: setSvgLeft,
             setVisibleRange: setVisibleRange,
             getSvgLeftOffset: getSvgLeftOffset,
             getSvgItemsBoxTopOffset: getSvgItemsBoxTopOffset,
@@ -401,7 +436,8 @@
             getChartContainer: getChartContainer,
             //Showing/hiding components
             showHideTrendlinesSvg: showHideTrendlinesSvg,
-            showHideExtremaSvg: showHideExtremaSvg
+            showHideExtremaSvg: showHideExtremaSvg,
+            scrollToXByItem: scrollToXByItem
         }
 
     })();
@@ -901,14 +937,14 @@
                 return items[endIndex];
             } else {
                 var item = items[i];
-                if (item.coordinates.left > x) {
+                if (item && item.coordinates.left > x) {
                     while (items[i].coordinates.right > x) {
                         if (--i < startIndex) {
                             return item;
                         }
                         item = items[i];
                     }
-                } else if (item.coordinates.right < x) {
+                } else if (item && item.coordinates.right < x) {
                     while (items[++i].coordinates.left < x) {
                         item = items[i];
                         if (i >= items.length) {
@@ -929,9 +965,11 @@
 
         function showInfo(e) {
             var res = findCoordinates(e);
-            setTimeout(self.parent.dates.updateCurrentDateIndicators(e.pageX, res.item.date, res.item.index), 0);
-            setTimeout(self.valuesPanel.updateCurrentValueIndicators(e.pageY, res.value), 0);
-            setTimeout(self.legend.updateLegend(res.item), 0);
+            if (res.item) {
+                setTimeout(self.parent.dates.updateCurrentDateIndicators(e.pageX, res.item.date, res.item.index), 0);
+                setTimeout(self.valuesPanel.updateCurrentValueIndicators(e.pageY, res.value), 0);
+                setTimeout(self.legend.updateLegend(res.item), 0);
+            }
         }
 
 
@@ -1820,6 +1858,10 @@
                     $(cell).bind({
                         mouseover: function (e) {
                             activateRow(row);
+                        },
+                        click: function (e) {
+                            e.stopPropagation();
+                            changeRowSelection(row);
                         }
                     });
                 });
@@ -2004,11 +2046,29 @@
                 }
             }
 
+            function scrollToItem(dataItem) {
+                var baseDateIndex = dataItem.baseDateIndex;
+                var leftOffset = self.ui.getSvgLeftOffset();
+                var chartContainer = self.ui.getChartContainer();
+                var width = $(chartContainer).width();
+
+                var firstVisibleItem = self.data.findItemByLeft(-leftOffset);
+                var lastVisibleItem = self.data.findItemByLeft(-leftOffset + width);
+
+                if (dataItem.endDateIndex < firstVisibleItem.index) {
+                    self.ui.scrollToXByItem(dataItem.startDateIndex, -6);
+                } else if (dataItem.startDateIndex > lastVisibleItem.index) {
+                    self.ui.scrollToXByItem(dataItem.startDateIndex, -6);
+                }
+
+            }
+
             return {
                 getData: getData,
                 getColumns: getColumns,
                 showDataItemOnChart: showDataItemOnChart,
-                hideDataItemOnChart: hideDataItemOnChart
+                hideDataItemOnChart: hideDataItemOnChart,
+                scrollToItem: scrollToItem
             }
 
         })();
@@ -2216,11 +2276,16 @@
 
             }
 
+            function scrollToItem(dataItem) {
+                var x = 1;
+            }
+
             return {
                 getData: getData,
                 getColumns: getColumns,
                 showDataItemOnChart: showDataItemOnChart,
-                hideDataItemOnChart: hideDataItemOnChart
+                hideDataItemOnChart: hideDataItemOnChart,
+                scrollToItem: scrollToItem
             }
 
         })();
@@ -2416,11 +2481,16 @@
 
             }
 
+            function scrollToItem(dataItem) {
+                var x = 1;
+            }
+
             return {
                 getData: getData,
                 getColumns: getColumns,
                 showDataItemOnChart: showDataItemOnChart,
-                hideDataItemOnChart: hideDataItemOnChart
+                hideDataItemOnChart: hideDataItemOnChart,
+                scrollToItem: scrollToItem
             }
 
         })();
@@ -2755,11 +2825,16 @@
 
             }
 
+            function scrollToItem(dataItem) {
+                var x = 1;
+            }
+
             return {
                 getData: getData,
                 getColumns: getColumns,
                 showDataItemOnChart: showDataItemOnChart,
-                hideDataItemOnChart: hideDataItemOnChart
+                hideDataItemOnChart: hideDataItemOnChart,
+                scrollToItem: scrollToItem
             }
 
         })();;
@@ -2783,6 +2858,21 @@
 
         }
 
+        function changeRowSelection(row) {
+            var rowIndex = (row ? row.index : 0);
+            var currentIndex = (grid.selectedRow ? grid.selectedRow.index : 0);
+            if (rowIndex === currentIndex) {
+                grid.selectedRow = null;
+                grid.activeDataItem = null;
+                setTimeout(unselectRow(row), 0);
+            } else {
+                unselectRow(grid.selectedRow);
+                grid.selectedRow = row;
+                grid.selectedDataItem = grid.object.store.dataView[row.index].data;
+                setTimeout(markRowAsSelected(row), 0);
+                setTimeout(factory.showDataItemOnChart(grid.selectedDataItem), 0);
+            }
+        }
 
         function activateRow(row) {
             if (row !== grid.activeRow) {
@@ -2791,12 +2881,16 @@
                 grid.activeDataItem = grid.object.store.dataView[row.index].data;
                 setTimeout(highlightRow(grid.activeRow), 0);
                 setTimeout(factory.showDataItemOnChart(grid.activeDataItem), 0);
+                setTimeout(factory.scrollToItem(grid.activeDataItem), 0);
             }
         }
 
         function deactivateCurrentRow() {
-            setTimeout(unhighlightRow(grid.activeRow), 0);
-            setTimeout(factory.hideDataItemOnChart(grid.activeDataItem), 0);
+            if (grid.activeRow === grid.selectedRow) {
+            } else {
+                setTimeout(unhighlightRow(grid.activeRow), 0);
+                setTimeout(factory.hideDataItemOnChart(grid.activeDataItem), 0);
+            }
         }
 
         function highlightRow(row) {
@@ -2810,6 +2904,30 @@
                 row.cells.forEach(function (cell) {
                     cell.classList.remove('highlighted-grid-cell');
                 });
+            }
+        }
+
+        function markRowAsSelected(row) {
+            if (row) {
+                row.cells.forEach(function (cell) {
+                    cell.classList.add('selected-grid-cell');
+                });
+            }
+        }
+
+        function unmarkRowAsSelected(row) {
+            if (row) {
+                row.cells.forEach(function (cell) {
+                    cell.classList.remove('selected-grid-cell');
+                });
+            }
+        }
+
+        function unselectRow(row) {
+            if (row) {
+                unmarkRowAsSelected(row);
+                grid.selectedRow === null;
+                setTimeout(factory.hideDataItemOnChart(grid.selectedDataItem), 0);
             }
         }
 
