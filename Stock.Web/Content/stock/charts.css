@@ -6,7 +6,6 @@
     box-sizing: border-box;
     width: 100%;
     height: auto;
-    min-height: 1000px;
     background-color: white;
     border: 1px solid #999; 
     padding: 0;
@@ -90,7 +89,6 @@
     box-sizing: border-box;
     width: 100%;
     height: auto;
-    min-height: 1000px;
     background-color: white;
 }
 
@@ -98,7 +96,7 @@
     display: block;
     position: relative;
     box-sizing: content-box;
-    height: 1000px;
+    height: auto;
     border-bottom: 0.5px solid #999999;
     overflow: hidden;
 }
@@ -162,7 +160,6 @@
     background-color: rgba(255, 255, 255, 0);
     height: 100%;
     width: 100%;
-    overflow: hidden;
 }
 
 .value-horizontal-line {
@@ -194,8 +191,13 @@
 .value-labels-container {
     position: absolute;
     left: 0;
+    top: 0;
+    height: 100%;
     width: 100%;
-    overflow: hidden;
+}
+
+.cursor-ns-resize {
+    cursor: ns-resize;
 }
 
 .value-label {

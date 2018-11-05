@@ -106,18 +106,6 @@ function ChartZoomController(parent, params) {
             }
         }
 
-        function triggerHorizontalSlideEvent(x) {
-            if (x) {
-                var left = self.dates.getLeftOffset() + x;
-                if (left <= 0) {
-                    self.trigger({
-                        type: 'horizontalSlide',
-                        left: left
-                    });
-                }
-            }
-        }
-
         function triggerScrollToX(left) {
             if (left !== undefined && left !== null) {
                 self.dates.scrollToX(left);

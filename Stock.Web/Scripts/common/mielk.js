@@ -806,6 +806,15 @@
             var x = 1;
         }
 
+        function contains(arr, item) {
+            for (var i = 0; i < arr.length; i++) {
+                if (arr[i] === item) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         return {
             getLastItem: getLastItem,
             fromObject: fromObject,
@@ -814,7 +823,8 @@
             getMax: getMax,
             getMin: getMin,
             findItem: findItem,
-            firstGreater: firstGreater
+            firstGreater: firstGreater,
+            contains: contains
         };
 
     })();

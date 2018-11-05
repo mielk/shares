@@ -174,7 +174,6 @@
             chartContainer = $('<div/>', {
                 'class': 'chart-container'
             }).appendTo(mainContainer)[0];
-            visibleRange.height = $(chartContainer).height();
 
             horizontalGridLinesContainer = $('<div/>', {
                 'class': 'horizontal-grid-lines'
@@ -190,6 +189,11 @@
 
         })();
 
+        (function saveHeightValuesInVisibleRangeObject() {
+            visibleRange.height = $(chartContainer).height();
+            svgBoxHeight = visibleRange.height;
+            visibleRange.svgHeight = svgBoxHeight;
+        })();
 
         //Rendering SVG containers.
         function insertSvgItems() {
@@ -201,7 +205,7 @@
             svgItems.setAttribute('preserveAspectRatio', 'none meet');
             svgItems.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
             svgItems.style.height = height + 'px';
-            svgItems.style.top = '0px';
+            svgItems.style.top = svgItemsBoxTop + 'px';
             svgItems.style.width = width + 'px';
             svgItems.style.left = svgLeft + 'px';
             svgItems.style.zIndex = 2;
@@ -299,16 +303,26 @@
                 svgPreview.style.top = top + 'px';
             }
 
+            visibleRange.svgHeight = svgBoxHeight;
             
         }
 
         function setSvgLeft(left) {
-            if (left) {
+            if (left || left === 0) {
                 svgLeft = left;
                 if (svgItems) svgItems.style.left = svgLeft + 'px';
                 if (svgExtrema) svgExtrema.style.left = svgLeft + 'px';
                 if (svgTrendlines) svgTrendlines.style.left = svgLeft + 'px';
                 if (svgPreview) svgPreview.style.left = svgLeft + 'px';
+            }
+        }
+
+        function setSvgTop(top) {
+            if (top || top === 0) {
+                if (svgItems) svgItems.style.top = (svgItemsBoxTop + top) + 'px';
+                if (svgExtrema) svgExtrema.style.top = (svgItemsBoxTop + top - svgItemsBoxOffset / 2) + 'px';
+                if (svgTrendlines) svgTrendlines.style.top = (svgItemsBoxTop + top - svgItemsBoxOffset / 2) + 'px';
+                if (svgPreview) svgPreview.style.top = (svgItemsBoxTop + top) + 'px';
             }
         }
 
@@ -326,6 +340,26 @@
         function setVisibleRange(min, max) {
             visibleRange.min = min;
             visibleRange.max = max;
+            visibleRange.unit = visibleRange.height / (visibleRange.max - visibleRange.min);
+            visibleRange.pixelValue = (visibleRange.max - visibleRange.min) / visibleRange.height;
+            visibleRange.svgUnit = visibleRange.svgHeight / (visibleRange.max - visibleRange.min);
+            visibleRange.svgPixelValue = (visibleRange.max - visibleRange.min) / visibleRange.svgHeight;
+        }
+
+        function stretchVisibleRange(newUnitHeight, prevUnitHeight) {
+            var itemsOnScreen = Math.round(visibleRange.height / newUnitHeight);
+            var change = itemsOnScreen - (visibleRange.max - visibleRange.min);
+            visibleRange.max += change / 2;
+            visibleRange.min -= change / 2;
+            visibleRange.unit = visibleRange.height / (visibleRange.max - visibleRange.min);
+            visibleRange.pixelValue = (visibleRange.max - visibleRange.min) / visibleRange.height;
+            visibleRange.svgUnit = visibleRange.svgHeight / (visibleRange.max - visibleRange.min);
+            visibleRange.svgPixelValue = (visibleRange.max - visibleRange.min) / visibleRange.svgHeight;
+        }
+
+        function offsetVisibleRange(offset) {
+            visibleRange.max += visibleRange.pixelValue * offset;
+            visibleRange.min += visibleRange.pixelValue * offset;
         }
 
         function getVisibleRange() {
@@ -374,6 +408,10 @@
             return valuesLabelsContainer;
         }
 
+        function getValueLabelsContainerHeight() {
+            return $(valuesLabelsContainer).height();
+        }
+
         function getHorizontalGridLinesContainer() {
             return horizontalGridLinesContainer;
         }
@@ -399,7 +437,7 @@
         function scrollToXByItem(index, offset) {
             var item = self.data.getItem(index);
             if (item){
-                var left = item.coordinates.left - offset;
+                var left = item.coordinates.left + offset;
                 setTimeout(self.parent.events.triggerScrollToX(-left), 0);
             }
         }
@@ -422,7 +460,10 @@
         return {
             setSvgHeight: setSvgHeight,
             setSvgLeft: setSvgLeft,
+            setSvgTop: setSvgTop,
             setVisibleRange: setVisibleRange,
+            stretchVisibleRange: stretchVisibleRange,
+            offsetVisibleRange: offsetVisibleRange,
             getSvgLeftOffset: getSvgLeftOffset,
             getSvgItemsBoxTopOffset: getSvgItemsBoxTopOffset,
             getSvgBoxHeight: getSvgBoxHeight,
@@ -433,6 +474,7 @@
             getVisibleRange: getVisibleRange,
             getHorizontalGridLinesContainer: getHorizontalGridLinesContainer,
             getValueLabelsContainer: getValueLabelsContainer,
+            getValueLabelsContainerHeight: getValueLabelsContainerHeight,
             getChartContainer: getChartContainer,
             //Showing/hiding components
             showHideTrendlinesSvg: showHideTrendlinesSvg,
@@ -447,28 +489,32 @@
         var type = self.params.getType();
         var svgBoxHeight = self.ui.getSvgBoxHeight();
         var itemsSvgOffset = self.ui.getSvgItemsBoxTopOffset();
-        var unitHeight;
+        //var unitHeight;
         var visibleRange = {};
         
 
         //[RENDERING]
-        function render() {
+        function render($unitHeight) {
             if (type === STOCK.INDICATORS.PRICE) {
-                renderPrices();
+                renderPrices($unitHeight);
             } else if (type === STOCK.INDICATORS.ADX) {
-                renderAdx();
+                renderAdx($unitHeight);
             } else if (type === STOCK.INDICATORS.MACD) {
-                renderMacd();
+                renderMacd($unitHeight);
             }
         }
 
 
         //[PRICES]
-        function renderPrices() {
+        function renderPrices() {//$unitHeight) {
+            //if ($unitHeight) {
+            //    self.ui.stretchVisibleRange($unitHeight, unitHeight);
+            //    unitHeight = $unitHeight;
+            //}
             renderItems();
             renderPricesExtrema();
             renderPriceTrendlines();
-            self.valuesPanel.renderValuesAndHorizontalGridLines(unitHeight);
+            self.valuesPanel.renderValuesAndHorizontalGridLines();
         }
 
         function renderItems() {
@@ -479,19 +525,14 @@
 
             function getY(value) {
                 var pointsDistance = valuesRange.max - value;
-                return pointsDistance * unitHeight;
+                return pointsDistance * visibleRange.svgUnit;
             }
 
             (function adjustSvgHeight() {
                 var svgHeight = Math.ceil(visibleRange.height * (valuesRange.max - valuesRange.min) / (visibleRange.max - visibleRange.min));
                 var svgTop = visibleRange.height * (visibleRange.max - valuesRange.max) / (visibleRange.max - visibleRange.min);
                 self.ui.setSvgHeight(svgHeight, svgTop);
-                svgBoxHeight = self.ui.getSvgBoxHeight();
-            })();
-
-            (function calculateUnitHeight() {
-                var levelsDistance = valuesRange.max - valuesRange.min;
-                unitHeight = svgBoxHeight / levelsDistance;
+                visibleRange = self.ui.getVisibleRange();
             })();
 
             (function appendVerticalCoordinates() {
@@ -508,7 +549,7 @@
                 });
             })();
 
-            (function generateAndInsertSvgRectangles() {
+            function generateAndInsertSvgRectangles() {
                 var priceUpBodyInsideColor = STOCK.CONFIG.candle.color.ascendingBody;
                 var priceUpBodyBorderColor = STOCK.CONFIG.candle.color.ascendingLine
                 var priceDownBodyInsideColor = STOCK.CONFIG.candle.color.descendingBody;
@@ -572,7 +613,9 @@
                     appendSvgComponentToItem(rectangle, item);
                 });
 
-            })();
+            }
+            
+            setTimeout(generateAndInsertSvgRectangles(), 0);
 
         }
 
@@ -651,10 +694,11 @@
             var svg = self.ui.getTrendlinesSvg();
             var trendlines = self.data.getTrendlines();
             var valuesRange = self.data.getValuesRange();
+            var visibleRange = self.ui.getVisibleRange();
 
             function getY(value) {
                 var pointsDistance = valuesRange.max - value;
-                return pointsDistance * unitHeight;
+                return pointsDistance * visibleRange.svgUnit;
             }
 
             (function appendCoordinates() {
@@ -742,8 +786,15 @@
         }
 
 
+
+        function changeUnitHeight(unitHeight) {
+            render(unitHeight);
+        }
+
+
         return {
-            render: render
+            render: render,
+            changeUnitHeight: changeUnitHeight
         }
 
     })();
@@ -754,98 +805,25 @@
         var valueLabelsContainer = self.ui.getValueLabelsContainer();
         var crossHair;
         var currentValueLabel;
+        var moveParams;
+        var labelInfo = {};
+        var labels = {};
 
-        function renderValuesAndHorizontalGridLines(unitHeight) {
+        function renderValuesAndHorizontalGridLines() {
             var valuesRange = self.data.getValuesRange();
             var visibleRange = self.ui.getVisibleRange();
+            labelInfo.unitHeight = visibleRange.unit;
 
-            function calculateGridLinesStep() {
-                var factors = [1, 2, 5];
-                var baseDistance = (visibleRange.max - visibleRange.min) / 10;
-                var log = Math.log(baseDistance) / Math.LN10;
-                
-                var possibleSteps = [];
-                factors.forEach(function (value) {
-                    possibleSteps.push(Math.pow(10, Math.floor(log)) * value);
-                });
-                possibleSteps.push(Math.pow(10, Math.ceil(log)));
+            $(horizontalLinesContainer).empty();
+            $(valueLabelsContainer).empty();
+            labels = {};
 
-                var minDistance;
-                var result;
-                possibleSteps.forEach(function (value) {
-                    var distance = Math.abs(value - baseDistance);
-                    if (minDistance === undefined || minDistance > distance) {
-                        minDistance = distance;
-                        result = value;
-                    }
-                });
-
-                return result;
-
-            }
-
-            function generateDisplayedValuesArray() {
-                var addSpaceRatio = 0.1;
-                var step = calculateGridLinesStep();
-                var min = Math.min(valuesRange.min, visibleRange.min);
-                var max = Math.max(valuesRange.max, visibleRange.max);
-                var spaceOffset = addSpaceRatio * ((max + min) / 2);
-                min -= spaceOffset;
-                max += spaceOffset;
-
-                var arr = [];
-                var remainder = min % step;
-                var value = min - remainder + (remainder < 0 ? 0 : step);
-                while (value <= max) {
-                    arr.push(value);
-                    value += step;
-                }
-
-                return arr;
-
-            }
-            
             (function insertHtmlComponents() {
-                var arr = generateDisplayedValuesArray();
-                var topValue = arr[arr.length - 1];
-                var y;
-
-                for (var i = arr.length - 1; i >= 0; i--) {
-                    y = (topValue - arr[i]) * unitHeight;
-
-                    var horizontalLine = $('<div/>', {
-                        'class': 'value-horizontal-line'
-                    }).css({
-                        'top': y + 'px'
-                    }).appendTo(horizontalLinesContainer)[0];
-
-                    var ticker = $('<div/>', {
-                        'class': 'value-label-ticker'
-                    }).css({
-                        'top': y + 'px'
-                    }).appendTo(valueLabelsContainer)[0];
-
-                    var label = $('<div/>', {
-                        'class': 'value-label',
-                        'html': arr[i].toFixed(4)
-                    }).appendTo(valueLabelsContainer)[0];
-
-                    var height = $(label).height();
-                    $(label).css('top', (y - height / 2) + 'px');
-
-                }
-
-                var top = (visibleRange.max - topValue) * unitHeight;
-                $(horizontalLinesContainer).css({
-                    height: y + 'px',
-                    top: top + 'px'
-                });
-
-                $(valueLabelsContainer).css({
-                    height: y + 'px',
-                    top: top + 'px'
-                });
-
+                var arr = generateDisplayedValuesArray(valuesRange, visibleRange);
+                labelInfo.min = arr[0];
+                labelInfo.max = arr[arr.length - 1];
+                labelInfo.arr = arr;
+                insertLabels(arr, visibleRange);
             })();
 
             (function insertCrossHair() {
@@ -861,6 +839,91 @@
                     visibility: 'hidden'
                 }).appendTo(valueLabelsContainer)[0];
             })();
+
+        }
+
+        function insertLabels(arr, visibleRange) {
+            for (var i = arr.length - 1; i >= 0; i--) {
+                var value = arr[i];
+                var item = labels[value];
+                var top = valueLabelsContainer.offsetTop;
+
+                if (item === undefined || item === null) {
+                    var y = (visibleRange.max - value) * labelInfo.unitHeight - top;
+
+                    var horizontalLine = $('<div/>', {
+                        'class': 'value-horizontal-line'
+                    }).css({
+                        'top': y + 'px'
+                    }).appendTo(horizontalLinesContainer)[0];
+
+                    var ticker = $('<div/>', {
+                        'class': 'value-label-ticker'
+                    }).css({
+                        'top': y + 'px'
+                    }).appendTo(valueLabelsContainer)[0];
+
+                    var label = $('<div/>', {
+                        'class': 'value-label',
+                        'html': value.toFixed(4)
+                    }).appendTo(valueLabelsContainer)[0];
+
+                    var height = $(label).height();
+                    $(label).css('top', (y - height / 2) + 'px');
+
+                    labels[value] = {
+                        label: label,
+                        horizontalLine: horizontalLine,
+                        ticker: ticker
+                    };
+                }
+
+            }
+        }
+
+        function calculateGridLinesStep(range) {
+            var factors = [1, 2, 5];
+            var baseDistance = (range.max - range.min) / 10;
+            var log = Math.log(baseDistance) / Math.LN10;
+
+            var possibleSteps = [];
+            factors.forEach(function (value) {
+                possibleSteps.push(Math.pow(10, Math.floor(log)) * value);
+            });
+            possibleSteps.push(Math.pow(10, Math.ceil(log)));
+
+            var minDistance;
+            var result;
+            possibleSteps.forEach(function (value) {
+                var distance = Math.abs(value - baseDistance);
+                if (minDistance === undefined || minDistance > distance) {
+                    minDistance = distance;
+                    result = value;
+                }
+            });
+
+            return result;
+
+        }
+
+        function generateDisplayedValuesArray(valuesRange, visibleRange) {
+            var addSpaceRatio = 0.1;
+            var step = calculateGridLinesStep(visibleRange);
+            var min = Math.min(valuesRange.min, visibleRange.min);
+            var max = Math.max(valuesRange.max, visibleRange.max);
+            var spaceOffset = addSpaceRatio * ((max + min) / 2);
+            min -= spaceOffset;
+            max += spaceOffset;
+
+            var arr = [];
+            var remainder = min % step;
+            var value = min - remainder + (remainder < 0 ? 0 : step);
+            while (value <= max) {
+                arr.push(value);
+                value += step;
+            }
+
+            return arr;
 
         }
 
@@ -889,6 +952,93 @@
         }
 
 
+        (function bindEvents() {
+
+            $(self).bind({
+                verticalSlide: function (e) {
+                    if (e.y) {
+                        var top = $(valueLabelsContainer).position().top + e.y;
+                        self.ui.offsetVisibleRange(e.y);
+                        $(valueLabelsContainer).css('top', top + 'px');
+                        $(horizontalLinesContainer).css('top', top + 'px');
+                        adjustLabels(top);
+                        self.ui.setSvgTop(top);
+                    }
+                }
+            });
+
+            $(valueLabelsContainer).bind({
+                mousedown: function (e) {
+                    setTimeout(handleMouseDown(e), 0);
+                },
+                mouseup: function (e) {
+                    endAction(e);
+                },
+                mouseleave: function (e) {
+                    endAction(e);
+                },
+                mousemove: function (e) {
+                    setTimeout(handleMouseMove(e), 0);
+                }
+            });
+        })();
+
+
+        function handleMouseDown(e) {
+            setTimeout(startResizing(e), 0);
+        }
+
+        function handleMouseUp(e) {
+            endAction(e);
+        }
+
+        function handleMouseMove(e) {
+            if (moveParams && moveParams.state) {
+                resize(e);
+            } 
+        }
+
+        function startResizing(e) {
+            valueLabelsContainer.classList.add('cursor-ns-resize');
+            resetMoveParamsObject();
+            moveParams.state = true;
+            moveParams.x = e.clientX;
+            moveParams.y = e.pageY;
+        }
+
+        function endAction(e) {
+            valueLabelsContainer.classList.remove('cursor-ns-resize');
+            resetMoveParamsObject();
+        }
+
+        function resetMoveParamsObject() {
+            moveParams = {
+                state: false,
+                x: null,
+                y: null
+            };
+        }
+
+        function resize(e) {
+            var change = moveParams.y - e.pageY;
+            var distance = labelInfo.max - labelInfo.min;
+            var unitHeight = labelInfo.unitHeight + (2 * change / distance);
+            self.svg.changeUnitHeight(unitHeight);
+        }
+
+        function adjustLabels(top) {
+            var valuesRange = self.data.getValuesRange();
+            var visibleRange = self.ui.getVisibleRange();
+            var arr = generateDisplayedValuesArray(valuesRange, visibleRange);
+            if (arr[arr.length - 1] !== labelInfo.max || arr[0] !== labelInfo.min) {
+                insertLabels(arr, visibleRange);
+                labelInfo.min = arr[0];
+                labelInfo.max = arr[arr.length - 1];
+                labelInfo.arr = arr;
+            };
+        }
+        
+
         return {
             renderValuesAndHorizontalGridLines: renderValuesAndHorizontalGridLines,
             updateCurrentValueIndicators: updateCurrentValueIndicators,
@@ -914,8 +1064,8 @@
 
         //[ACTIONS]
         function findCoordinates(e) {
-            var x = e.pageX - self.ui.getSvgLeftOffset();
-            var y = e.pageY - $(eventsLayer).offset().top;
+            var x = e.clientX - self.ui.getSvgLeftOffset();
+            var y = e.clientY - $(eventsLayer).offset().top;
             var item = findItemByX(x);
             var value = getValueByY(y);
 
@@ -959,8 +1109,7 @@
 
         function getValueByY(y) {
             var visibleRange = self.ui.getVisibleRange();
-            var pixelUnits = (visibleRange.max - visibleRange.min) / visibleRange.height;
-            return visibleRange.max - (pixelUnits * y);
+            return visibleRange.max - (visibleRange.pixelValue * y);
         }
 
         function showInfo(e) {
@@ -987,14 +1136,12 @@
             if (moveParams && moveParams.state) {
                 var offsetX = (e.clientX - moveParams.x);
                 moveParams.x = e.clientX;
-                var offsetY = (e.clientY - moveParams.y);
-                moveParams.y = e.clientY;
+                var offsetY = (e.pageY - moveParams.y);
+                moveParams.y = e.pageY;
                 setTimeout(self.parent.events.triggerHorizontalSlideEvent(offsetX), 0);
-
-                //self.trigger({
-                //    type: 'verticalSlide',
-                //    y: offsetY
-                //});
+                if (offsetY) {
+                    setTimeout(self.trigger({ type: 'verticalSlide', y: offsetY }));
+                }
             }
         }
 
@@ -1002,7 +1149,7 @@
             resetMoveParamsObject();
             moveParams.state = true;
             moveParams.x = e.clientX;
-            moveParams.y = e.clientY;
+            moveParams.y = e.pageY;
         }
 
         function endMoveMode(e) {
@@ -1237,6 +1384,7 @@
                     setTimeout(handleLeavingChartPanel(), 0);
                 }
             });
+
         })();
 
     })();
@@ -1772,10 +1920,7 @@
                         pageSizeData: [5, 10, 20, 50],
                         barType: 'both'
                     },
-                    events: [{
-                        rowclick: function(grid, rowIndex, dataItem){
-                            //var x = dataItem;
-                        },
+                    events: [{                        
                         filter: function (grid, filters) {
                             mapGridHtmlElementsToRows();
                             addEventsToCells();
@@ -1855,6 +2000,7 @@
             grid.rows.forEach(function (row) {
                 var cells = row.cells;
                 cells.forEach(function (cell) {
+                    $(cell).off();
                     $(cell).bind({
                         mouseover: function (e) {
                             activateRow(row);
@@ -2055,10 +2201,10 @@
                 var firstVisibleItem = self.data.findItemByLeft(-leftOffset);
                 var lastVisibleItem = self.data.findItemByLeft(-leftOffset + width);
 
-                if (dataItem.endDateIndex < firstVisibleItem.index) {
-                    self.ui.scrollToXByItem(dataItem.startDateIndex, -6);
+                if (dataItem.startDateIndex < firstVisibleItem.index) {
+                    self.ui.scrollToXByItem(dataItem.startDateIndex, -100);
                 } else if (dataItem.startDateIndex > lastVisibleItem.index) {
-                    self.ui.scrollToXByItem(dataItem.startDateIndex, -6);
+                    self.ui.scrollToXByItem(dataItem.startDateIndex, -100);
                 }
 
             }
@@ -2859,8 +3005,8 @@
         }
 
         function changeRowSelection(row) {
-            var rowIndex = (row ? row.index : 0);
-            var currentIndex = (grid.selectedRow ? grid.selectedRow.index : 0);
+            var rowIndex = (row ? row.index : -1);
+            var currentIndex = (grid.selectedRow ? grid.selectedRow.index : -1);
             if (rowIndex === currentIndex) {
                 grid.selectedRow = null;
                 grid.activeDataItem = null;
@@ -2875,14 +3021,12 @@
         }
 
         function activateRow(row) {
-            if (row !== grid.activeRow) {
-                setTimeout(deactivateCurrentRow(), 0);
-                grid.activeRow = row;
-                grid.activeDataItem = grid.object.store.dataView[row.index].data;
-                setTimeout(highlightRow(grid.activeRow), 0);
-                setTimeout(factory.showDataItemOnChart(grid.activeDataItem), 0);
-                setTimeout(factory.scrollToItem(grid.activeDataItem), 0);
-            }
+            setTimeout(deactivateCurrentRow(), 0);
+            grid.activeRow = row;
+            grid.activeDataItem = grid.object.store.dataView[row.index].data;
+            setTimeout(highlightRow(grid.activeRow), 0);
+            setTimeout(factory.showDataItemOnChart(grid.activeDataItem), 0);
+            setTimeout(factory.scrollToItem(grid.activeDataItem), 0);
         }
 
         function deactivateCurrentRow() {

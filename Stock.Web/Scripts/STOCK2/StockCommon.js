@@ -188,7 +188,7 @@ Date.prototype.isHoliday = function () {
                 return new PriceLabelFactory();
             },
             runWhenComplete: false,
-            initialHeight: 1000,
+            initialHeight: 750,
             minValue: 0,
             maxValue: null,
             valueRangePadding: 0.1,

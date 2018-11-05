@@ -71,9 +71,11 @@
     <Compile Include="Repository\Concrete\EFQuotationRepository.cs" />
     <Compile Include="Repository\RepositoryFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TransferObjects\AdxDto.cs" />
     <Compile Include="TransferObjects\AnalysisInfoDto.cs" />
     <Compile Include="TransferObjects\ExtremumDto.cs" />
     <Compile Include="TransferObjects\ExtremumGroupDto.cs" />
+    <Compile Include="TransferObjects\MacdDto.cs" />
     <Compile Include="TransferObjects\QuotationDto.cs" />
     <Compile Include="TransferObjects\TrendBreakDto.cs" />
     <Compile Include="TransferObjects\TrendHitDto.cs" />
