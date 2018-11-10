@@ -375,17 +375,17 @@
         var options = {};
         var defaultSettings = {
             clickToHide: true,
-            autoHide: true,
-            autoHideDelay: 2000,
+            autoHide: false,
+            autoHideDelay: 5000,
             arrowShow: false,
             elementPosition: 'bottom right',
             globalPosition: 'bottom right',
             style: 'bootstrap',
             className: 'info',
             showAnimation: 'slideDown',
-            showDuration: 400,
+            showDuration: 200,
             hideAnimation: 'slideUp',
-            hideDuration: 500,
+            hideDuration: 200,
             gap: 2
         };
 

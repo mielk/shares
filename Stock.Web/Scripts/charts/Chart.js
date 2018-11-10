@@ -6,6 +6,7 @@
     var self = this;
     self.Chart = true;
     self.parent = parent;
+    self.verticalResizeIndex = 0;
 
 
     self.params = (function () {
@@ -59,10 +60,11 @@
         }
 
         function setVisibilityRange() {
-            var offset = 0.04 * (valuesRange.min + valuesRange.max) / 2;
-            var min = Math.floor(valuesRange.min - offset);
-            var max = Math.floor(valuesRange.max + offset);
-            self.ui.setVisibleRange(min, max);
+            //var offset = 0.04 * (valuesRange.min + valuesRange.max) / 2;
+            //var min = Math.floor(valuesRange.min - offset);
+            //var max = Math.floor(valuesRange.max + offset);
+            //self.ui.setVisibleRange(min, max);
+            self.ui.setVisibleRange(valuesRange.min, valuesRange.max);
         }
 
 
@@ -154,7 +156,8 @@
         var svgTrendlines;
         var svgPreview;
         var svgBoxHeight = 1000;
-        var svgItemsBoxOffset = 100;
+        var svgDetailsBoxOffset = 100;
+        var svgItemsBoxTopAnchor = 0;
         var svgItemsBoxTop = 0;
         var svgLeft = 0;
         var svgTrendlinesRightExtention = 200;
@@ -205,7 +208,7 @@
             svgItems.setAttribute('preserveAspectRatio', 'none meet');
             svgItems.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
             svgItems.style.height = height + 'px';
-            svgItems.style.top = svgItemsBoxTop + 'px';
+            svgItems.style.top = svgItemsBoxTopAnchor + 'px';
             svgItems.style.width = width + 'px';
             svgItems.style.left = svgLeft + 'px';
             svgItems.style.zIndex = 2;
@@ -215,9 +218,9 @@
 
         function insertSvgExtrema() {
             svgExtrema = mielk.svg.createSvg();
-            var height = svgBoxHeight + svgItemsBoxOffset;
+            var height = svgBoxHeight + svgDetailsBoxOffset;
             var width = calculateItemsWidth();
-            var top = (svgItemsBoxTop - svgItemsBoxOffset / 2);
+            var top = (svgItemsBoxTop - svgDetailsBoxOffset / 2);
 
             svgExtrema.setAttribute('id', 'extrema');
             svgExtrema.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
@@ -234,9 +237,9 @@
 
         function insertSvgTrendlines() {
             svgTrendlines = mielk.svg.createSvg();
-            var height = svgBoxHeight + svgItemsBoxOffset;
+            var height = svgBoxHeight + svgDetailsBoxOffset;
             var width = calculateItemsWidth() + svgTrendlinesRightExtention;
-            var top = (svgItemsBoxTop - svgItemsBoxOffset / 2);
+            var top = (svgItemsBoxTop - svgDetailsBoxOffset / 2);
 
             svgTrendlines.setAttribute('id', 'trendlines');
             svgTrendlines.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
@@ -260,7 +263,7 @@
             svgPreview.setAttribute('preserveAspectRatio', 'none meet');
             svgPreview.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
             svgPreview.style.height = height + 'px';
-            svgPreview.style.top = svgItemsBoxTop + 'px';
+            svgPreview.style.top = svgItemsBoxTopAnchor + 'px';
             svgPreview.style.width = width + 'px';
             svgPreview.style.left = svgLeft + 'px';
             chartContainer.appendChild(svgPreview);
@@ -270,37 +273,41 @@
 
 
         //Adjusting SGV containers size & position.
-        function setSvgHeight(height, top) {
+        function setSvgHeight(height) {
+            var heightChange = height - svgBoxHeight;
+            var topChange = (heightChange / -2);
             svgBoxHeight = height;
             var width = calculateItemsWidth();
 
             //[Items]
             svgItems.setAttribute('viewBox', '0 0 ' + width + ' ' + svgBoxHeight);
             svgItems.style.height = svgBoxHeight + 'px';
-            if (top !== undefined) {
-                svgItemsBoxTop = top
-                svgItems.style.top = top + 'px';
-            }
+            svgItemsBoxTopAnchor += topChange;
+            svgItemsBoxTop += topChange;
+            svgItems.style.top = svgItemsBoxTop + 'px';
+
+            //var valuesContainerTopOffset = self.valuesPanel.getTopOffset();
+            //mielk.notify.display('{setSvgHeight} || height: ' + height + ' | svgItemsBoxTopAnchor: ' + svgItemsBoxTopAnchor + ' | svgItems.style.top: ' + svgItems.style.top + ' | values 300 top: ' + valuesContainerTopOffset);
 
             //[Extrema]
             if (svgExtrema) {
-                svgExtrema.setAttribute('viewBox', '0 0 ' + width + ' ' + (svgBoxHeight + svgItemsBoxOffset));
-                svgExtrema.style.height = (svgBoxHeight + svgItemsBoxOffset) + 'px';
-                if (top !== undefined) svgExtrema.style.top = (top - svgItemsBoxOffset / 2) + 'px';
+                svgExtrema.setAttribute('viewBox', '0 0 ' + width + ' ' + (svgBoxHeight + svgDetailsBoxOffset));
+                svgExtrema.style.height = (svgBoxHeight + svgDetailsBoxOffset) + 'px';
+                svgExtrema.style.top = (svgItemsBoxTop - svgDetailsBoxOffset / 2) + 'px';
             }
 
             //[Trendlines]
             if (svgTrendlines) {
-                svgTrendlines.setAttribute('viewBox', '0 0 ' + width + ' ' + (svgBoxHeight + svgItemsBoxOffset));
-                svgTrendlines.style.height = (svgBoxHeight + svgItemsBoxOffset) + 'px';
-                if (top !== undefined) svgTrendlines.style.top = (top - svgItemsBoxOffset / 2) + 'px';
+                svgTrendlines.setAttribute('viewBox', '0 0 ' + width + ' ' + (svgBoxHeight + svgDetailsBoxOffset));
+                svgTrendlines.style.height = (svgBoxHeight + svgDetailsBoxOffset) + 'px';
+                svgTrendlines.style.top = (svgItemsBoxTop - svgDetailsBoxOffset / 2) + 'px';
             }
 
             //[Preview]
             if (svgPreview) {
                 svgPreview.setAttribute('viewBox', '0 0 ' + width + ' ' + svgBoxHeight);
                 svgPreview.style.height = svgBoxHeight + 'px';
-                svgPreview.style.top = top + 'px';
+                svgPreview.style.top = svgItemsBoxTop + 'px';
             }
 
             visibleRange.svgHeight = svgBoxHeight;
@@ -317,12 +324,21 @@
             }
         }
 
-        function setSvgTop(top) {
+        function offsetSvgVertically(top) {
             if (top || top === 0) {
-                if (svgItems) svgItems.style.top = (svgItemsBoxTop + top) + 'px';
-                if (svgExtrema) svgExtrema.style.top = (svgItemsBoxTop + top - svgItemsBoxOffset / 2) + 'px';
-                if (svgTrendlines) svgTrendlines.style.top = (svgItemsBoxTop + top - svgItemsBoxOffset / 2) + 'px';
-                if (svgPreview) svgPreview.style.top = (svgItemsBoxTop + top) + 'px';
+
+                //var valuesContainerTopOffset = self.valuesPanel.getTopOffset();
+                //mielk.notify.display('Before offsetSvgVertically | [top]: ' + top + ' | svgItemsBoxTopAnchor' + svgItemsBoxTopAnchor + ' | svgItems.style.top: ' + svgItems.style.top + '| values container top: ' + valuesContainerTopOffset);
+
+                svgItemsBoxTop = svgItemsBoxTopAnchor + top;
+
+                if (svgItems) svgItems.style.top = svgItemsBoxTop + 'px';
+                if (svgExtrema) svgExtrema.style.top = (svgItemsBoxTop - svgDetailsBoxOffset / 2) + 'px';
+                if (svgTrendlines) svgTrendlines.style.top = (svgItemsBoxTop - svgDetailsBoxOffset / 2) + 'px';
+                if (svgPreview) svgPreview.style.top = svgItemsBoxTop + 'px';
+
+                //mielk.notify.display('After offsetSvgVertically | [top]: ' + top + ' | svgItemsBoxTopAnchor' + svgItemsBoxTopAnchor + ' | svgItems.style.top: ' + svgItems.style.top + '| values container top: ' + valuesContainerTopOffset);
+
             }
         }
 
@@ -346,15 +362,22 @@
             visibleRange.svgPixelValue = (visibleRange.max - visibleRange.min) / visibleRange.svgHeight;
         }
 
-        function stretchVisibleRange(newUnitHeight, prevUnitHeight) {
-            var itemsOnScreen = Math.round(visibleRange.height / newUnitHeight);
-            var change = itemsOnScreen - (visibleRange.max - visibleRange.min);
-            visibleRange.max += change / 2;
-            visibleRange.min -= change / 2;
-            visibleRange.unit = visibleRange.height / (visibleRange.max - visibleRange.min);
-            visibleRange.pixelValue = (visibleRange.max - visibleRange.min) / visibleRange.height;
-            visibleRange.svgUnit = visibleRange.svgHeight / (visibleRange.max - visibleRange.min);
-            visibleRange.svgPixelValue = (visibleRange.max - visibleRange.min) / visibleRange.svgHeight;
+        function stretchVisibleRange(heightSizeChange) {
+            var valuesRange = self.data.getValuesRange();            
+            var newHeight = visibleRange.svgHeight + heightSizeChange;
+            //mielk.notify.display('new height: ' + newHeight);
+            var newUnit = newHeight / (valuesRange.max - valuesRange.min);
+            var itemsOnScreen = visibleRange.height / newUnit;
+            var middle = (visibleRange.max + visibleRange.min) / 2
+            var newMax = middle + itemsOnScreen / 2;
+            var newMin = middle - itemsOnScreen / 2;
+            visibleRange.svgHeight = newHeight;
+            visibleRange.unit = newUnit;
+            visibleRange.svgUnit = newUnit;
+            visibleRange.max = newMax;
+            visibleRange.min = newMin;            
+            visibleRange.pixelValue = 1 / visibleRange.unit;
+            visibleRange.svgPixelValue = visibleRange.pixelValue;
         }
 
         function offsetVisibleRange(offset) {
@@ -370,8 +393,8 @@
             return svgBoxHeight;
         }
 
-        function getSvgItemsBoxTopOffset() {
-            return svgItemsBoxOffset;
+        function getsvgItemsBoxTopAnchorOffset() {
+            return svgDetailsBoxOffset;
         }
 
         function getItemsSvg() {
@@ -460,12 +483,12 @@
         return {
             setSvgHeight: setSvgHeight,
             setSvgLeft: setSvgLeft,
-            setSvgTop: setSvgTop,
+            offsetSvgVertically: offsetSvgVertically,
             setVisibleRange: setVisibleRange,
             stretchVisibleRange: stretchVisibleRange,
             offsetVisibleRange: offsetVisibleRange,
             getSvgLeftOffset: getSvgLeftOffset,
-            getSvgItemsBoxTopOffset: getSvgItemsBoxTopOffset,
+            getsvgItemsBoxTopAnchorOffset: getsvgItemsBoxTopAnchorOffset,
             getSvgBoxHeight: getSvgBoxHeight,
             getItemsSvg: getItemsSvg,
             getExtremaSvg: getExtremaSvg,
@@ -488,29 +511,27 @@
     self.svg = (function () {
         var type = self.params.getType();
         var svgBoxHeight = self.ui.getSvgBoxHeight();
-        var itemsSvgOffset = self.ui.getSvgItemsBoxTopOffset();
+        var itemsSvgOffset = self.ui.getsvgItemsBoxTopAnchorOffset();
         //var unitHeight;
         var visibleRange = {};
+        var resizeIndex;
         
 
         //[RENDERING]
-        function render($unitHeight) {
+        function render() {
+            resizeIndex = self.verticalResizeIndex;
             if (type === STOCK.INDICATORS.PRICE) {
-                renderPrices($unitHeight);
+                renderPrices();
             } else if (type === STOCK.INDICATORS.ADX) {
-                renderAdx($unitHeight);
+                renderAdx();
             } else if (type === STOCK.INDICATORS.MACD) {
-                renderMacd($unitHeight);
+                renderMacd();
             }
         }
 
 
         //[PRICES]
-        function renderPrices() {//$unitHeight) {
-            //if ($unitHeight) {
-            //    self.ui.stretchVisibleRange($unitHeight, unitHeight);
-            //    unitHeight = $unitHeight;
-            //}
+        function renderPrices() {
             renderItems();
             renderPricesExtrema();
             renderPriceTrendlines();
@@ -522,16 +543,21 @@
             var valuesRange = self.data.getValuesRange();
             var visibleRange = self.ui.getVisibleRange();
             var items = self.data.getItems();
+            //var valuesTop = self.valuesPanel.getTopOffset();
 
             function getY(value) {
                 var pointsDistance = valuesRange.max - value;
-                return pointsDistance * visibleRange.svgUnit;
+                return pointsDistance * visibleRange.svgUnit; // - valuesTop;
             }
 
+            var test300 = getY(300);
+            var z = 1;
+
             (function adjustSvgHeight() {
-                var svgHeight = Math.ceil(visibleRange.height * (valuesRange.max - valuesRange.min) / (visibleRange.max - visibleRange.min));
-                var svgTop = visibleRange.height * (visibleRange.max - valuesRange.max) / (visibleRange.max - visibleRange.min);
-                self.ui.setSvgHeight(svgHeight, svgTop);
+                var svgHeight = visibleRange.svgHeight;
+                //var valuesTopOffset = self.valuesPanel.getTopOffset();
+                //var svgTop = valuesTopOffset + (visibleRange.height - svgHeight) / 2;
+                self.ui.setSvgHeight(svgHeight);
                 visibleRange = self.ui.getVisibleRange();
             })();
 
@@ -558,36 +584,40 @@
                 var strokeWidth = STOCK.CONFIG.candle.strokeWidth;
                 var rectangles = [];
 
-                items.forEach(function (item) {
-                    if (item.item) {
-                        var quotation = item.item.price.quotation;
-                        var hasBody = item.coordinates.bodyHeight >= 1;
-                        var body = {
-                            type: 'body',
-                            item: item,
-                            fill: (hasBody ? (quotation.priceUp ? priceUpBodyInsideColor : priceDownBodyInsideColor) : shadowColor),
-                            stroke: (quotation.priceUp ? priceUpBodyBorderColor : priceDownBodyBorderColor),
-                            strokeWidth: (hasBody ? (item.coordinates.width < (strokeWidth * 2 + 1) ? 0 : strokeWidth) : 0),
-                            height: (item.coordinates.bodyHeight < 1 ? 1 : item.coordinates.bodyHeight),
-                            width: (hasBody ? item.coordinates.width + 1 : item.coordinates.width + 2),
-                            y: item.coordinates.bodyTop + 0.5,
-                            x: (hasBody ? item.coordinates.left + 0.5 : item.coordinates.left - 0.5)
-                        };
-                        var shadow = {
-                            type: 'shadow',
-                            item: item,
-                            fill: shadowColor,
-                            stroke: shadowColor,
-                            strokeWidth: 0,
-                            height: item.coordinates.shadowHeight,
-                            width: strokeWidth,
-                            y: item.coordinates.shadowTop,
-                            x: item.coordinates.left + (item.coordinates.width + 1) / 2
-                        };
-                        rectangles.push(shadow);
-                        rectangles.push(body);
+                for (var i = 0; i < items.length; i++) {
+                    if (resizeIndex !== self.verticalResizeIndex) break;
+                    var item = items[i];
+                    if (item) {
+                        if (item.item) {
+                            var quotation = item.item.price.quotation;
+                            var hasBody = item.coordinates.bodyHeight >= 1;
+                            var body = {
+                                type: 'body',
+                                item: item,
+                                fill: (hasBody ? (quotation.priceUp ? priceUpBodyInsideColor : priceDownBodyInsideColor) : shadowColor),
+                                stroke: (quotation.priceUp ? priceUpBodyBorderColor : priceDownBodyBorderColor),
+                                strokeWidth: (hasBody ? (item.coordinates.width < (strokeWidth * 2 + 1) ? 0 : strokeWidth) : 0),
+                                height: (item.coordinates.bodyHeight < 1 ? 1 : item.coordinates.bodyHeight),
+                                width: (hasBody ? item.coordinates.width + 1 : item.coordinates.width + 2),
+                                y: item.coordinates.bodyTop + 0.5,
+                                x: (hasBody ? item.coordinates.left + 0.5 : item.coordinates.left - 0.5)
+                            };
+                            var shadow = {
+                                type: 'shadow',
+                                item: item,
+                                fill: shadowColor,
+                                stroke: shadowColor,
+                                strokeWidth: 0,
+                                height: item.coordinates.shadowHeight,
+                                width: strokeWidth,
+                                y: item.coordinates.shadowTop,
+                                x: item.coordinates.left + (item.coordinates.width + 1) / 2
+                            };
+                            rectangles.push(shadow);
+                            rectangles.push(body);
+                        }
                     }
-                });
+                }
 
                 function appendSvgComponentToItem(component, params) {
                     var item = params.item;
@@ -602,16 +632,22 @@
 
                 }
 
-                $(svg).empty();
-                rectangles.forEach(function (item) {
-                    var rectangle = mielk.svg.createRectangle(item.width, item.height, item.x, item.y, item.fill)
-                    rectangle.style.stroke = item.stroke;
-                    rectangle.style.strokeWidth = item.strokeWidth + 'px';
-                    rectangle.style.vectorEffect = 'non-scaling-stroke';
-                    rectangle.style.shapeRendering = 'crispEdges'
-                    svg.appendChild(rectangle);
-                    appendSvgComponentToItem(rectangle, item);
-                });
+                if (resizeIndex === self.verticalResizeIndex) {
+                    $(svg).empty();
+                    for (var i = 0; i < rectangles.length; i++) {
+                        var item = rectangles[i];
+                        if (item) {
+                            if (resizeIndex !== self.verticalResizeIndex) break;
+                            var rectangle = mielk.svg.createRectangle(item.width, item.height, item.x, item.y, item.fill)
+                            rectangle.style.stroke = item.stroke;
+                            rectangle.style.strokeWidth = item.strokeWidth + 'px';
+                            rectangle.style.vectorEffect = 'non-scaling-stroke';
+                            rectangle.style.shapeRendering = 'crispEdges'
+                            svg.appendChild(rectangle);
+                            appendSvgComponentToItem(rectangle, item);
+                        }
+                    }
+                }
 
             }
             
@@ -659,33 +695,43 @@
 
                 }
 
-                items.forEach(function (item) {
-                    if (item.item) {
-                        var price = item.item.price;
-                        if (price.hasPeak()) {
-                            var value = Math.max(price.peakByClose ? price.peakByClose.value : 0, price.peakByHigh ? price.peakByHigh.value : 0);
-                            var circle = generateCircleObject(value, false, item);
-                            if (circle) circles.push(circle);
-                        }
+                for (var i = 0; i < items.length; i++) {
+                    if (resizeIndex !== self.verticalResizeIndex) break;
+                    var item = items[i];
+                    if (item) {
+                        if (item.item) {
+                            var price = item.item.price;
+                            if (price.hasPeak()) {
+                                var value = Math.max(price.peakByClose ? price.peakByClose.value : 0, price.peakByHigh ? price.peakByHigh.value : 0);
+                                var circle = generateCircleObject(value, false, item);
+                                if (circle) circles.push(circle);
+                            }
 
-                        if (price.hasTrough()) {
-                            var value = Math.max(price.troughByClose ? price.troughByClose.value : 0, price.troughByLow ? price.troughByLow.value : 0);
-                            var circle = generateCircleObject(value, true, item);
-                            if (circle) circles.push(circle);
+                            if (price.hasTrough()) {
+                                var value = Math.max(price.troughByClose ? price.troughByClose.value : 0, price.troughByLow ? price.troughByLow.value : 0);
+                                var circle = generateCircleObject(value, true, item);
+                                if (circle) circles.push(circle);
+                            }
                         }
                     }
-                });
+                }
 
-                $(svg).empty();
-                circles.forEach(function (item) {
-                    var circle = mielk.svg.createCircle(item.x, item.y, item.radius, item.fill, item.stroke);
-                    circle.style.strokeWidth = item.strokeWidth + 'px';
-                    circle.style.vectorEffect = 'non-scaling-stroke';
-                    circle.style.shapeRendering = 'crispEdges'
-                    svg.appendChild(circle);
-                    appendSvgComponentToItem(circle, item);
-                });
-
+                if (resizeIndex === self.verticalResizeIndex) {
+                    $(svg).empty();
+                    for (var i = 0; i < circles.length; i++) {
+                        if (resizeIndex !== self.verticalResizeIndex) break;
+                        var item = circles[i];
+                        if (item) {
+                            var circle = mielk.svg.createCircle(item.x, item.y, item.radius, item.fill, item.stroke);
+                            circle.style.strokeWidth = item.strokeWidth + 'px';
+                            circle.style.vectorEffect = 'non-scaling-stroke';
+                            circle.style.shapeRendering = 'crispEdges'
+                            svg.appendChild(circle);
+                            appendSvgComponentToItem(circle, item);
+                        }
+                    }
+                }
+                
             })();
 
         }
@@ -702,41 +748,48 @@
             }
 
             (function appendCoordinates() {
-                trendlines.forEach(function (item) {
-                    var viewSlope = 0;
-                    var linkedItems = {
-                        start: self.data.getItem(item.footholds.start),
-                        base: self.data.getItem(item.trendline.edgePoints.base.index),
-                        counter: self.data.getItem(item.trendline.edgePoints.counter.index),
-                        end: self.data.getItem(item.footholds.end)
-                    };
-                    var edgePointsCoordinates = {
-                        base: {
-                            x: linkedItems.base.coordinates.middle,
-                            y: Math.round(getY(item.trendline.edgePoints.base.level)) + itemsSvgOffset / 2
-                        },
-                        counter: {
-                            x: linkedItems.counter.coordinates.middle,
-                            y: Math.round(getY(item.trendline.edgePoints.counter.level)) + itemsSvgOffset / 2
-                        }
-                    };
-                    viewSlope = (edgePointsCoordinates.counter.y - edgePointsCoordinates.base.y) / (edgePointsCoordinates.counter.x - edgePointsCoordinates.base.x);
 
-
-                    function calculateCoordinatesForPoint(x) {
-                        return {
-                            x: x,
-                            y: Math.round(edgePointsCoordinates.base.y + (x - edgePointsCoordinates.base.x) * viewSlope)
-                        }
-                        return 
+                function calculateCoordinatesForPoint(x) {
+                    return {
+                        x: x,
+                        y: Math.round(edgePointsCoordinates.base.y + (x - edgePointsCoordinates.base.x) * viewSlope)
                     }
+                    return
+                }
 
-                    item.coordinates = {
-                        start: calculateCoordinatesForPoint(linkedItems.start.coordinates.middle),
-                        end: calculateCoordinatesForPoint(linkedItems.end.coordinates.middle)
+                for (var i = 0; i < trendlines.length; i++) {
+                    var item = trendlines[i];
+                    if (item) {
+
+                        if (resizeIndex !== self.verticalResizeIndex) break;
+
+                        var viewSlope = 0;
+                        var linkedItems = {
+                            start: self.data.getItem(item.footholds.start),
+                            base: self.data.getItem(item.trendline.edgePoints.base.index),
+                            counter: self.data.getItem(item.trendline.edgePoints.counter.index),
+                            end: self.data.getItem(item.footholds.end)
+                        };
+                        var edgePointsCoordinates = {
+                            base: {
+                                x: linkedItems.base.coordinates.middle,
+                                y: Math.round(getY(item.trendline.edgePoints.base.level)) + itemsSvgOffset / 2
+                            },
+                            counter: {
+                                x: linkedItems.counter.coordinates.middle,
+                                y: Math.round(getY(item.trendline.edgePoints.counter.level)) + itemsSvgOffset / 2
+                            }
+                        };
+                        viewSlope = (edgePointsCoordinates.counter.y - edgePointsCoordinates.base.y) / (edgePointsCoordinates.counter.x - edgePointsCoordinates.base.x);
+
+                        item.coordinates = {
+                            start: calculateCoordinatesForPoint(linkedItems.start.coordinates.middle),
+                            end: calculateCoordinatesForPoint(linkedItems.end.coordinates.middle)
+                        }
+
                     }
+                }
 
-                });
             })();
 
             (function generateAndInsertSvgPaths() {
@@ -744,31 +797,40 @@
                 var strokeWidth = STOCK.CONFIG.trendlines.width;
                 var stroke = STOCK.CONFIG.trendlines.color;
 
-                trendlines.forEach(function (item) {
-                    var path = {
-                        d: 'M ' + item.coordinates.start.x + ' ' + item.coordinates.start.y + 'L' + item.coordinates.end.x + ' ' + item.coordinates.end.y,
-                        //stroke: 'rgba(0, 0, 0, ' + item.trendline.value / 100 + ')',
-                        stroke: 'rgba(0, 0, 0, 0.5)',
-                        strokeWidth: strokeWidth,
-                        trendline: item
-                    };
-                    paths.push(path);
-                });
+                for (var i = 0; i < trendlines.length; i++) {
+                    var item = trendlines[i];
+                    if (item) {
+                        if (resizeIndex !== self.verticalResizeIndex) break;
+                        var path = {
+                            d: 'M ' + item.coordinates.start.x + ' ' + item.coordinates.start.y + 'L' + item.coordinates.end.x + ' ' + item.coordinates.end.y,
+                            //stroke: 'rgba(0, 0, 0, ' + item.trendline.value / 100 + ')',
+                            stroke: 'rgba(0, 0, 0, 0.5)',
+                            strokeWidth: strokeWidth,
+                            trendline: item
+                        };
+                        paths.push(path);
+                    }
+                }
 
                 function appendSvgComponentToItem(component, item) {
                     item.svgPath = component;
                 }
 
-                $(svg).empty();
-                paths.forEach(function (item) {
-                    var path = mielk.svg.createPath(item.d);
-                    path.style.strokeWidth = item.strokeWidth + 'px';
-                    path.style.stroke = item.stroke;
-                    path.style.vectorEffect = 'non-scaling-stroke';
-                    path.style.shapeRendering = 'crispEdges'
-                    svg.appendChild(path);
-                    appendSvgComponentToItem(path, item.trendline);
-                });
+                if (resizeIndex === self.verticalResizeIndex) {
+                    $(svg).empty();
+                    for (var i = 0; i < paths.length; i++) {
+                        var item = paths[i];
+                        if (item) {
+                            var path = mielk.svg.createPath(item.d);
+                            path.style.strokeWidth = item.strokeWidth + 'px';
+                            path.style.stroke = item.stroke;
+                            path.style.vectorEffect = 'non-scaling-stroke';
+                            path.style.shapeRendering = 'crispEdges'
+                            svg.appendChild(path);
+                            appendSvgComponentToItem(path, item.trendline);
+                        }
+                    }
+                }
 
             })();
 
@@ -786,15 +848,8 @@
         }
 
 
-
-        function changeUnitHeight(unitHeight) {
-            render(unitHeight);
-        }
-
-
         return {
-            render: render,
-            changeUnitHeight: changeUnitHeight
+            render: render
         }
 
     })();
@@ -805,9 +860,14 @@
         var valueLabelsContainer = self.ui.getValueLabelsContainer();
         var crossHair;
         var currentValueLabel;
-        var moveParams;
         var labelInfo = {};
         var labels = {};
+        var zoomStep = 100;
+        var zoomInProgress = false;
+
+        function getTopOffset() {
+            return valueLabelsContainer.offsetTop;
+        }
 
         function renderValuesAndHorizontalGridLines() {
             var valuesRange = self.data.getValuesRange();
@@ -816,6 +876,8 @@
 
             $(horizontalLinesContainer).empty();
             $(valueLabelsContainer).empty();
+            var x = $(valueLabelsContainer).css('top');
+            $(valueLabelsContainer).css('top', '0px');
             labels = {};
 
             (function insertHtmlComponents() {
@@ -823,7 +885,7 @@
                 labelInfo.min = arr[0];
                 labelInfo.max = arr[arr.length - 1];
                 labelInfo.arr = arr;
-                insertLabels(arr, visibleRange);
+                insertLabels(arr, visibleRange, valuesRange);
             })();
 
             (function insertCrossHair() {
@@ -842,12 +904,16 @@
 
         }
 
-        function insertLabels(arr, visibleRange) {
+        function insertLabels(arr, visibleRange, valuesRange) {
+            var top = 0;//valueLabelsContainer.offsetTop;
+            var test300 = ((valuesRange ? valuesRange.max : visibleRange.max) - 300) * labelInfo.unitHeight - top;
+            var z = 1;
+
+
+
             for (var i = arr.length - 1; i >= 0; i--) {
                 var value = arr[i];
                 var item = labels[value];
-                var top = valueLabelsContainer.offsetTop;
-
                 if (item === undefined || item === null) {
                     var y = (visibleRange.max - value) * labelInfo.unitHeight - top;
 
@@ -907,7 +973,7 @@
         }
 
         function generateDisplayedValuesArray(valuesRange, visibleRange) {
-            var addSpaceRatio = 0.1;
+            var addSpaceRatio = 0; //0.1;
             var step = calculateGridLinesStep(visibleRange);
             var min = Math.min(valuesRange.min, visibleRange.min);
             var max = Math.max(valuesRange.max, visibleRange.max);
@@ -929,7 +995,7 @@
 
         function updateCurrentValueIndicators(y, value){
             var top = y - $(horizontalLinesContainer).offset().top;
-            var labelTop = Math.max(0, top - $(currentValueLabel).height() / 2);
+            var labelTop = top - $(currentValueLabel).height() / 2;
             var caption = value.toFixed(4);
 
             $(crossHair).css({
@@ -962,68 +1028,44 @@
                         $(valueLabelsContainer).css('top', top + 'px');
                         $(horizontalLinesContainer).css('top', top + 'px');
                         adjustLabels(top);
-                        self.ui.setSvgTop(top);
+                        self.ui.offsetSvgVertically(top);
                     }
                 }
             });
 
             $(valueLabelsContainer).bind({
-                mousedown: function (e) {
-                    setTimeout(handleMouseDown(e), 0);
-                },
-                mouseup: function (e) {
-                    endAction(e);
-                },
-                mouseleave: function (e) {
-                    endAction(e);
-                },
-                mousemove: function (e) {
-                    setTimeout(handleMouseMove(e), 0);
+                contextmenu: function (e) {
+                    e.preventDefault();
                 }
+                , mousedown: function (e) {
+                    if (!zoomInProgress) {
+                        setTimeout(handleMouseDown(e), 0);
+                    }
+                }
+                //, mousemove: function (e) {
+                //    setTimeout(handleMouseMove(e), 0);
+                //}
             });
         })();
 
 
         function handleMouseDown(e) {
-            setTimeout(startResizing(e), 0);
+            if (e.buttons === 1) {
+                setTimeout(zoom(zoomStep));
+            } else if (e.buttons === 2) {
+                setTimeout(zoom(-zoomStep));
+            }
         }
 
-        function handleMouseUp(e) {
-            endAction(e);
-        }
-
-        function handleMouseMove(e) {
-            if (moveParams && moveParams.state) {
-                resize(e);
-            } 
-        }
-
-        function startResizing(e) {
-            valueLabelsContainer.classList.add('cursor-ns-resize');
-            resetMoveParamsObject();
-            moveParams.state = true;
-            moveParams.x = e.clientX;
-            moveParams.y = e.pageY;
-        }
-
-        function endAction(e) {
-            valueLabelsContainer.classList.remove('cursor-ns-resize');
-            resetMoveParamsObject();
-        }
-
-        function resetMoveParamsObject() {
-            moveParams = {
-                state: false,
-                x: null,
-                y: null
-            };
-        }
-
-        function resize(e) {
-            var change = moveParams.y - e.pageY;
-            var distance = labelInfo.max - labelInfo.min;
-            var unitHeight = labelInfo.unitHeight + (2 * change / distance);
-            self.svg.changeUnitHeight(unitHeight);
+        function zoom(change) {
+            zoomInProgress = true;
+            if (change != 0) {
+                self.verticalResizeIndex++;
+                self.ui.stretchVisibleRange(change);
+                var visibleRange = self.ui.getVisibleRange();
+                self.svg.render();
+            }
+            zoomInProgress = false;
         }
 
         function adjustLabels(top) {
@@ -1040,6 +1082,7 @@
         
 
         return {
+            getTopOffset: getTopOffset,
             renderValuesAndHorizontalGridLines: renderValuesAndHorizontalGridLines,
             updateCurrentValueIndicators: updateCurrentValueIndicators,
             hideCurrentValueIndicators: hideCurrentValueIndicators
@@ -1049,7 +1092,7 @@
 
 
     self.events = (function () {
-        var topOffset = self.ui.getSvgItemsBoxTopOffset();
+        var topOffset = self.ui.getsvgItemsBoxTopAnchorOffset();
         var eventsLayer;
         var highlightedExtremumCircle;
         var moveParams;
