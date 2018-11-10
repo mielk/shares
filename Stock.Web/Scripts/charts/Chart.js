@@ -393,8 +393,16 @@
             return svgBoxHeight;
         }
 
-        function getsvgItemsBoxTopAnchorOffset() {
+        function getSvgDetailsBoxTopOffset() {
             return svgDetailsBoxOffset;
+        }
+
+        function getSvgAnchorTopOffset() {
+            return svgItemsBoxTopAnchor;
+        }
+
+        function getSvgTopOffset() {
+            return svgItemsBoxTop;
         }
 
         function getItemsSvg() {
@@ -488,7 +496,9 @@
             stretchVisibleRange: stretchVisibleRange,
             offsetVisibleRange: offsetVisibleRange,
             getSvgLeftOffset: getSvgLeftOffset,
-            getsvgItemsBoxTopAnchorOffset: getsvgItemsBoxTopAnchorOffset,
+            getSvgDetailsBoxTopOffset: getSvgDetailsBoxTopOffset,
+            getSvgAnchorTopOffset: getSvgAnchorTopOffset,
+            getSvgTopOffset: getSvgTopOffset,
             getSvgBoxHeight: getSvgBoxHeight,
             getItemsSvg: getItemsSvg,
             getExtremaSvg: getExtremaSvg,
@@ -511,7 +521,7 @@
     self.svg = (function () {
         var type = self.params.getType();
         var svgBoxHeight = self.ui.getSvgBoxHeight();
-        var itemsSvgOffset = self.ui.getsvgItemsBoxTopAnchorOffset();
+        var itemsSvgOffset = self.ui.getSvgDetailsBoxTopOffset();
         //var unitHeight;
         var visibleRange = {};
         var resizeIndex;
@@ -543,20 +553,14 @@
             var valuesRange = self.data.getValuesRange();
             var visibleRange = self.ui.getVisibleRange();
             var items = self.data.getItems();
-            //var valuesTop = self.valuesPanel.getTopOffset();
-
+            
             function getY(value) {
                 var pointsDistance = valuesRange.max - value;
-                return pointsDistance * visibleRange.svgUnit; // - valuesTop;
+                return pointsDistance * visibleRange.svgUnit;
             }
-
-            var test300 = getY(300);
-            var z = 1;
 
             (function adjustSvgHeight() {
                 var svgHeight = visibleRange.svgHeight;
-                //var valuesTopOffset = self.valuesPanel.getTopOffset();
-                //var svgTop = valuesTopOffset + (visibleRange.height - svgHeight) / 2;
                 self.ui.setSvgHeight(svgHeight);
                 visibleRange = self.ui.getVisibleRange();
             })();
@@ -876,8 +880,6 @@
 
             $(horizontalLinesContainer).empty();
             $(valueLabelsContainer).empty();
-            var x = $(valueLabelsContainer).css('top');
-            $(valueLabelsContainer).css('top', '0px');
             labels = {};
 
             (function insertHtmlComponents() {
@@ -905,17 +907,15 @@
         }
 
         function insertLabels(arr, visibleRange, valuesRange) {
-            var top = 0;//valueLabelsContainer.offsetTop;
-            var test300 = ((valuesRange ? valuesRange.max : visibleRange.max) - 300) * labelInfo.unitHeight - top;
-            var z = 1;
-
-
+            var top = valueLabelsContainer.offsetTop;
+            var svgTopOffset = self.ui.getSvgTopOffset();
+            var topDiff = svgTopOffset - top;
 
             for (var i = arr.length - 1; i >= 0; i--) {
                 var value = arr[i];
                 var item = labels[value];
                 if (item === undefined || item === null) {
-                    var y = (visibleRange.max - value) * labelInfo.unitHeight - top;
+                    var y = ((valuesRange ? valuesRange.max : visibleRange.max) - value) * labelInfo.unitHeight + topDiff;
 
                     var horizontalLine = $('<div/>', {
                         'class': 'value-horizontal-line'
@@ -1092,7 +1092,7 @@
 
 
     self.events = (function () {
-        var topOffset = self.ui.getsvgItemsBoxTopAnchorOffset();
+        var topOffset = self.ui.getSvgDetailsBoxTopOffset();
         var eventsLayer;
         var highlightedExtremumCircle;
         var moveParams;
