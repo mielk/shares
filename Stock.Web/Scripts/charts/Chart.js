@@ -160,7 +160,7 @@
         var svgItemsBoxTopAnchor = 0;
         var svgItemsBoxTop = 0;
         var svgLeft = 0;
-        var svgTrendlinesRightExtention = 200;
+        var svgExtraWidth = 200;
         //[Visibility]
         var visibleRange = {};
         //------------------------------------------------------------------
@@ -202,7 +202,7 @@
         function insertSvgItems() {
             svgItems = mielk.svg.createSvg();
             var height = svgBoxHeight;
-            var width = calculateItemsWidth();
+            var width = calculateSvgWidth();
 
             svgItems.setAttribute('id', 'items');
             svgItems.setAttribute('preserveAspectRatio', 'none meet');
@@ -219,7 +219,7 @@
         function insertSvgExtrema() {
             svgExtrema = mielk.svg.createSvg();
             var height = svgBoxHeight + svgDetailsBoxOffset;
-            var width = calculateItemsWidth();
+            var width = calculateSvgWidth();
             var top = (svgItemsBoxTop - svgDetailsBoxOffset / 2);
 
             svgExtrema.setAttribute('id', 'extrema');
@@ -238,7 +238,7 @@
         function insertSvgTrendlines() {
             svgTrendlines = mielk.svg.createSvg();
             var height = svgBoxHeight + svgDetailsBoxOffset;
-            var width = calculateItemsWidth() + svgTrendlinesRightExtention;
+            var width = calculateSvgWidth();
             var top = (svgItemsBoxTop - svgDetailsBoxOffset / 2);
 
             svgTrendlines.setAttribute('id', 'trendlines');
@@ -257,7 +257,7 @@
         function insertSvgPreview() {
             svgPreview = mielk.svg.createSvg();
             var height = svgBoxHeight;
-            var width = calculateItemsWidth();
+            var width = calculateSvgWidth();
 
             svgPreview.setAttribute('id', 'preview');
             svgPreview.setAttribute('preserveAspectRatio', 'none meet');
@@ -277,7 +277,7 @@
             var heightChange = height - svgBoxHeight;
             var topChange = (heightChange / -2);
             svgBoxHeight = height;
-            var width = calculateItemsWidth();
+            var width = calculateSvgWidth();
 
             //[Items]
             svgItems.setAttribute('viewBox', '0 0 ' + width + ' ' + svgBoxHeight);
@@ -326,29 +326,21 @@
 
         function offsetSvgVertically(top) {
             if (top || top === 0) {
-
-                //var valuesContainerTopOffset = self.valuesPanel.getTopOffset();
-                //mielk.notify.display('Before offsetSvgVertically | [top]: ' + top + ' | svgItemsBoxTopAnchor' + svgItemsBoxTopAnchor + ' | svgItems.style.top: ' + svgItems.style.top + '| values container top: ' + valuesContainerTopOffset);
-
-                svgItemsBoxTop = svgItemsBoxTopAnchor + top;
-
+                svgItemsBoxTop = top;
                 if (svgItems) svgItems.style.top = svgItemsBoxTop + 'px';
                 if (svgExtrema) svgExtrema.style.top = (svgItemsBoxTop - svgDetailsBoxOffset / 2) + 'px';
                 if (svgTrendlines) svgTrendlines.style.top = (svgItemsBoxTop - svgDetailsBoxOffset / 2) + 'px';
                 if (svgPreview) svgPreview.style.top = svgItemsBoxTop + 'px';
-
-                //mielk.notify.display('After offsetSvgVertically | [top]: ' + top + ' | svgItemsBoxTopAnchor' + svgItemsBoxTopAnchor + ' | svgItems.style.top: ' + svgItems.style.top + '| values container top: ' + valuesContainerTopOffset);
-
             }
         }
 
 
 
         //Helper functions.
-        function calculateItemsWidth() {
+        function calculateSvgWidth() {
             var nonEmptyItemsCounter = self.data.countNonEmptyItems();
             var itemWidth = Math.ceil(self.params.getItemWidth());
-            return nonEmptyItemsCounter * itemWidth;
+            return (nonEmptyItemsCounter * itemWidth) + svgExtraWidth;
         }
 
 
@@ -365,8 +357,7 @@
         function stretchVisibleRange(heightSizeChange) {
             var valuesRange = self.data.getValuesRange();            
             var newHeight = visibleRange.svgHeight + heightSizeChange;
-            //mielk.notify.display('new height: ' + newHeight);
-            var newUnit = newHeight / (valuesRange.max - valuesRange.min);
+            var newUnit = newHe1ight / (valuesRange.max - valuesRange.min);
             var itemsOnScreen = visibleRange.height / newUnit;
             var middle = (visibleRange.max + visibleRange.min) / 2
             var newMax = middle + itemsOnScreen / 2;
@@ -522,7 +513,6 @@
         var type = self.params.getType();
         var svgBoxHeight = self.ui.getSvgBoxHeight();
         var itemsSvgOffset = self.ui.getSvgDetailsBoxTopOffset();
-        //var unitHeight;
         var visibleRange = {};
         var resizeIndex;
         
@@ -743,6 +733,7 @@
         function renderPriceTrendlines() {
             var svg = self.ui.getTrendlinesSvg();
             var trendlines = self.data.getTrendlines();
+            var quotes = self.data.getItems();
             var valuesRange = self.data.getValuesRange();
             var visibleRange = self.ui.getVisibleRange();
 
@@ -756,7 +747,7 @@
                 function calculateCoordinatesForPoint(x) {
                     return {
                         x: x,
-                        y: Math.round(edgePointsCoordinates.base.y + (x - edgePointsCoordinates.base.x) * viewSlope)
+                        y: edgePointsCoordinates.base.y + (x - edgePointsCoordinates.base.x) * viewSlope
                     }
                     return
                 }
@@ -777,11 +768,11 @@
                         var edgePointsCoordinates = {
                             base: {
                                 x: linkedItems.base.coordinates.middle,
-                                y: Math.round(getY(item.trendline.edgePoints.base.level)) + itemsSvgOffset / 2
+                                y: getY(item.trendline.edgePoints.base.level) + itemsSvgOffset / 2
                             },
                             counter: {
                                 x: linkedItems.counter.coordinates.middle,
-                                y: Math.round(getY(item.trendline.edgePoints.counter.level)) + itemsSvgOffset / 2
+                                y: getY(item.trendline.edgePoints.counter.level) + itemsSvgOffset / 2
                             }
                         };
                         viewSlope = (edgePointsCoordinates.counter.y - edgePointsCoordinates.base.y) / (edgePointsCoordinates.counter.x - edgePointsCoordinates.base.x);
@@ -792,6 +783,7 @@
                         }
 
                     }
+
                 }
 
             })();
@@ -803,6 +795,9 @@
 
                 for (var i = 0; i < trendlines.length; i++) {
                     var item = trendlines[i];
+                    if (i === 12) {
+                        var x = 1;
+                    }
                     if (item) {
                         if (resizeIndex !== self.verticalResizeIndex) break;
                         var path = {
@@ -882,6 +877,15 @@
             $(valueLabelsContainer).empty();
             labels = {};
 
+            (function locateContainers() {
+                var height = self.ui.getSvgBoxHeight();
+                var top = self.ui.getSvgTopOffset();
+                $(valueLabelsContainer).height(height);
+                $(valueLabelsContainer).css('top', top + 'px');
+                $(horizontalLinesContainer).height(height);
+                $(horizontalLinesContainer).css('top', top + 'px');
+            })();
+
             (function insertHtmlComponents() {
                 var arr = generateDisplayedValuesArray(valuesRange, visibleRange);
                 labelInfo.min = arr[0];
@@ -907,15 +911,11 @@
         }
 
         function insertLabels(arr, visibleRange, valuesRange) {
-            var top = valueLabelsContainer.offsetTop;
-            var svgTopOffset = self.ui.getSvgTopOffset();
-            var topDiff = svgTopOffset - top;
-
             for (var i = arr.length - 1; i >= 0; i--) {
                 var value = arr[i];
                 var item = labels[value];
                 if (item === undefined || item === null) {
-                    var y = ((valuesRange ? valuesRange.max : visibleRange.max) - value) * labelInfo.unitHeight + topDiff;
+                    var y = ((valuesRange ? valuesRange.max : visibleRange.max) - value) * labelInfo.unitHeight;
 
                     var horizontalLine = $('<div/>', {
                         'class': 'value-horizontal-line'
@@ -1073,7 +1073,7 @@
             var visibleRange = self.ui.getVisibleRange();
             var arr = generateDisplayedValuesArray(valuesRange, visibleRange);
             if (arr[arr.length - 1] !== labelInfo.max || arr[0] !== labelInfo.min) {
-                insertLabels(arr, visibleRange);
+                insertLabels(arr, visibleRange, valuesRange);
                 labelInfo.min = arr[0];
                 labelInfo.max = arr[arr.length - 1];
                 labelInfo.arr = arr;
